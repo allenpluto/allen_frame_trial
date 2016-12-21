@@ -674,14 +674,20 @@ display: block;
 height:1px;
 margin-top:-1px;
 clear:both;
-content: '     i\'d like to test: content : with semi-column ';
+content: '     i\'d like to test ,content : with semi-column. \"Let\'s try some content   inside,double quote; as well\"  ';
 font-family:'Font Awesome';
 }";
 print_r($css_test_line);
 echo '<br>';
-print_r(minify_content($css_test_line,'css'));
-preg_match("/('([^']|\\')*?[^\\]')/",$css_test_line,$matches);
+$css_test_line = minify_content($css_test_line,'css');
+print_r($css_test_line);
+
+preg_match('/(\'(?:[^\']|\\\')*?)([,:;\{\}](?!\s))((?:[^\']|\\\')*?[^\\\]\')/',$css_test_line,$matches);
 print_r($matches);
+
+echo '<br>';
+$css_test_line = minify_content($css_test_line,'css');
+print_r($css_test_line);
 
 echo '<br>';
 print_r(minify_content(".column_container > .column {display: block; float:left;min-height:1px ;}",'css'));

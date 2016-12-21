@@ -288,14 +288,36 @@ function minify_content($value, $type='html')
                 '/[^\S]+([,:;\{\}])/',             // strip whitespaces before , : ; { }
                 '/(\s)+/'                            // shorten multiple whitespace sequences
             );
+            // "/'(?:[^']|\\')*?[^\\\]'/"
             $replace = array(
                 '',
                 '\\1',
                 '\\1',
                 '\\1'
             );
-            // ('([^']|\\')*?[^\\]')
-            return preg_replace($search, $replace, $value);
+            $value = preg_replace($search, $replace, $value);
+            $old_value = '';
+            $count = 50;
+            while($value != $old_value)
+            {
+                $old_value = $value;
+                if ($count-- < 0)
+                {
+                    break;
+                }
+                $search = array(
+                    '/(\'(?:[^\']|\\\')*?)([,:;\{\}](?!\s))((?:[^\']|\\\')*?[^\\\]\')/',          // put a space after , : ; for the content inside single quotes
+                    '/("(?:[^"]|\\")*?)([,:;\{\}](?!\s))((?:[^"]|\\")*?[^\\\]")/'          // put a space after , : ; for the content inside double quotes
+                );
+                $replace = array(
+                    '\\1\\2 \\3',
+                    '\\1\\2 \\3'
+                );
+                $value = preg_replace($search, $replace, $value);
+            }
+            return $value;
+
+
         case 'html':
             // Minify HTML
             $search = array(
