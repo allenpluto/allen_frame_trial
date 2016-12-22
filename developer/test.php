@@ -674,21 +674,30 @@ display: block;
 height:1px;
 margin-top:-1px;
 clear:both;
-content: '     i\'d like to test ,content : with semi-column. \"Let\'s try some content   inside,double quote; as well\"  ';
+content: '     i\'d like to test: content : with semi-column ';
 font-family:'Font Awesome';
 }";
 print_r($css_test_line);
 echo '<br>';
+//print_r(minify_content($css_test_line,'css'));
+$counter = 0;
+$quoted_content = array();
+while(preg_match("/'((?:[^']|\\')*?[^\\\])'/",$css_test_line,$matches,PREG_OFFSET_CAPTURE))
+{
+    $quoted_content['[[*content_keeper_'.$counter.']]'] = $matches[0][0];
+    $css_test_line = substr_replace($css_test_line,'[[*content_keeper_'.$counter.']]',$matches[0][1],strlen($matches[0][0]));
+    $counter++;
+}
+while(preg_match('/"((?:[^"]|\\\')*?[^\\\])"/',$css_test_line,$matches,PREG_OFFSET_CAPTURE))
+{
+    $quoted_content['[[*content_keeper_'.$counter.']]'] = $matches[0][0];
+    $css_test_line = substr_replace($css_test_line,'[[*content_keeper_'.$counter.']]',$matches[0][1],strlen($matches[0][0]));
+    $counter++;
+}
 $css_test_line = minify_content($css_test_line,'css');
+$css_test_line = strtr($css_test_line,$quoted_content);
 print_r($css_test_line);
-
-preg_match('/(\'(?:[^\']|\\\')*?)([,:;\{\}](?!\s))((?:[^\']|\\\')*?[^\\\]\')/',$css_test_line,$matches);
-print_r($matches);
-
-echo '<br>';
-$css_test_line = minify_content($css_test_line,'css');
-print_r($css_test_line);
-
+print_r($quoted_content);
 echo '<br>';
 print_r(minify_content(".column_container > .column {display: block; float:left;min-height:1px ;}",'css'));
 

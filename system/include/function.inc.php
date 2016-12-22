@@ -282,6 +282,22 @@ function minify_content($value, $type='html')
     {
         case 'css':
             // Minify CSS
+            $counter = 0;
+            $quoted_content = array();
+            while(preg_match('/\'((?:[^\']|\\\')*?[^\\\])\'/',$value,$matches,PREG_OFFSET_CAPTURE))
+            {
+                $quoted_content['[[*content_keeper_'.$counter.']]'] = $matches[0][0];
+                $value = substr_replace($value,'[[*content_keeper_'.$counter.']]',$matches[0][1],strlen($matches[0][0]));
+                $counter++;
+            }
+            while(preg_match('/"((?:[^"]|\\")*?[^\\\])"/',$value,$matches,PREG_OFFSET_CAPTURE))
+            {
+                $quoted_content['[[*content_keeper_'.$counter.']]'] = $matches[0][0];
+                $value = substr_replace($value,'[[*content_keeper_'.$counter.']]',$matches[0][1],strlen($matches[0][0]));
+                $counter++;
+            }
+            unset($counter);
+
             $search = array(
                 '/\/\*(.*?)\*\//s',                  // remove css comments
                 '/([,:;\{\}])[^\S]+/',             // strip whitespaces after , : ; { }
@@ -296,25 +312,9 @@ function minify_content($value, $type='html')
                 '\\1'
             );
             $value = preg_replace($search, $replace, $value);
-            $old_value = '';
-            $count = 50;
-            while($value != $old_value)
-            {
-                $old_value = $value;
-                if ($count-- < 0)
-                {
-                    break;
-                }
-                $search = array(
-                    '/(\'(?:[^\']|\\\')*?)([,:;\{\}](?!\s))((?:[^\']|\\\')*?[^\\\]\')/',          // put a space after , : ; for the content inside single quotes
-                    '/("(?:[^"]|\\")*?)([,:;\{\}](?!\s))((?:[^"]|\\")*?[^\\\]")/'          // put a space after , : ; for the content inside double quotes
-                );
-                $replace = array(
-                    '\\1\\2 \\3',
-                    '\\1\\2 \\3'
-                );
-                $value = preg_replace($search, $replace, $value);
-            }
+
+            $value = strtr($value,$quoted_content);
+
             return $value;
 
 
