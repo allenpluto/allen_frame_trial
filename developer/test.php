@@ -701,6 +701,17 @@ print_r($quoted_content);
 echo '<br>';
 print_r(minify_content(".column_container > .column {display: block; float:left;min-height:1px ;}",'css'));
 
+$js_test = file_get_contents('C:\wamp\www\allen_frame_trial\content\js\default.js');
+preg_match_all('/"((?:[^"]|\\")*?)(?<!\\\)"/',$js_test,$matches,PREG_OFFSET_CAPTURE);
+print_r($matches);
+//exit();
+$js_test = minify_content($js_test,'js');
+//preg_match('/([\<\>\=\+\-,:;\(\)\{\}])[^\S]+/',$js_test,$matches,PREG_OFFSET_CAPTURE);
+//print_r($matches);
+//$js_test = preg_replace('/([\<\>\=\+\-,:;\(\)\{\}])[^\S]+/','\\1',$js_test);
+echo '<script>';
+print_r($js_test);
+
 /*$test_uri = 'http://mobile.top4.com.au/listing/find/plumbers/nsw/sydney-region/pyrmont';
 $test_uri = 'http://mobile.top4.com.au/listing/search/'.urlencode('Plumbing services & gas fitter').'/where/'.urlencode('Pyrmont NSW, 2106');
 $uri_part = parse_url($test_uri);
