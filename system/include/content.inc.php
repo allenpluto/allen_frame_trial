@@ -277,7 +277,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
             case 'html':
             default:
                 //$request_path_part = array_shift($request_path);
-                $module = ['listing','business','business-amp','console'];
+                $module = ['listing','business','business-amp','members'];
                 if (in_array($request_path_part,$module))
                 {
                     $this->request['module'] = $request_path_part;
@@ -353,10 +353,8 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                                 //$this->request['document'] = $request_path_part;
                         }
                         break;
-                    case 'console':
-                        include_once(PATH_PREFERENCE.'api'.FILE_EXTENSION_INCLUDE);
-
-                        $method = ['profile','credential','dashboard'];
+                    case 'members':
+                        $method = ['account','listing','dashboard'];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
@@ -1131,7 +1129,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
 
                 switch($this->request['module'])
                 {
-                    case 'console':
+                    case 'members':
                         if (!isset($_COOKIE['session_id']))
                         {
                             // Error Handling, session validation failed, session_id not set
@@ -1156,7 +1154,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                         if (empty($entity_api_obj->row))
                         {
                             // Error Handling, session validation failed, session_id is valid, but cannot read corresponding account
-                            $this->message->error = 'Session Validation Succeed, but cannot find related api account';
+                            $this->message->error = 'Session Validation Succeed, but cannot find related account';
                             $this->result['status'] = 301;
                             $this->result['header']['Location'] =  URI_SITE_BASE.'login';
                             return false;
@@ -1180,6 +1178,14 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                         $content = ['page_title'=>ucwords($this->request['method'])];
                         switch($this->request['method'])
                         {
+                            case 'account':
+                                $entity_account_obj = new entity_account($this->content['account']['id']);
+                                $entity_contact_obj = new entity_contact($this->content['account']['id']);
+                                $entity_profile_obj = new entity_profile($this->content['account']['id']);
+
+                                break;
+                            case 'listing':
+                                break;
                             case 'credential':
                                 $content['remote_ip'] = $this->request['remote_ip'];
                                 $content['ajax_info'] = '';
@@ -1351,7 +1357,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                                             {
                                                 $this->result['cookie'] = ['session_id'=>['value'=>$session['name'],'time'=>time()+$session_expire]];
                                                 $this->result['status'] = 301;
-                                                $this->result['header']['Location'] =  URI_SITE_BASE.'console';
+                                                $this->result['header']['Location'] =  URI_SITE_BASE.'members';
                                             }
                                         }
                                     }
