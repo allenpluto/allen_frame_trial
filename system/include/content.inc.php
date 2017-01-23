@@ -110,7 +110,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
         $request_uri = trim(preg_replace('/^[\/]?'.FOLDER_SITE_BASE.'[\/]/','',$value),'/');
         $request_path = explode('/',$request_uri);
 
-        $type = ['ajax','css','image','js','json','xml'];
+        $type = ['css','font','image','js','json'];
         $request_path_part = array_shift($request_path);
         if (in_array($request_path_part,$type))
         {
@@ -123,6 +123,10 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
             $this->request['file_uri'] = URI_SITE_BASE;
         }
         $this->request['file_path'] = PATH_ASSET.$this->request['data_type'].DIRECTORY_SEPARATOR;
+        if (file_exists(PATH_PREFERENCE.$this->request['data_type'].FILE_EXTENSION_INCLUDE))
+        {
+            include_once(PATH_PREFERENCE.$this->request['data_type'].FILE_EXTENSION_INCLUDE);
+        }
 
         // HTML Page uri structure decoder
         switch ($this->request['data_type'])
@@ -201,56 +205,9 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                 $this->request['file_uri'] .= $file_name;
                 unset($file_name);
                 break;
-            case 'ajax':
-                if (empty($request_path))
-                {
-                    $this->request['method'] = 'check_connection';
-                }
-                else
-                {
-                    $this->request['method'] = array_shift($request_path);
-                }
-                if (!empty($request_path))
-                {
-                    $this->request['value'] = array_shift($request_path);
-                }
-                if (!empty($request_path))
-                {
-                    // More unrecognized value passed through URI
-                    $this->message->error = 'Decoding: URI parts unrecognized ['.implode('/',$request_path).']';
-                    $this->content['api_result'] = [
-                        'status'=>'INVALID_REQUEST',
-                        'message'=>'Illegal Request URI'
-                    ];
-                    return true;
-                }
-                $this->request['remote_ip'] = get_remote_ip();
-
-                $this->request['http_referer_host'] = '';
-                $option['format'] = 'json';
-                if (isset($_SERVER['HTTP_REFERER']))
-                {
-                    $this->request['http_referer_host'] = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-                }
-                break;
             case 'json':
-            case 'xml':
-                include_once(PATH_PREFERENCE.'api'.FILE_EXTENSION_INCLUDE);
                 $this->request['remote_ip'] = get_remote_ip();
 
-                if (!empty($this->preference->api['force_ssl']))
-                {
-                    if ($_SERVER['REQUEST_SCHEME'] != 'https')
-                    {
-                        // More unrecognized value passed through URI
-                        $this->message->warning = 'API SSL Access Required';
-                        $this->content['api_result'] = [
-                            'status'=>'INVALID_REQUEST',
-                            'message'=>'API Requests require SSL (uri should start with https://)'
-                        ];
-                        return true;
-                    }
-                }
                 if (empty($request_path))
                 {
                     $this->request['method'] = 'list_available_method';
@@ -363,7 +320,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                         }
                         else
                         {
-                            // Error Handling, trying to access console without module specified or unrecognized module
+                            // Error Handling, trying to access members without module specified or unrecognized module
                             $this->result['status'] = 301;
                             $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['module'].'/'.end($method);
                         }
@@ -379,6 +336,17 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
 
                 break;
         }
+
+        if (isset($_COOKIE['session_id']))
+        {
+            $this->request['session_id'] = $_COOKIE['session_id'];
+        }
+
+        if (isset($_SERVER['HTTP_AUTH_KEY']))
+        {
+            $this->request['auth_key'] = $_SERVER['HTTP_AUTH_KEY'];
+        }
+
 
         $option_preset = ['data_type','document','file_type','extension','module','template','render'];
         foreach($option as $key=>$item)
@@ -396,6 +364,69 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
 
     private function build_content()
     {
+        // If session is set, try to get account from session
+        if (!empty($this->request['session_id']))
+        {
+            $entity_account_session_obj = new entity_account_session();
+            $method_variable = ['status'=>'OK','message'=>'','account_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
+
+            $session = $entity_account_session_obj->validate_account_session_id($method_variable);
+            if ($session == false)
+            {
+                // Error Handling, session validation failed, session_id invalid
+                $this->message->notice = 'Session exists, but session validation failed';
+            }
+            else
+            {
+                $entity_account_obj = new entity_account($session['account_id']);
+                if (empty($entity_account_obj->row))
+                {
+                    // Error Handling, session validation failed, session_id is valid, but cannot read corresponding account
+                    $this->message->notice = 'Session Validation Succeed, but cannot find related account account';
+                }
+                else
+                {
+                    $this->content['account'] = end($entity_account_obj->row);
+                }
+            }
+            unset($session);
+        }
+
+        // If auth_key is set, try to get api account from auth_key
+        if (!empty($this->request['auth_key']))
+        {
+            $entity_api_key_obj = new entity_api_key();
+            $method_variable = ['api_key'=>$this->request['auth_key'],'remote_ip'=>$this->request['remote_ip']];
+            $auth_id = $entity_api_key_obj->validate_api_key($method_variable);
+            if ($auth_id === false)
+            {
+                // Error Handling, api key authentication failed
+                $this->message->notice = 'Building: Api Key Authentication Failed';
+                $this->content['api_result'] = [
+                    'status'=>$method_variable['status'],
+                    'message'=>$method_variable['message']
+                ];
+            }
+            else
+            {
+                $entity_api_obj = new entity_api($auth_id);
+                if (empty($entity_api_obj->row))
+                {
+                    // Error Handling, session validation failed, api_key is valid, but cannot read corresponding account
+                    $this->message->error = 'Api Key Authentication Succeed, but cannot find related api account';
+                    $this->content['api_result'] = [
+                        'status'=>'REQUEST_DENIED',
+                        'message'=>'Cannot get account info, it might be suspended or temporarily inaccessible'
+                    ];
+                }
+                else
+                {
+                    $this->content['account'] = end($entity_api_obj->row);
+                }
+            }
+        }
+
+        // Regularize Content output format
         if (!isset($this->request['option']['format'])) $this->content['format'] = $this->request['data_type'];
         else $this->content['format'] = $this->request['option']['format'];
 
@@ -1007,42 +1038,6 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                     // ajax request failed before building content
                     return true;
                 }
-                if (empty($_SERVER['HTTP_AUTH_KEY']))
-                {
-                    // Error Handling, api key authentication failed
-                    $this->message->notice = 'Building: Api Key Not Provided';
-                    $this->content['api_result'] = [
-                        'status'=>'REQUEST_DENIED',
-                        'message'=>'Api Key Not Provided'
-                    ];
-                    return true;
-                }
-                $entity_api_key_obj = new entity_api_key();
-                $method_variable = ['api_key'=>$_SERVER['HTTP_AUTH_KEY'],'remote_ip'=>$this->request['remote_ip']];
-                $auth_id = $entity_api_key_obj->validate_api_key($method_variable);
-                if ($auth_id === false)
-                {
-                    // Error Handling, api key authentication failed
-                    $this->message->notice = 'Building: Api Key Authentication Failed';
-                    $this->content['api_result'] = [
-                        'status'=>$method_variable['status'],
-                        'message'=>$method_variable['message']
-                    ];
-                    return true;
-                }
-
-                $entity_api_obj = new entity_api($auth_id);
-                if (empty($entity_api_obj->row))
-                {
-                    // Error Handling, session validation failed, api_key is valid, but cannot read corresponding account
-                    $this->message->error = 'Api Key Authentication Succeed, but cannot find related api account';
-                    $this->content['api_result'] = [
-                        'status'=>'REQUEST_DENIED',
-                        'message'=>'Cannot get account info, it might be suspended or temporarily inaccessible'
-                    ];
-                    return true;
-                }
-                $this->content['account'] = end($entity_api_obj->row);
 
                 $entity_api_method_obj = new entity_api_method($this->request['method'],['api_id'=>$auth_id]);
                 if (empty($entity_api_method_obj->id_group))
@@ -1258,7 +1253,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                                         // If session is valid, redirect to console
                                         $this->result['cookie'] = ['session_id'=>['value'=>$session['name'],'time'=>strtotime($session['expire_time'])]];
                                         $this->result['status'] = 301;
-                                        $this->result['header']['Location'] =  URI_SITE_BASE.'console/credential';
+                                        $this->result['header']['Location'] =  URI_SITE_BASE.'members/';
 
                                         return true;
                                     }
@@ -1288,7 +1283,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                                             $complementary = base64_decode($option_value);
                                             if ($complementary === false OR $complementary == $option_value)
                                             {
-                                                // Error Handling, complementary info error
+                                                // Error Handling, complementary info error, complementary is not base64 encoded text
                                                 $this->message->notice = 'Building: Login Failed';
                                                 $this->content['post_result'] = [
                                                     'status'=>'REQUEST_DENIED',
@@ -1475,7 +1470,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                                 //['value'=>'/js/default-top4.js','option'=>['source'=>'http://dev.top4.com.au/scripts/default.js','format'=>'html_tag']]
                             ];
 
-                            if ($this->request['document'] == 'login')
+                            if ($this->request['document'] == 'login' OR $this->request['document'] == 'signup' )
                             {
                                 $this->content['field']['complementary'] = base64_encode(json_encode(['remote_addr'=>get_remote_ip(), 'http_user_agent'=>$_SERVER['HTTP_USER_AGENT'], 'submission_id'=>sha1(openssl_random_pseudo_bytes(5))]));
                             }

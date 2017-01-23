@@ -434,6 +434,32 @@ function minify_content($value, $type='html')
     }
 }
 
+function password_hashing($value)
+{
+    if (is_array($value))
+    {
+        extract($value);
+    }
+    if (isset($password))
+    {
+        $value = $password;
+    }
+    if (isset($name) AND !isset($salt))
+    {
+        $salt = substr(hash('sha256',$name),-5);
+    }
+    if (empty($value))
+    {
+        return False;
+    }
+    if (!isset($salt))
+    {
+        $salt = '';
+    }
+    $result = hash('sha256',hash('crc32b',$value.$salt));
+    return $result;
+}
+
 function get_remote_ip()
 {
     if (!empty($_SERVER['HTTP_CF_CONNECTING_IP']))
