@@ -21,7 +21,7 @@ class content extends base {
             'content'=>array()
         );
 
-        // Analyse uri structure and validate input variables, store separate input parts into $request
+        // Analyse uri structure and raw environment variables, store into $this->request
         if ($this->request_decoder($parameter) === false)
         {
             // Error Log, error during reading input uri and parameters
@@ -30,7 +30,7 @@ class content extends base {
 //echo '<pre>';
 //print_r('request_decoder: <br>');
 //print_r($this);
-if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml')
+if ($this->request['source_type'] == 'data')
 {
     $api_access_log = PATH_ASSET.'log'.DIRECTORY_SEPARATOR.'api_access_log.txt';
     if (!file_exists(dirname($api_access_log))) mkdir(dirname($api_access_log), 0755, true);
@@ -62,7 +62,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
 //print_r('generate_rendering: <br>');
 //print_r(filesize($this->content['target_file']['path']));
 //print_r($this);
-if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml')
+if ($this->request['source_type'] == 'data')
 {
     if (isset($this->content['account']))
     {
@@ -110,31 +110,40 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
         $request_uri = trim(preg_replace('/^[\/]?'.FOLDER_SITE_BASE.'[\/]/','',$value),'/');
         $request_path = explode('/',$request_uri);
 
-        $type = ['css','font','image','js','json'];
+        $type = ['css','font','image','js'];
         $request_path_part = array_shift($request_path);
         if (in_array($request_path_part,$type))
         {
-            $this->request['data_type'] = $request_path_part;
-            $this->request['file_uri'] = URI_ASSET.$this->request['data_type'].'/';
+            $this->request['source_type'] = 'static_file';
+            $this->request['file_type'] = $request_path_part;
+            $this->request['file_uri'] = URI_ASSET.$this->request['file_type'].'/';
         }
         else
         {
-            $this->request['data_type'] = 'html';
-            $this->request['file_uri'] = URI_SITE_BASE;
+            $type = ['xml','json'];
+            if (in_array($request_path_part,$type))
+            {
+                $this->request['source_type'] = 'data';
+                $this->request['file_type'] = $request_path_part;
+                $this->request['file_uri'] = URI_ASSET.$this->request['file_type'].'/';
+            }
+            else
+            {
+                $this->request['source_type'] = 'data';
+                $this->request['file_type'] = 'html';
+                $this->request['file_uri'] = URI_SITE_BASE;
+            }
         }
-        $this->request['file_path'] = PATH_ASSET.$this->request['data_type'].DIRECTORY_SEPARATOR;
-        if (file_exists(PATH_PREFERENCE.$this->request['data_type'].FILE_EXTENSION_INCLUDE))
+        $this->request['file_path'] = PATH_ASSET.$this->request['file_type'].DIRECTORY_SEPARATOR;
+        if (file_exists(PATH_PREFERENCE.$this->request['file_type'].FILE_EXTENSION_INCLUDE))
         {
-            include_once(PATH_PREFERENCE.$this->request['data_type'].FILE_EXTENSION_INCLUDE);
+            include_once(PATH_PREFERENCE.$this->request['file_type'].FILE_EXTENSION_INCLUDE);
         }
 
         // HTML Page uri structure decoder
-        switch ($this->request['data_type'])
+        switch ($this->request['source_type'])
         {
-            case 'css':
-            case 'font':
-            case 'image':
-            case 'js':
+            case 'static_file':
                 if (empty($request_path))
                 {
                     // Folder forbid direct access
@@ -147,9 +156,8 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                 $this->request['document'] = array_shift($file_part);
                 if (!empty($file_part)) $this->request['file_type'] = array_pop($file_part);
                 $this->request['extension'] = [];
-                if ($this->request['data_type'] == 'image')
+                if ($this->request['file_type'] == 'image')
                 {
-                    include_once(PATH_PREFERENCE.'image'.FILE_EXTENSION_INCLUDE);
                     $image_size = array_keys($this->preference->image['size']);
                     $image_quality = array_keys($this->preference->image['quality']);
                     foreach ($file_part as $file_extension_index=>$file_extension)
@@ -205,36 +213,10 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                 $this->request['file_uri'] .= $file_name;
                 unset($file_name);
                 break;
-            case 'json':
-                $this->request['remote_ip'] = get_remote_ip();
-
-                if (empty($request_path))
-                {
-                    $this->request['method'] = 'list_available_method';
-                }
-                else
-                {
-                    $this->request['method'] = array_shift($request_path);
-                }
-                if (!empty($request_path))
-                {
-                    $this->request['value'] = array_shift($request_path);
-                }
-                if (!empty($request_path))
-                {
-                    // More unrecognized value passed through URI
-                    $this->message->error = 'Decoding: URI parts unrecognized ['.implode('/',$request_path).']';
-                    $this->content['api_result'] = [
-                        'status'=>'INVALID_REQUEST',
-                        'message'=>'Illegal Request URI'
-                    ];
-                    return true;
-                }
-                break;
-            case 'html':
+            case 'data':
             default:
                 //$request_path_part = array_shift($request_path);
-                $module = ['listing','business','business-amp','members'];
+                $module = ['profile','listing','business','business-amp','members'];
                 if (in_array($request_path_part,$module))
                 {
                     $this->request['module'] = $request_path_part;
@@ -271,7 +253,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                                     {
                                         if (!in_array( $request_path[$i*2],$option))
                                         {
-                                            $this->message->error = __FILE__.'(line '.__LINE__.'): Construction Fail, unknown option ['.$request_path[$i*2].'] for '.$this->request['data_type'];
+                                            $this->message->error = __FILE__.'(line '.__LINE__.'): Construction Fail, unknown option ['.$request_path[$i*2].'] for '.$this->request['file_type'];
                                             break 2;
                                         }
                                         $this->request['option'][$request_path[$i*2]] = $request_path[$i*2+1];
@@ -299,7 +281,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                                     {
                                         if (!in_array( $request_path[$i*2],$option))
                                         {
-                                            $this->message->error = __FILE__.'(line '.__LINE__.'): Construction Fail, unknown option ['.$request_path[$i*2].'] for '.$this->request['data_type'];
+                                            $this->message->error = __FILE__.'(line '.__LINE__.'): Construction Fail, unknown option ['.$request_path[$i*2].'] for '.$this->request['file_type'];
                                             break 2;
                                         }
                                         $this->request['option'][$request_path[$i*2]] = $request_path[$i*2+1];
@@ -337,6 +319,8 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                 break;
         }
 
+        $this->request['remote_ip'] = get_remote_ip();
+
         if (isset($_COOKIE['session_id']))
         {
             $this->request['session_id'] = $_COOKIE['session_id'];
@@ -345,6 +329,11 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
         if (isset($_SERVER['HTTP_AUTH_KEY']))
         {
             $this->request['auth_key'] = $_SERVER['HTTP_AUTH_KEY'];
+        }
+
+        if (isset($_SERVER['HTTP_REFERER']))
+        {
+            $this->request['http_referer'] = $_SERVER['HTTP_REFERER'];
         }
 
 
@@ -388,6 +377,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                 {
                     $this->content['account'] = end($entity_account_obj->row);
                 }
+                unset($entity_account_obj);
             }
             unset($session);
         }
@@ -409,7 +399,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
             }
             else
             {
-                $entity_api_obj = new entity_api($auth_id);
+                $entity_api_obj = new entity_api($this->content['account']['id']);
                 if (empty($entity_api_obj->row))
                 {
                     // Error Handling, session validation failed, api_key is valid, but cannot read corresponding account
@@ -423,11 +413,13 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                 {
                     $this->content['account'] = end($entity_api_obj->row);
                 }
+                unset($entity_api_obj);
             }
+            unset($auth_id);
         }
 
         // Regularize Content output format
-        if (!isset($this->request['option']['format'])) $this->content['format'] = $this->request['data_type'];
+        if (!isset($this->request['option']['format'])) $this->content['format'] = $this->request['file_type'];
         else $this->content['format'] = $this->request['option']['format'];
 
         if($this->content['format'] == 'html_tag')
@@ -438,7 +430,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                 $this->content['html_tag'] = array_merge($this->content['html_tag'],$this->request['option']['html_tag']);
             }
             if (!isset($this->content['html_tag']['attr'])) $this->content['html_tag']['attr'] = array();
-            switch($this->request['data_type']) {
+            switch($this->request['file_type']) {
                 case 'css':
                     if (!isset($this->content['html_tag']['name'])) $this->content['html_tag']['name'] = 'link';
                     $this->content['html_tag']['attr']['href'] = $this->request['file_uri'];
@@ -461,11 +453,9 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
             }
         }
 
-        switch($this->request['data_type'])
+        switch($this->request['source_type'])
         {
-            case 'css':
-            case 'image':
-            case 'js':
+            case 'static_file':
                 $this->content['target_file'] = [
                     'path'=>$this->request['file_path'],
                     'uri'=>$this->request['file_uri']
@@ -482,7 +472,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                     $this->content['target_file']['content_length'] = 0;
                 }
 
-                $file_relative_path = $this->request['data_type'].DIRECTORY_SEPARATOR;
+                $file_relative_path = $this->request['file_type'].DIRECTORY_SEPARATOR;
                 if (!empty($this->request['sub_path'])) $file_relative_path .= implode(DIRECTORY_SEPARATOR,$this->request['sub_path']).DIRECTORY_SEPARATOR;
                 $this->content['source_file'] = [
                     'path' => PATH_ASSET.$file_relative_path.$this->request['document'].'.src.'.$this->request['file_type'],
@@ -579,7 +569,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                             $this->result['status'] = 404;
                             return false;
                         }
-                        $entity_class = 'entity_'.$this->request['data_type'];
+                        $entity_class = 'entity_'.$this->request['file_type'];
                         if (!class_exists($entity_class))
                         {
                             // Error Handling, last ditch failed, source file does not exist in database either
@@ -652,7 +642,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                     }
                 }
 
-                if ($this->request['data_type'] == 'image')
+                if ($this->request['file_type'] == 'image')
                 {
                     $source_image_size = getimagesize($this->content['source_file']['path']);
                     $this->content['source_file']['width'] = $source_image_size[0];
@@ -684,7 +674,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                             $this->content['target_file']['minify'] = true;
                             break;
                     }
-                    if ($this->request['data_type'] == 'image')
+                    if ($this->request['file_type'] == 'image')
                     {
                         // Image Extensions
                         switch ($extension_index)
@@ -703,429 +693,17 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                 // If image quality is not specified, use the fast generate setting
                 if (!isset($this->content['target_file']['quality'])) $this->content['target_file']['quality'] = $this->preference->image['quality']['spd'];
                 break;
-            case 'ajax':
-                if (isset($this->content['api_result']['status']) AND $this->content['api_result']['status'] != 'OK')
-                {
-                    // ajax request failed before building content
-                    return true;
-                }
-                if (!isset($_COOKIE['session_id']))
-                {
-                    // Error Handling, session validation failed, session_id not set
-                    $this->message->notice = 'Session ID Not Set';
-                    $this->content['api_result'] = [
-                        'status'=>'REQUEST_DENIED',
-                        'message'=>'Session Timeout. Please login again to continue'
-                    ];
-                    return true;
-                }
-                $entity_api_session_obj = new entity_api_session();
-                $method_variable = ['status'=>'OK','message'=>'','api_session_id'=>$_COOKIE['session_id'],'remote_ip'=>$this->request['remote_ip']];
-                if (isset($this->request['option']['remote_ip'])) $method_variable['remote_ip'] = $this->request['option']['remote_ip'];
-                $session = $entity_api_session_obj->validate_api_session_id($method_variable);
-                if ($session == false)
-                {
-                    // Error Handling, session validation failed, session_id invalid
-                    $this->message->notice = 'Session Validation Failed';
-                    $this->content['api_result'] = [
-                        'status'=>'REQUEST_DENIED',
-                        'message'=>'Session Validation Failed'
-                    ];
-                    return true;
-                }
-                $entity_api_obj = new entity_api($session['account_id']);
-                if (empty($entity_api_obj->row))
-                {
-                    // Error Handling, session validation failed, session_id is valid, but cannot read corresponding account
-                    $this->message->error = 'Session Validation Succeed, but cannot find related api account';
-                    $this->content['api_result'] = [
-                        'status'=>'REQUEST_DENIED',
-                        'message'=>'Cannot get account info, it might be suspended or temporarily inaccessible'
-                    ];
-                    return true;
-                }
-                $this->content['account'] = end($entity_api_obj->row);
-
-                switch($this->request['method'])
-                {
-                    case 'credential_add':
-                        $entity_api_key_obj = new entity_api_key();
-                        $new_api_key = $entity_api_key_obj->generate_api_key($this->content['account']['id']);
-
-                        $set_value = array(
-                            'account_id'=>$this->content['account']['id'],
-                            'name'=>$new_api_key,
-                            'alternate_name'=>$this->content['account']['name'].' API Key ',
-                            'ip_restriction'=>array()
-                        );
-
-                        $get_entity_api_key_obj = new entity_api_key();
-                        $get_parameter = array(
-                            'bind_param' => array(':account_id'=>$this->content['account']['id']),
-                            'where' => array('`account_id` = :account_id')
-                        );
-                        $row = $get_entity_api_key_obj->get($get_parameter);
-                        if (empty($row))
-                        {
-                            $set_value['alternate_name'] .= '1';
-                        }
-                        else
-                        {
-                            $set_value['alternate_name'] .= count($row)+1;
-                        }
-
-                        $remote_ip = $this->request['option']['remote_ip'];
-                        if ($remote_ip == '::1')
-                        {
-                            $remote_ip = '127.0.0.1';
-                        }
-                        $reg_pattern = '/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/';
-                        if (preg_match($reg_pattern,$remote_ip))
-                        {
-                            $set_value['ip_restriction'][] = $remote_ip;
-                        }
-
-                        $set_parameter = [
-                            'row'=>[$set_value],
-                            'table_fields'=>array_keys($set_value)
-                        ];
-
-                        if ($entity_api_key_obj->set($set_parameter) === false)
-                        {
-                            $this->content['api_result'] = [
-                                'status'=>'REQUEST_DENIED',
-                                'message'=>'Fail to create new api key, please try again later'
-                            ];
-                            return true;
-                        }
-                        $this->content['api_result'] = [
-                            'status'=>'OK',
-                            'message'=>'',
-                            'api_key'=>$new_api_key
-                        ];
-                        $this->content['api_result']['result'] = $entity_api_key_obj->get_api_key();
-                        break;
-                    case 'credential_delete':
-                        if (!isset($this->request['option']['name']))
-                        {
-                            // Error Handling, target api_key not set
-                            $this->message->notice = 'API KEY Not Provided, unable to delete';
-                            $this->content['api_result'] = [
-                                'status'=>'INVALID_REQUEST',
-                                'message'=>'API KEY Not Provided'
-                            ];
-                            return true;
-                        }
-
-                        $entity_api_key_obj = new entity_api_key();
-                        $get_parameter = array(
-                            'bind_param' => array(':name'=>$this->request['option']['name']),
-                            'where' => array('`name` = :name')
-                        );
-                        $row = $entity_api_key_obj->get_api_key($get_parameter);
-                        if (empty($row) OR count($row) == 0)
-                        {
-                            // Error Handling, target api_key does not exist
-                            $this->message->notice = 'API KEY Does Not Exist, unable to delete';
-                            $this->content['api_result'] = [
-                                'status'=>'ZERO_RESULTS',
-                                'message'=>'API KEY Does Not Exist Anymore'
-                            ];
-                            return true;
-                        }
-                        if ($entity_api_key_obj->delete())
-                        {
-                            $this->content['api_result'] = [
-                                'status'=>'OK',
-                                'message'=>'API KEY Deleted',
-                                'result'=>$row
-                            ];
-                        }
-                        else
-                        {
-                            $this->content['api_result'] = [
-                                'status'=>'SERVER_ERROR',
-                                'message'=>'Database delete request failed, try again later'
-                            ];
-                        }
-
-                        break;
-                    case 'credential_update':
-                        if (!isset($this->request['option']['name']))
-                        {
-                            // Error Handling, target api_key not set
-                            $this->message->notice = 'API KEY Not Provided, unable to update';
-                            $this->content['api_result'] = [
-                                'status'=>'INVALID_REQUEST',
-                                'message'=>'API KEY Not Provided'
-                            ];
-                            return true;
-                        }
-
-                        $entity_api_key_obj = new entity_api_key();
-                        $get_parameter = array(
-                            'bind_param' => array(':name'=>$this->request['option']['name']),
-                            'where' => array('`name` = :name')
-                        );
-                        $row = $entity_api_key_obj->get($get_parameter);
-                        if (empty($row) OR count($row) == 0)
-                        {
-                            // Error Handling, target api_key does not exist
-                            $this->message->notice = 'API KEY Does Not Exist, unable to update';
-                            $this->content['api_result'] = [
-                                'status'=>'INVALID_REQUEST',
-                                'message'=>'API KEY Does Not Exist'
-                            ];
-                            return true;
-                        }
-                        if (!isset($this->request['option']['alternate_name'])) $this->request['option']['alternate_name'] = '';
-                        if (!isset($this->request['option']['ip_restriction'])) $this->request['option']['ip_restriction'] = array();
-                        $update_value = array(
-                            'alternate_name'=>$this->request['option']['alternate_name'],
-                            'ip_restriction'=>$this->request['option']['ip_restriction']
-                        );
-                        if (end($row)['alternate_name'] == $update_value['alternate_name'])
-                        {
-                            if (implode(',',end($row)['ip_restriction']) == implode(',',$update_value['ip_restriction']))
-                            {
-                                // Error Handling, all value same, nothing to update
-                                $this->message->notice = 'alternate_name and ip_restriction are the same as current record, nothing to update';
-                                $this->content['api_result'] = [
-                                    'status'=>'ZERO_RESULTS',
-                                    'message'=>'Nothing updated'
-                                ];
-                                return true;
-                            }
-                        }
-                        if ($entity_api_key_obj->update($update_value))
-                        {
-                            $this->content['api_result'] = [
-                                'status'=>'OK',
-                                'message'=>'API KEY Details Updated',
-                            ];
-                        }
-                        else
-                        {
-                            $this->content['api_result'] = [
-                                'status'=>'SERVER_ERROR',
-                                'message'=>'Database update request failed, try again later'
-                            ];
-                        }
-                        break;
-                    case 'profile_update_alternate_name':
-                        if (!isset($this->request['option']['alternate_name']))
-                        {
-                            // Error Handling, alternate_name not set
-                            $this->message->notice = 'Update api alternate_name with null value';
-                            $this->content['api_result'] = [
-                                'status'=>'INVALID_REQUEST',
-                                'message'=>'Nickname cannot be null'
-                            ];
-                            return true;
-                        }
-                        if ($this->request['option']['alternate_name'] == $this->content['account']['alternate_name'])
-                        {
-                            // Error Handling, update value same as current record
-                            $this->message->notice = 'Update api alternate_name failed, update value same as current record';
-                            $this->content['api_result'] = [
-                                'status'=>'OK',
-                                'message'=>$this->content['account']['alternate_name'].' is already set as account nickname'
-                            ];
-                            return true;
-                        }
-
-                        if (!empty($this->request['option']['alternate_name']))
-                        {
-                            // If alternate_name is not empty string, check if somebody already using it
-                            $get_entity_api_obj = new entity_api();
-                            $get_parameter = array(
-                                'bind_param' => array(':alternate_name'=>$this->request['option']['alternate_name']),
-                                'where' => array('`alternate_name` = :alternate_name','`id` <> '.$this->content['account']['id'])
-                            );
-                            $row = $get_entity_api_obj->get($get_parameter);
-                            if (count($row) > 0)
-                            {
-                                // Error Handling, username already exist
-                                $this->message->notice = 'Api alternate_name already exists';
-                                $this->content['api_result'] = [
-                                    'status'=>'REQUEST_DENIED',
-                                    'message'=>'Nickname '.$this->request['option']['alternate_name'].' is already used, please choose a different name '.json_encode($row)
-                                ];
-                                return true;
-                            }
-                        }
-
-                        $update_entity_api_obj = new entity_api($this->content['account']['id']);
-                        $update_value = ['alternate_name'=>$this->request['option']['alternate_name']];
-                        if ($update_entity_api_obj->update($update_value))
-                        {
-                            $this->content['api_result'] = [
-                                'status'=>'OK',
-                                'message'=>'Nickname updated'
-                            ];
-                        }
-                        else
-                        {
-                            $this->content['api_result'] = [
-                                'status'=>'SERVER_ERROR',
-                                'message'=>'Database update request failed, try again later'
-                            ];
-                        }
-                        break;
-                    case 'profile_update_password':
-                        if (empty($this->request['option']['password']))
-                        {
-                            // Error Handling, password not set
-                            $this->message->notice = 'Update api password with empty value';
-                            $this->content['api_result'] = [
-                                'status'=>'INVALID_REQUEST',
-                                'message'=>'Password cannot be empty'
-                            ];
-                            return true;
-                        }
-                        if (hash('sha256',hash('crc32b',$this->request['option']['password'])) == $this->content['account']['password'])
-                        {
-                            // Error Handling, update value same as current record
-                            $this->message->notice = 'Update api password failed, update value same as current record';
-                            $this->content['api_result'] = [
-                                'status'=>'OK',
-                                'message'=>$this->content['account']['alternate_name'].' is already set as account nickname'
-                            ];
-                            return true;
-                        }
-
-                        $update_entity_api_obj = new entity_api($this->content['account']['id']);
-                        $update_value = ['password'=>$this->request['option']['password']];
-                        if ($update_entity_api_obj->update($update_value))
-                        {
-                            $this->content['api_result'] = [
-                                'status'=>'OK',
-                                'message'=>'Password updated'
-                            ];
-
-                            // On successful update password, force all session expire
-                            $entity_api_session_obj = new entity_api_session();
-                            $get_parameter = array(
-                                'bind_param' => array(':name'=>$_COOKIE['session_id']),
-                                'where' => array('`name` <> :name','`account_id` = '.$this->content['account']['id'])
-                            );
-                            $entity_api_session_obj->get($get_parameter);
-                            $entity_api_session_obj->delete();
-
-                        }
-                        else
-                        {
-                            $this->content['api_result'] = [
-                                'status'=>'SERVER_ERROR',
-                                'message'=>'Database update request failed, try again later'
-                            ];
-                        }
-                        break;
-                    case 'check_connection':
-                    default:
-                        $this->content['api_result'] = [
-                            'status'=>'OK',
-                            'message'=>'API Connection Test Success'
-                        ];
-
-                }
-
-                break;
-            case 'json':
-            case 'xml':
-                if (isset($this->content['api_result']['status']) AND $this->content['api_result']['status'] != 'OK')
-                {
-                    // ajax request failed before building content
-                    return true;
-                }
-
-                $entity_api_method_obj = new entity_api_method($this->request['method'],['api_id'=>$auth_id]);
-                if (empty($entity_api_method_obj->id_group))
-                {
-                    // Error Handling, api method not recognized
-                    $this->message->notice = 'Building: Unknown Request Api Method ['.$this->request['method'].']';
-                    $this->content['api_result'] = [
-                        'status'=>'INVALID_REQUEST',
-                        'message'=>'Method Does Not Exist: '.$this->request['method']
-                    ];
-                    return true;
-                }
-
-                $method_variable = [];
-                if (!empty($this->request['option'])) $method_variable = $this->request['option'];
-                if (!empty($this->request['value'])) $method_variable['value'] = $this->request['value'];
-                $method_variable['api_id'] = $auth_id;
-                $method_variable['status'] = 'OK';
-                $method_variable['message'] = '';
-
-                if (end($entity_api_method_obj->id_group) > 99)
-                {
-                    // For non-public functions, check if the user get the access
-                    $list_method_variable = $method_variable;
-                    $available_functions = $entity_api_method_obj->list_available_method($list_method_variable);
-                    $available_function_name = [];
-                    foreach($available_functions as $available_function_index=>&$available_function)
-                    {
-                        $available_function_name[] = $available_function['request_uri'];
-                        $available_function['request_uri'] = URI_SITE_BASE.$this->content['format'].'/'.$available_function['request_uri'];
-                    }
-                    if (!in_array($this->request['method'],$available_function_name))
-                    {
-                        // Error Handling, user permission error, user does not have permission to use this function
-                        $this->message->notice = 'Building: User ['.end($entity_api_obj->row)['name'].'] does not have the permission to use the method ['.$this->request['method'].']';
-                        $this->content['api_result'] = [
-                            'status'=>'REQUEST_DENIED',
-                            'message'=>'User ['.end($entity_api_obj->row)['name'].'] does not have the permission to use the method ['.$this->request['method'].']',
-                            'available_methods'=>$available_function_name
-                        ];
-                        return true;
-                    }
-                }
-
-                // For public functions, direct execute
-                //$method_calling = str_replace('-','_',$this->request['method']);
-                $method_calling = $this->request['method'];
-                if (!method_exists($entity_api_method_obj,$method_calling))
-                {
-                    // Error Handling, internal error, api method defined in database, but does not exist in class function
-                    $this->message->notice = 'Building: Server Internal Error Api Method ['.$this->request['method'].'] not defined';
-                    $this->content['api_result'] = [
-                        'status'=>'UNKNOWN_ERROR',
-                        'message'=>'Method not available: ['.$this->request['method'].']. Server side is probably upgrading or under maintenance, try again later.'
-                    ];
-                    return true;
-                }
-
-                $this->content['method'] = $this->request['method'];
-
-                $api_call_result = $entity_api_method_obj->$method_calling($method_variable);
-
-                if (isset($method_variable['status'])) $this->content['api_result']['status'] = $method_variable['status'];
-                if (isset($method_variable['message'])) $this->content['api_result']['message'] = $method_variable['message'];
-                if ($api_call_result !== FALSE)
-                {
-                    foreach ($api_call_result as $record_index=>&$record)
-                    {
-                        if (!empty($record['request_uri'])) $record['request_uri'] = URI_SITE_BASE.$this->content['format'].'/'.$record['request_uri'];
-                        if (!empty($record['friendly_url']))
-                        {
-                            $record['listing_url'] = 'http://www.top4.com.au/business/'.$record['friendly_url'];
-                            unset($record['friendly_url']);
-                        }
-                    }
-                    $this->content['api_result']['result'] = &$api_call_result;
-                }
-
-                break;
-            case 'html':
+            case 'data':
             default:
+                $this->content['status'] = 'OK';
+                $this->content['message'] = '';
                 $this->content['field'] = array();
                 $this->content['field']['base'] = URI_SITE_BASE;
 
                 switch($this->request['module'])
                 {
                     case 'members':
-                        if (!isset($_COOKIE['session_id']))
+                        if (!isset($this->request['session_id']))
                         {
                             // Error Handling, session validation failed, session_id not set
                             $this->message->notice = 'Session ID Not Set, Redirect to Login Page';
@@ -1135,7 +713,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                         }
 
                         $entity_api_session_obj = new entity_api_session();
-                        $method_variable = ['status'=>'OK','message'=>'','api_session_id'=>$_COOKIE['session_id'],'remote_ip'=>$this->request['remote_ip']];
+                        $method_variable = ['status'=>'OK','message'=>'','api_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
                         $session = $entity_api_session_obj->validate_api_session_id($method_variable);
                         if ($session == false)
                         {
@@ -1226,11 +804,11 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                         // If page is login, check for user login session
                         if ($this->request['document'] == 'login')
                         {
-                            if (isset($_COOKIE['session_id']))
+                            if (isset($this->request['session_id']))
                             {
                                 // session_id is set, check if it is already logged in
                                 $entity_api_session_obj = new entity_api_session();
-                                $method_variable = ['status'=>'OK','message'=>'','api_session_id'=>$_COOKIE['session_id'],'remote_ip'=>$this->request['remote_ip']];
+                                $method_variable = ['status'=>'OK','message'=>'','api_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
                                 $session = $entity_api_session_obj->validate_api_session_id($method_variable);
 
                                 if ($session === false)
@@ -1386,7 +964,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                             // success or fail, logout page always redirect to login page after process complete
                             $this->result['status'] = 301;
                             $this->result['header']['Location'] =  URI_SITE_BASE.'login';
-                            if (!isset($_COOKIE['session_id']))
+                            if (!isset($this->request['session_id']))
                             {
                                 // session_id is not set, redirect to login page
                                 return true;
@@ -1395,11 +973,11 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
 
                             $entity_api_session_obj = new entity_api_session();
                             $get_parameter = array(
-                                'bind_param' => array(':name'=>$_COOKIE['session_id']),
+                                'bind_param' => array(':name'=>$this->request['session_id']),
                                 'where' => array('`name` = :name')
                             );
                             $entity_api_session_obj->get($get_parameter);
-                            /*$method_variable = ['status' => 'OK', 'message' => '', 'api_session_id' => $_COOKIE['session_id']];
+                            /*$method_variable = ['status' => 'OK', 'message' => '', 'api_session_id' => $this->request['session_id']];
                             $session = $entity_api_session_obj->validate_api_session_id($method_variable);
                             if ($session === false)
                             {
@@ -1561,7 +1139,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                     if (!empty($this->content['target_file']['minify']))
                     {
                         $start_time = microtime(true);
-                        file_put_contents($this->content['target_file']['path'],minify_content(file_get_contents($this->content['target_file']['path']),$this->request['data_type']));
+                        file_put_contents($this->content['target_file']['path'],minify_content(file_get_contents($this->content['target_file']['path']),$this->request['file_type']));
                         $this->message->notice = 'PHP Minifier Execution Time: '. (microtime(true) - $start_time);
                     }
                     touch($this->content['target_file']['path'],$this->content['source_file']['last_modified']);
@@ -1603,7 +1181,7 @@ if ($this->request['data_type'] == 'json' OR $this->request['data_type'] == 'xml
                 $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s',$this->content['target_file']['last_modified']).' GMT';
                 $this->result['header']['Content-Length'] = $this->content['target_file']['content_length'];
 
-                switch ($this->request['data_type'])
+                switch ($this->request['file_type'])
                 {
                     case 'css':
                         $this->result['header']['Content-Type'] = 'text/css';
