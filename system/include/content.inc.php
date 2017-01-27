@@ -18,7 +18,7 @@ class content extends base {
         $this->result = array(
             'status'=>200,
             'header'=>array(),
-            'content'=>array()
+            'content'=>''
         );
 
         // Analyse uri structure and raw environment variables, store into $this->request
@@ -28,6 +28,8 @@ class content extends base {
             $this->message->error = 'Fail: Error during request_decoder';
         }
 //echo '<pre>';
+//print_r(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH).'<br>');
+//print_r(parse_url($this->request['file_uri'], PHP_URL_PATH).'<br>');
 //print_r('request_decoder: <br>');
 //print_r($this);
 if ($this->request['source_type'] == 'data')
@@ -68,7 +70,7 @@ if ($this->request['source_type'] == 'data')
     {
         file_put_contents($api_access_log,'REQUEST Account: '.$this->content['account']['name'].'['.$this->content['account']['id'].']'."\n",FILE_APPEND);
     }
-    file_put_contents($api_access_log,'RESULT: '.$this->result['content']."\n\n",FILE_APPEND);
+    file_put_contents($api_access_log,'RESULT: '.print_r($this->result['content'],true)."\n\n",FILE_APPEND);
 }
 //exit();
     }
@@ -106,6 +108,21 @@ if ($this->request['source_type'] == 'data')
             //if (!isset($option['data_type'])) $option['data_type'] = 'json';
             unset($_POST);
         }
+
+        $option_preset = ['data_type','document','file_type','extension','module','template','render'];
+        foreach($option as $key=>$item)
+        {
+            // Options from GET, POST overwrite ones decoded from uri
+            if (in_array($key,$option_preset))
+            {
+                $this->request[$key] = $item;
+                unset($option[$key]);
+            }
+        }
+        // dump the rest custom/unrecognized input variables into $request['option']
+        $this->request['option'] = $option;
+        unset($option_preset);
+        unset($option);
 
         $request_uri = trim(preg_replace('/^[\/]?'.FOLDER_SITE_BASE.'[\/]/','',$value),'/');
         $request_path = explode('/',$request_uri);
@@ -310,10 +327,19 @@ if ($this->request['source_type'] == 'data')
                         break;
                     default:
                         $this->request['document'] = $request_path_part;
-                        $this->request['file_path'] .= $this->request['document'].DIRECTORY_SEPARATOR.'index.html';
+                        if (!empty($this->request['document']))
+                        {
+                            $this->request['file_path'] .= $this->request['document'].DIRECTORY_SEPARATOR;
+                        }
+
+                        $this->request['file_path'] .= 'index.'.$this->request['file_type'];
                         $this->request['file_uri'] .= $this->request['document'];
 
                         $this->request['remote_ip'] = get_remote_ip();
+                }
+                if (!isset($this->request['method']))
+                {
+                    $this->request['method'] = '';
                 }
 
                 break;
@@ -336,19 +362,11 @@ if ($this->request['source_type'] == 'data')
             $this->request['http_referer'] = $_SERVER['HTTP_REFERER'];
         }
 
-
-        $option_preset = ['data_type','document','file_type','extension','module','template','render'];
-        foreach($option as $key=>$item)
+        if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) != parse_url($this->request['file_uri'],PHP_URL_PATH))
         {
-            // Options from GET, POST overwrite ones decoded from uri
-            if (in_array($key,$option_preset))
-            {
-                $this->request[$key] = $item;
-                unset($option[$key]);
-            }
+            $this->result['status'] = 301;
+            $this->result['header']['Location'] =  $this->request['file_uri'].'?'.http_build_query($this->request['option']);
         }
-        // dump the rest custom/unrecognized input variables into $request['option']
-        $this->request['option'] = $option;
     }
 
     private function build_content()
@@ -1019,9 +1037,9 @@ if ($this->request['source_type'] == 'data')
                             $page_obj = new view_web_page($this->request['document']);
                             if (empty($page_obj->id_group))
                             {
-                                //$this->result['status'] = 404;
-                                $this->result['status'] = 301;
-                                $this->result['header']['Location'] =  URI_SITE_BASE.'login';
+                                $this->result['status'] = 404;
+                                //$this->result['status'] = 301;
+                                //$this->result['header']['Location'] =  URI_SITE_BASE.'login';
                                 return false;
                             }
                             if (count($page_obj->id_group) > 1)

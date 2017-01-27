@@ -35,9 +35,9 @@ function render_xml($field = array(), &$xml = NULL, $parent_node_name = '')
     return $xml;
 }
 
-function render_html($field = array(), $template_name = '')
+function render_html($field = array(), $template_name = '', $container_name = '', $separator = NULL)
 {
-    if (empty($template_name)) return '';
+    //if (empty($template_name)) return '';
 $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLOBALS['start_time'];
 
     $field_parameter = array();
@@ -47,11 +47,37 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
         unset($field['_parameter']);
     }
     if (isset($field_parameter['condition']) AND empty($field_parameter['condition'])) return '';
+    if (!empty($template_name))
+    {
+        if (file_exists(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE)) $field_parameter['template'] = file_get_contents(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE);
+        else
+        {
+            $GLOBALS['global_message']->notice = 'rendering error: template ['.PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE.'] file does not exist';
+            $field_parameter['template'] = '[[*_placeholder]]';
+        }
+    }
+    if (!empty($container_name))
+    {
+        if (file_exists(PATH_TEMPLATE.$container_name.FILE_EXTENSION_TEMPLATE)) $field_parameter['container'] = file_get_contents(PATH_TEMPLATE.$container_name.FILE_EXTENSION_TEMPLATE);
+        {
+            $GLOBALS['global_message']->warning = 'rendering error: container ['.PATH_TEMPLATE.$container_name.FILE_EXTENSION_TEMPLATE.'] file does not exist';
+            $field_parameter['container'] = '[[*_placeholder]]';
+        }
+    }
+    if (isset($separator))
+    {
+        $field_parameter['separator'] = $separator;
+    }
     if (isset($field['_value']))
     {
         $field = $field['_value'];
     }
-    if (is_array($field) AND isset($field[0]))
+    if (!is_array($field) OR !isset($field[0]))
+    {
+        $field = [$field];
+    }
+
+    /*if (is_array($field) AND isset($field[0]))
     {
         $rendered_content_array = array();
         foreach($field as $field_index=>$field_value)
@@ -67,14 +93,29 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
         {
             return $rendered_content;
         }
+    }*/
+
+    //if (file_exists(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE)) $template = file_get_contents(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE);
+    //else return '';
+    if (empty($field_parameter['template'])) return '';
+
+    //if (empty($field)) return $template;
+    //if (!is_array($field)) $field = array('_placeholder'=>$field);
+
+    foreach($field as $field_row_index=>$field_row)
+    {
+        if (isset($field_row['_parameter']))
+        {
+            $field_row_parameter = array_merge($field_parameter,$field_row['_parameter']);
+            unset($field_row['_parameter']);
+        }
+        else
+        {
+            $field_row_parameter = $field_parameter;
+        }
     }
 
-    if (file_exists(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE)) $template = file_get_contents(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE);
-    else return '';
-    if (empty($field)) return $template;
-    if (!is_array($field)) $field = array('_placeholder'=>$field);
-
-    preg_match_all('/\[\[(\W*)(.+?)\]\]/', $template, $matches);
+    preg_match_all('/\[\[(\W*)(.+?)\]\]/', $field_parameter['template'], $matches);
 
     $match_result = array();
 
@@ -103,7 +144,7 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
     $translate_array = array();
     foreach($match_result as $match_result_key=>&$match_result_value)
     {
-        $match_result_value = array_merge($match_result_value,$field_parameter);
+        $match_result_value = array_merge($match_result_value,$field_row_parameter);
         if (isset($match_result_value['condition']))
         {
             if (empty($match_result_value['condition']))
@@ -112,7 +153,7 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
             }
             else
             {
-                if (isset($field[$match_result_value['condition']]) AND empty($field[$match_result_value['condition']]))
+                if (isset($field_row[$match_result_value['condition']]) AND empty($field_row[$match_result_value['condition']]))
                 {
                     return '';
                 }
@@ -122,19 +163,23 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
         {
             case '*':
                 // Field value, directly set value from given field
-                if (isset($field[$match_result_value['name']]))
+                if (isset($field_row[$match_result_value['name']]))
                 {
-                    if (empty($field[$match_result_value['name']]))
+                    if (empty($field_row[$match_result_value['name']]))
                     {
                         $match_result_value['value'] = '';
                     }
                     else
                     {
-                        if (is_array($field[$match_result_value['name']]))
+                        if (is_array($field_row[$match_result_value['name']]))
                         {
+                            // If field value is still an array, it needs to be rendered again
                             if (!isset($match_result_value['template'])) $match_result_value['template'] = $template_name.'_'.$match_result_value['name'];
                             if (file_exists(PATH_TEMPLATE.$match_result_value['template'].FILE_EXTENSION_TEMPLATE))
                             {
+                                $match_result_value['value'] = render_html($field_row[$match_result_value['name']],$match_result_value['template']);
+
+
                                 $match_result_value['value'] = '';
                                 foreach($field[$match_result_value['name']] as $sub_field_index=>$sub_field)
                                 {
