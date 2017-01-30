@@ -668,6 +668,13 @@ $entity->sync();
 print_r($global_message->display());
 print_r('Executing time: '.(time() - $timestamp).'<br>');
 $format = format::get_obj();*/
+print_r(json_encode([
+    'id'=>'test',
+    'content'=>'<div class="listing_block_wrapper block_wrapper ajax_loader_container">{{$container_debug}}<div class="clear"></div></div>'
+]));
+//print_r(json_decode('{"id":"home_featured_listing_container","title":"<h2>Featured</h2>","content":"<div class=\"listing_block_wrapper block_wrapper ajax_loader_container\"><div class="system_debug"></div><div class=\"clear\"></div></div>"}'));
+exit;
+
 $css_test_line = ".column_container:after
 {
 display: block;

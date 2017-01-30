@@ -49,7 +49,11 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
     if (isset($field_parameter['condition']) AND empty($field_parameter['condition'])) return '';
     if (!empty($template_name))
     {
-        if (file_exists(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE)) $field_parameter['template'] = file_get_contents(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE);
+        $field_parameter['template_name'] = $template_name;
+        if (file_exists(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE))
+        {
+            $field_parameter['template'] = file_get_contents(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE);
+        }
         else
         {
             $GLOBALS['global_message']->notice = 'rendering error: template ['.PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE.'] file does not exist';
@@ -68,6 +72,10 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
     {
         $field_parameter['separator'] = $separator;
     }
+    else
+    {
+        $field_parameter['separator'] = '';
+    }
     if (isset($field['_value']))
     {
         $field = $field['_value'];
@@ -77,243 +85,269 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
         $field = [$field];
     }
 
-    /*if (is_array($field) AND isset($field[0]))
+    $template_match = array();
+    $rendered_content = array();
+    foreach($field as $field_row_index=>&$field_row)
     {
-        $rendered_content_array = array();
-        foreach($field as $field_index=>$field_value)
+        if (!is_array($field_row))
         {
-            $rendered_content_array[] = render_html($field_value, $template_name);
-        }
-        $rendered_content =  implode('',$rendered_content_array);
-        if (isset($field_parameter['container']))
-        {
-            return render_html(array('_placeholder'=>$rendered_content),$field_parameter['container']);
+            $field_row = ['_placeholder'=>$field_row];
         }
         else
         {
-            return $rendered_content;
-        }
-    }*/
-
-    //if (file_exists(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE)) $template = file_get_contents(PATH_TEMPLATE.$template_name.FILE_EXTENSION_TEMPLATE);
-    //else return '';
-    if (empty($field_parameter['template'])) return '';
-
-    //if (empty($field)) return $template;
-    //if (!is_array($field)) $field = array('_placeholder'=>$field);
-
-    foreach($field as $field_row_index=>$field_row)
-    {
-        if (isset($field_row['_parameter']))
-        {
-            $field_row_parameter = array_merge($field_parameter,$field_row['_parameter']);
-            unset($field_row['_parameter']);
-        }
-        else
-        {
-            $field_row_parameter = $field_parameter;
-        }
-    }
-
-    preg_match_all('/\[\[(\W*)(.+?)\]\]/', $field_parameter['template'], $matches);
-
-    $match_result = array();
-
-    foreach($matches[2] as $match_key=>$match_value)
-    {
-        $current_item = $matches[0][$match_key];
-        if (!isset($match_result[$current_item]))
-        {
-            $match_result[$current_item] = array('type'=>$matches[1][$match_key]);
-            $match_item = explode(':',$match_value);
-            foreach($match_item as $match_item_index=>$match_item_value)
+            if (isset($field_row['_parameter']))
             {
-                if ($match_item_index == 0) $match_result[$current_item]['name'] = $match_item_value;
-                else
-                {
-                    if (preg_match('/(\w+)=`(.*)`/', $match_item_value, $match_item_value_matches))
-                    {
-                        $match_result[$current_item][$match_item_value_matches[1]] = $match_item_value_matches[2];
-                    }
-                }
-            }
-        }
-    }
-
-    $rendered_content = $template;
-    $translate_array = array();
-    foreach($match_result as $match_result_key=>&$match_result_value)
-    {
-        $match_result_value = array_merge($match_result_value,$field_row_parameter);
-        if (isset($match_result_value['condition']))
-        {
-            if (empty($match_result_value['condition']))
-            {
-                return '';
+                $field_row_parameter = array_merge($field_parameter,$field_row['_parameter']);
+                unset($field_row['_parameter']);
             }
             else
             {
-                if (isset($field_row[$match_result_value['condition']]) AND empty($field_row[$match_result_value['condition']]))
+                $field_row_parameter = $field_parameter;
+            }
+
+            if (empty($field_row_parameter['template'])) continue;
+
+            if (!isset($field_row_parameter['template_name']))
+            {
+                $template_counter = 0;
+                while (isset($template_match['template_'.$template_counter]))
                 {
-                    return '';
+                    if ($template_match['template_'.$template_counter]['template'] == $field_row_parameter['template'])
+                    {
+                        $field_row_parameter['template_name'] = 'template_'.$template_counter;
+                        break;
+                    }
+                    $template_counter++;
+                }
+                if (!isset($field_row_parameter['template_name']))
+                {
+                    $field_row_parameter['template_name'] = 'template_'.$template_counter;
+                    $template_match['template_'.$template_counter]['template'] = $field_row_parameter['template'];
                 }
             }
         }
-        switch($match_result_value['type'])
+
+        if (isset($field_parameter['parent_row']))
         {
-            case '*':
-                // Field value, directly set value from given field
-                if (isset($field_row[$match_result_value['name']]))
+            $field_row = array_merge($field_parameter['parent_row'],$field_row);
+        }
+
+        $match_result = array();
+        if (!isset($template_match[$field_row_parameter['template_name']]['match_result']))
+        {
+            $template_match[$field_row_parameter['template_name']]['match_result'] = array();
+            while(preg_match_all('/\[\[((\W*)([^\[]+?)(:\w+=`[^\[]*`)?)\]\]/', $field_row_parameter['template'], $matches))
+            {
+                foreach($matches[3] as $match_key=>$match_value)
                 {
-                    if (empty($field_row[$match_result_value['name']]))
+                    $current_item = '{{'.$matches[1][$match_key].'}}';
+                    if (!isset($match_result[$current_item]))
                     {
-                        $match_result_value['value'] = '';
-                    }
-                    else
-                    {
-                        if (is_array($field_row[$match_result_value['name']]))
+                        $match_result[$current_item] = array('type'=>$matches[2][$match_key],'name'=>$match_value);
+
+                        if (preg_match_all('/:(\w+?)=`(.*?)`/', $matches[4][$match_key], $match_items))
                         {
-                            // If field value is still an array, it needs to be rendered again
-                            if (!isset($match_result_value['template'])) $match_result_value['template'] = $template_name.'_'.$match_result_value['name'];
-                            if (file_exists(PATH_TEMPLATE.$match_result_value['template'].FILE_EXTENSION_TEMPLATE))
+                            foreach ($match_items[2] as $match_item_index=>$match_item_value)
                             {
-                                $match_result_value['value'] = render_html($field_row[$match_result_value['name']],$match_result_value['template']);
+                                $match_result[$current_item][$match_items[1][$match_item_index]] = $match_item_value;
+                                str_replace($match_item_value,'',$match_value);
+                            }
+                        }
+
+                    }
+                }
+
+                $template_match[$field_row_parameter['template_name']]['match_result'] = array_merge($template_match[$field_row_parameter['template_name']]['match_result'],$match_result);
+//print_r($match_result);
+                unset($matches);
+                unset($match_result);
+
+                $field_row_parameter['template'] = preg_replace('/\[\[([^\[]*?)\]\]/','{{$1}}',$field_row_parameter['template']);
+            }
+        }
 
 
-                                $match_result_value['value'] = '';
-                                foreach($field[$match_result_value['name']] as $sub_field_index=>$sub_field)
+        $field_row_rendered_content = $field_row_parameter['template'];
+        $translate_array = array();
+        $match_result = $template_match[$field_row_parameter['template_name']]['match_result'];
+
+        foreach($match_result as $match_result_key=>&$match_result_value)
+        {
+            $match_result_value = array_merge($match_result_value,$field_row_parameter);
+            if (isset($match_result_value['condition']))
+            {
+                if (empty($match_result_value['condition']))
+                {
+                    return '';
+                }
+                else
+                {
+                    if (isset($field_row[$match_result_value['condition']]) AND empty($field_row[$match_result_value['condition']]))
+                    {
+                        return '';
+                    }
+                }
+            }
+            switch($match_result_value['type'])
+            {
+                case '*':
+                    // Field value, directly set value from given field
+                    if (isset($field_row[$match_result_value['name']]))
+                    {
+                        if (empty($field_row[$match_result_value['name']]))
+                        {
+                            $match_result_value['value'] = '';
+                        }
+                        else
+                        {
+                            if (is_array($field_row[$match_result_value['name']]))
+                            {
+                                // If field value is still an array, it needs to be rendered again
+                                if (!isset($match_result_value['template'])) $match_result_value['template'] = $field_row_parameter['template_name'].'_'.$match_result_value['name'];
+                                if (file_exists(PATH_TEMPLATE.$match_result_value['template'].FILE_EXTENSION_TEMPLATE))
                                 {
-                                    if (!is_array($sub_field)) $sub_field = array('_placeholder'=>$sub_field);
-                                    $sub_field = array_merge($field,$sub_field);
-                                    $match_result_value['value'] .= render_html($sub_field,$match_result_value['template']);
+                                    $match_result_value['value'] = render_html(['_value'=>$field_row[$match_result_value['name']],'_parameter'=>['parent_row'=>$field_row]],$match_result_value['template']);
+                                }
+                                else
+                                {
+                                    $match_result_value['value'] = render_html(['_value'=>$field_row[$match_result_value['name']],'_parameter'=>['parent_row'=>$field_row]],'container_blank');
                                 }
                             }
                             else
                             {
-                                $match_result_value['value'] = implode(',',$field[$match_result_value['name']]);
+                                $match_result_value['value'] = $field_row[$match_result_value['name']];
                             }
+                        }
+                    }
+                    else $match_result_value['value'] = '';
+                    break;
+                case '$':
+                    // Chunk, load sub-template
+                    if (!isset($match_result_value['condition'])) $match_result_value['condition'] = true;
+                    else $match_result_value['condition'] = $field_row[$match_result_value['condition']];
+                    if (!isset($match_result_value['alternative_chunk'])) $match_result_value['alternative_chunk'] = '';
+                    if (isset($match_result_value['field'])) $field_row = array_merge($field_row, json_decode($match_result_value['field'],true));
+                    if ($match_result_value['condition']) $match_result_value['value'] = render_html($field_row,$match_result_value['name']);
+                    else $match_result_value['value'] = render_html($field_row,$match_result_value['alternative_chunk']);
+                    break;
+                case '':
+                    // Object, fetch value and render for each row
+                    if (empty($field[$match_result_value['name']]))
+                    {
+                        $match_result_value['value'] = '';
+                        break;
+                    }
+
+                    if (!isset($match_result_value['object']))
+                    {
+                        if (class_exists('view_'.$match_result_value['name']))
+                        {
+                            $match_result_value['object'] = 'view_'.$match_result_value['name'];
                         }
                         else
                         {
-                            //$match_result_value['value'] = $field[$match_result_value['name']];
-                            if (empty($match_result_value['template']))
-                            {
-                                $match_result_value['value'] = $field[$match_result_value['name']];
-                            }
-                            else
-                            {
-                                    //$field_with_default_value = array_merge($field, ['_placeholder'=>$field[$match_result_value['name']],'_parameter'=>array()]);
-                                $match_result_value['value'] = render_html(['_placeholder'=>$field[$match_result_value['name']]],$match_result_value['template']);
-                                    //unset($field_with_default_value);
-                            }
+                            $match_result_value['object'] = 'entity_'.$match_result_value['name'];
                         }
                     }
-                }
-                else $match_result_value['value'] = '';
-                break;
-            case '$':
-                // Chunk, load sub-template
-                if (!isset($match_result_value['condition'])) $match_result_value['condition'] = true;
-                else $match_result_value['condition'] = $field[$match_result_value['condition']];
-                if (!isset($match_result_value['alternative_chunk'])) $match_result_value['alternative_chunk'] = '';
-                if (isset($match_result_value['field'])) $field = array_merge($field, json_decode($match_result_value['field'],true));
-                if ($match_result_value['condition']) $match_result_value['value'] = render_html($field,$match_result_value['name']);
-                else $match_result_value['value'] = render_html($field,$match_result_value['alternative_chunk']);
-                break;
-            case '':
-                // Object, fetch value and render for each row
-                if (empty($field[$match_result_value['name']]))
-                {
-                    $match_result_value['value'] = '';
-                    break;
-                }
-
-                if (!isset($match_result_value['object']))
-                {
-                    if (class_exists('view_'.$match_result_value['name']))
+                    if (!isset($match_result_value['template']))
                     {
-                        $match_result_value['object'] = 'view_'.$match_result_value['name'];
+                        $match_result_value['template'] = $template.'_'.$match_result_value['name'];
+                        if (!file_exists(PATH_TEMPLATE.$match_result_value['template'].FILE_EXTENSION_TEMPLATE)) $match_result_value['template'] = $match_result_value['object'];
                     }
-                    else
+                    if (isset($match_result_value['field'])) $field = array_merge($field, json_decode($match_result_value['field'],true));
+
+                    if (!file_exists(PATH_TEMPLATE.$match_result_value['template'].FILE_EXTENSION_TEMPLATE))
                     {
-                        $match_result_value['object'] = 'entity_'.$match_result_value['name'];
+                        $match_result_value['value'] = '';
+                        break;
                     }
-                }
-                if (!isset($match_result_value['template']))
-                {
-                    $match_result_value['template'] = $template.'_'.$match_result_value['name'];
-                    if (!file_exists(PATH_TEMPLATE.$match_result_value['template'].FILE_EXTENSION_TEMPLATE)) $match_result_value['template'] = $match_result_value['object'];
-                }
-                if (isset($match_result_value['field'])) $field = array_merge($field, json_decode($match_result_value['field'],true));
+                    $GLOBALS['time_stack']['analyse parameter for object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
+                    try
+                    {
+                        $object = new $match_result_value['object']($field[$match_result_value['name']]);
+                        $GLOBALS['time_stack']['create object 1 '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
+                    }
+                    catch (Exception $e)
+                    {
+                        // Error Handling, error rendering sub object during render_html
+                        $GLOBALS['global_message']->error = 'error rendering sub object during render_html'.$e->getMessage();
+                        $match_result_value['value'] = $e->getMessage();
+                        break;
+                    }
+                    $GLOBALS['time_stack']['create object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
 
-                if (!file_exists(PATH_TEMPLATE.$match_result_value['template'].FILE_EXTENSION_TEMPLATE))
-                {
-                    $match_result_value['value'] = '';
-                    break;
-                }
-$GLOBALS['time_stack']['analyse parameter for object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
-                try
-                {
-                    $object = new $match_result_value['object']($field[$match_result_value['name']]);
-$GLOBALS['time_stack']['create object 1 '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
-                }
-                catch (Exception $e)
-                {
-                    // Error Handling, error rendering sub object during render_html
-                    $GLOBALS['global_message']->error = 'error rendering sub object during render_html'.$e->getMessage();
-                    $match_result_value['value'] = $e->getMessage();
-                    break;
-                }
-$GLOBALS['time_stack']['create object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
-
-                $result = $object->fetch_value();
-                $GLOBALS['time_stack']['fetch value '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
+                    $result = $object->fetch_value();
+                    $GLOBALS['time_stack']['fetch value '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
 //print_r($object);
-                unset($object);
-                $rendered_result = array();
-                foreach ($result as $index=>$row)
-                {
-                    $row = array_merge($field,$row);
-                    $rendered_result[] = render_html($row,$match_result_value['template']);
-$GLOBALS['time_stack']['render row['.$index.'] '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
-                }
-                $match_result_value['value'] = implode('',$rendered_result);
-                unset($result);
-                unset($rendered_result);
-
-                break;
-            case '-':
-                $match_result_value['value'] = '';
-                break;
-            case '+':
-                // do not replace, keep for further operation, such as insert style or script
-                $match_result_value['value'] = '';
-                if (isset($field[$match_result_value['name']]))
-                {
-                    foreach($field[$match_result_value['name']] as $resource_index=>&$resource)
+                    unset($object);
+                    $rendered_result = array();
+                    foreach ($result as $index=>$row)
                     {
-                        $resource_obj =  new content($resource);
-                        //print_r($resource_obj);
-                        $match_result_value['value'] .= $resource_obj->get_result();
+                        $row = array_merge($field,$row);
+                        $rendered_result[] = render_html($row,$match_result_value['template']);
+                        $GLOBALS['time_stack']['render row['.$index.'] '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
                     }
-                }
-                else $match_result_value['value'] = '';
-                break;
-            default:
-                $match_result_value['value'] = '';
+                    $match_result_value['value'] = implode('',$rendered_result);
+                    unset($result);
+                    unset($rendered_result);
+
+                    break;
+                case '-':
+                    $match_result_value['value'] = '';
+                    break;
+                case '+':
+                    // do not replace, keep for further operation, such as insert style or script
+                    $match_result_value['value'] = '';
+                    if (isset($field[$match_result_value['name']]))
+                    {
+                        foreach($field[$match_result_value['name']] as $resource_index=>&$resource)
+                        {
+                            $resource_obj =  new content($resource);
+                            //print_r($resource_obj);
+                            $match_result_value['value'] .= $resource_obj->get_result();
+                        }
+                    }
+                    else $match_result_value['value'] = '';
+                    break;
+                default:
+                    $match_result_value['value'] = '';
+            }
+            if (isset($match_result_value['value']))
+            {
+                $translate_array[$match_result_key] = $match_result_value['value'];
+            }
+            $GLOBALS['time_stack']['render variable '.$match_result_key] = microtime(1) - $GLOBALS['start_time'];
         }
-        if (isset($match_result_value['value']))
+
+        while (preg_match('/{{[^\+](.*?)}}/', $field_row_rendered_content))
         {
-            $translate_array[$match_result_key] = $match_result_value['value'];
-            if (isset($match_result_value['container']) AND !empty($match_result_value['value'])) $translate_array[$match_result_key] = render_html(['_placeholder'=>$translate_array[$match_result_key]],$match_result_value['container']);
+            $field_row_rendered_content = strtr($field_row_rendered_content,$translate_array);
         }
-$GLOBALS['time_stack']['render variable '.$match_result_key] = microtime(1) - $GLOBALS['start_time'];
+        $field_row_rendered_content = preg_replace('/{{(.*?)}}/','[[$1]]',$field_row_rendered_content);
+
+        // self loop, if page still have untranslated template variables (place holder type excepted, [[+example]], as they are not suppose to be translated at all), use same field and template to render again
+        if (preg_match('/\[\[[^\+](.*?)\]\]/', $field_row_rendered_content))
+        {
+            $field_row_rendered_content = render_html(['_value'=>$field_row,'_parameter'=>['template'=>$field_row_rendered_content]]);
+        }
+
+        if (!empty($field_row_parameter['container']) AND !empty($field_row_rendered_content))
+        {
+            $field_row_rendered_content = str_replace('[[*_placeholder]]',$field_row_rendered_content,$field_row_parameter['row_container']);
+        }
+
+        $rendered_content[] = $field_row_rendered_content;
     }
-    $rendered_content = strtr($rendered_content,$translate_array);
 
-    //print_r($match_result);
+    $field_rendered_content = implode($field_parameter['separator'],$rendered_content);
 
-    return $rendered_content;
+    if (!empty($field_parameter['container']) AND !empty($field_rendered_content))
+    {
+        $field_rendered_content = str_replace('[[*_placeholder]]',$field_rendered_content,$field_parameter['container']);
+    }
+
+    return $field_rendered_content;
+
 }
 
 function minify_content($value, $type='html')
