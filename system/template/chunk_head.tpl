@@ -12,5 +12,5 @@
 
     <meta name="robots" content="[[*robots]]">
 
-    [[+style]]
+    [[*style]]
 </head>

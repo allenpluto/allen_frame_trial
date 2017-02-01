@@ -447,24 +447,24 @@ if ($this->request['source_type'] == 'data')
             {
                 $this->content['html_tag'] = array_merge($this->content['html_tag'],$this->request['option']['html_tag']);
             }
-            if (!isset($this->content['html_tag']['attr'])) $this->content['html_tag']['attr'] = array();
+            if (!isset($this->content['html_tag']['attribute'])) $this->content['html_tag']['attribute'] = array();
             switch($this->request['file_type']) {
                 case 'css':
                     if (!isset($this->content['html_tag']['name'])) $this->content['html_tag']['name'] = 'link';
-                    $this->content['html_tag']['attr']['href'] = $this->request['file_uri'];
-                    if (!isset($this->content['html_tag']['attr']['type'])) $this->content['html_tag']['attr']['type'] = 'text/css';
-                    if (!isset($this->content['html_tag']['attr']['rel'])) $this->content['html_tag']['attr']['rel'] = 'stylesheet';
-                    if (!isset($this->content['html_tag']['attr']['media'])) $this->content['html_tag']['attr']['media'] = 'all';
+                    $this->content['html_tag']['attribute']['href'] = $this->request['file_uri'];
+                    if (!isset($this->content['html_tag']['attribute']['type'])) $this->content['html_tag']['attribute']['type'] = 'text/css';
+                    if (!isset($this->content['html_tag']['attribute']['rel'])) $this->content['html_tag']['attribute']['rel'] = 'stylesheet';
+                    if (!isset($this->content['html_tag']['attribute']['media'])) $this->content['html_tag']['attribute']['media'] = 'all';
                     break;
                 case 'image':
                     if (!isset($this->content['html_tag']['name'])) $this->content['html_tag']['name'] = 'img';
-                    $this->content['html_tag']['attr']['src'] = $this->request['file_uri'];
-                    if (!isset($this->content['html_tag']['attr']['alt'])) $this->content['html_tag']['attr']['alt'] = trim(ucwords($this->format->caption($this->request['document'])));
+                    $this->content['html_tag']['attribute']['src'] = $this->request['file_uri'];
+                    if (!isset($this->content['html_tag']['attribute']['alt'])) $this->content['html_tag']['attribute']['alt'] = trim(ucwords($this->format->caption($this->request['document'])));
                     break;
                 case 'js':
                     if (!isset($this->content['html_tag']['name'])) $this->content['html_tag']['name'] = 'script';
-                    $this->content['html_tag']['attr']['src'] = $this->request['file_uri'];
-                    if (!isset($this->content['html_tag']['attr']['type'])) $this->content['html_tag']['attr']['type'] = 'text/javascript';
+                    $this->content['html_tag']['attribute']['src'] = $this->request['file_uri'];
+                    if (!isset($this->content['html_tag']['attribute']['type'])) $this->content['html_tag']['attribute']['type'] = 'text/javascript';
                 default:
                     // Error Handling, tag name not given
                     if (!isset($this->content['html_tag']['name'])) $this->content['html_tag']['name'] = 'div';
@@ -716,6 +716,8 @@ if ($this->request['source_type'] == 'data')
                 $this->content['status'] = 'OK';
                 $this->content['message'] = '';
                 $this->content['field'] = array();
+                $this->content['script'] = array();
+                $this->content['style'] = array();
                 $this->content['field']['base'] = URI_SITE_BASE;
 
                 switch($this->request['module'])
@@ -1056,9 +1058,6 @@ if ($this->request['source_type'] == 'data')
                                 return false;
                             }
                             $this->content['field'] = array_merge($this->content['field'],end($page_fetched_value));
-                            $this->content['field']['style'] = [
-                                //['value'=>'/css/default.min.css','option'=>['format'=>'html_tag']]
-                            ];
 
                             $this->content['field']['script'] = [
                                 ['value'=>'/js/jquery.min.js','option'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js','format'=>'html_tag']]
@@ -1093,7 +1092,7 @@ if ($this->request['source_type'] == 'data')
                     {
                         if (file_exists(PATH_CONTENT_CSS.implode('_',$template_name_part).'.css'))
                         {
-                            array_unshift($default_css, ['value'=>'/css/'.implode('_',$template_name_part).'.min.css','option'=>['format'=>'html_tag']]);
+                            $default_css = array_merge([implode('_',$template_name_part)=>[]],$default_css);
                         }
                         if (file_exists(PATH_CONTENT_JS.implode('_',$template_name_part).'.js'))
                         {
@@ -1106,10 +1105,25 @@ if ($this->request['source_type'] == 'data')
                         array_pop($template_name_part);
                     }
 
-                    $this->content['field']['style'] = array_merge($this->content['field']['style'],$default_css);
+                    $this->content['style'] = array_merge($this->content['style'],$default_css);
                     $this->content['field']['script'] = array_merge($this->content['field']['script'],$default_js);
                     if (!isset($this->content['template'])) $this->content['template'] = 'page_default';
                 }
+
+                if (!empty($this->content['style']))
+                {
+                    $this->content['field']['style'] = ['_value'=>[],'_parameter'=>['template_name'=>'chunk_html_tag','parent_row'=>['name'=>'link','attribute'=>['rel'=>'stylesheet','type'=>'text/css'],'non_void_element'=>false]]];
+                    $file_extension = '.css';
+                    if ($this->preference->minify_css)
+                    {
+                        $file_extension = '.min'.$file_extension;
+                    }
+                    foreach($this->content['style'] as $name=>$option)
+                    {
+                        $this->content['field']['style']['_value'][] = ['attribute'=>['href'=>URI_CONTENT_CSS.$name.$file_extension]];
+                    }
+                }
+
                 $this->result['content'] = render_html($this->content['field'],$this->content['template']);
 
 
@@ -1345,21 +1359,7 @@ if ($this->request['source_type'] == 'data')
                 $this->result['header']['Content-Type'] = 'application/json';
                 break;
             case 'html_tag':
-                $this->result['content'] = '<'.$this->content['html_tag']['name'];
-                foreach($this->content['html_tag']['attr'] as $attr_name=>$attr_content)
-                {
-                    $this->result['content'] .= ' '.$attr_name.'="'.$attr_content.'"';
-                }
-                $this->result['content'] .= '>';
-                $void_tag = ['area','base','br','col','command','embed','hr','img','input','keygen','link','meta','param','source','track','wbr'];
-                if (!in_array($this->content['html_tag']['name'],$void_tag))
-                {
-                    if (isset($this->content['html_tag']['html']))
-                    {
-                        $this->result['content'] .= htmlspecialchars($this->content['html_tag']['html']);
-                    }
-                    $this->result['content'] .= '</'.$this->content['html_tag']['name'].'>';
-                }
+                $this->result['content'] = render_html($this->content['html_tag'],'chunk_html_tag');
                 break;
             case 'xml':
                 $this->result['content'] = render_xml($this->content['api_result'])->asXML();
