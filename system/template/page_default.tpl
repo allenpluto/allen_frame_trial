@@ -16,6 +16,6 @@
         </div><!-- #footer_wrapper -->
     </div>
 </div>
-[[+script]]
+[[*script]]
 </body>
 </html>

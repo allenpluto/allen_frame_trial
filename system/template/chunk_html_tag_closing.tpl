@@ -1,1 +1,1 @@
-[[*inner_html]]</[[*name]]>
+[[*value]]</[[*name]]>

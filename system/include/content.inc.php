@@ -758,14 +758,14 @@ if ($this->request['source_type'] == 'data')
 
                         $this->content['field']['robots'] = 'noindex, nofollow';
 
-                        $this->content['field']['style'] = [
-                            ['value'=>'/css/default.min.css','option'=>['format'=>'html_tag']]
-                        ];
+                        //$this->content['field']['style'] = [
+                        //    ['value'=>'/css/default.min.css','option'=>['format'=>'html_tag']]
+                        //];
 
-                        $this->content['field']['script'] = [
-                            ['value'=>'/js/jquery.min.js','option'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js','format'=>'html_tag']],
-                            ['value'=>'/js/default.min.js','option'=>['format'=>'html_tag']],
-                        ];
+                        //$this->content['field']['script'] = [
+                        //    ['value'=>'/js/jquery.min.js','option'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js','format'=>'html_tag']],
+                        //    ['value'=>'/js/default.min.js','option'=>['format'=>'html_tag']],
+                        //];
 
                         $this->content['field']['name'] = ucwords($this->request['method']).' - '.$this->content['account']['name'];
                         $content = ['page_title'=>ucwords($this->request['method'])];
@@ -1059,10 +1059,8 @@ if ($this->request['source_type'] == 'data')
                             }
                             $this->content['field'] = array_merge($this->content['field'],end($page_fetched_value));
 
-                            $this->content['field']['script'] = [
-                                ['value'=>'/js/jquery.min.js','option'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js','format'=>'html_tag']]
-                                //['value'=>'/js/default.min.js','option'=>['format'=>'html_tag']]
-                                //['value'=>'/js/default-top4.js','option'=>['source'=>'http://dev.top4.com.au/scripts/default.js','format'=>'html_tag']]
+                            $this->content['script'] = [
+                                'jquery'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js']
                             ];
 
                             if ($this->request['document'] == 'login' OR $this->request['document'] == 'signup' )
@@ -1096,7 +1094,7 @@ if ($this->request['source_type'] == 'data')
                         }
                         if (file_exists(PATH_CONTENT_JS.implode('_',$template_name_part).'.js'))
                         {
-                            array_unshift($default_js, ['value'=>'/js/'.implode('_',$template_name_part).'.min.js','option'=>['format'=>'html_tag']]);
+                            $default_js = array_merge([implode('_',$template_name_part)=>[]],$default_js);
                         }
                         if (!isset($this->content['template']) AND file_exists(PATH_TEMPLATE.'page_'.implode('_',$template_name_part).FILE_EXTENSION_TEMPLATE))
                         {
@@ -1106,23 +1104,11 @@ if ($this->request['source_type'] == 'data')
                     }
 
                     $this->content['style'] = array_merge($this->content['style'],$default_css);
-                    $this->content['field']['script'] = array_merge($this->content['field']['script'],$default_js);
+                    $this->content['script'] = array_merge($this->content['script'],$default_js);
                     if (!isset($this->content['template'])) $this->content['template'] = 'page_default';
                 }
+            //print_r($this->content['script']);exit();
 
-                if (!empty($this->content['style']))
-                {
-                    $this->content['field']['style'] = ['_value'=>[],'_parameter'=>['template_name'=>'chunk_html_tag','parent_row'=>['name'=>'link','attribute'=>['rel'=>'stylesheet','type'=>'text/css'],'non_void_element'=>false]]];
-                    $file_extension = '.css';
-                    if ($this->preference->minify_css)
-                    {
-                        $file_extension = '.min'.$file_extension;
-                    }
-                    foreach($this->content['style'] as $name=>$option)
-                    {
-                        $this->content['field']['style']['_value'][] = ['attribute'=>['href'=>URI_CONTENT_CSS.$name.$file_extension]];
-                    }
-                }
 
                 $this->result['content'] = render_html($this->content['field'],$this->content['template']);
 
@@ -1370,6 +1356,83 @@ if ($this->request['source_type'] == 'data')
             case 'html':
                 if (!isset($this->content['field'])) $this->content['field'] = array();
                 if (!isset($this->content['template'])) $this->content['template'] = '';
+                if (!empty($this->content['style']))
+                {
+                    $this->content['field']['style'] = ['_value'=>[],'_parameter'=>['template_name'=>'chunk_html_tag']];
+                    $file_extension = '.css';
+                    if ($this->preference->minify_css)
+                    {
+                        $file_extension = '.min'.$file_extension;
+                    }
+                    foreach($this->content['style'] as $name=>$option)
+                    {
+                        $attribute = [
+                            'type'=>'text/css'
+                        ];
+                        if (!isset($option['content']))
+                        {
+                            $tag = [
+                                'name'=>'link',
+                                'non_void_element'=>false
+                            ];
+                            $attribute['rel'] = 'stylesheet';
+                            $attribute['href'] = URI_CSS.$name.$file_extension;
+                        }
+                        else
+                        {
+                            $tag = [
+                                'name'=>'style',
+                                'non_void_element'=>true,
+                                'content'=>$option['content']
+                            ];
+                        }
+
+                        if (isset($option['attribute']))  $attribute = array_merge($attribute,$option['attribute']);
+                        $attribute_set = [];
+                        foreach($attribute as $attribute_name=>$attribute_value)
+                        {
+                            $attribute_set[] = ['name'=>$attribute_name,'value'=>$attribute_value];
+                        }
+                        $tag['attribute'] = $attribute_set;
+                        unset($attribute_set);
+
+                        $this->content['field']['style']['_value'][] = $tag;
+                        unset($tag);
+                    }
+                }
+                if (!empty($this->content['script']))
+                {
+                    $this->content['field']['script'] = ['_value'=>[],'_parameter'=>['template_name'=>'chunk_html_tag']];
+                    $file_extension = '.js';
+                    if ($this->preference->minify_js)
+                    {
+                        $file_extension = '.min'.$file_extension;
+                    }
+                    foreach($this->content['script'] as $name=>$option)
+                    {
+                        $tag = [
+                            'name'=>'script',
+                            'non_void_element'=>true
+                        ];
+                        if (isset($option['content']))  $tag['content'] = $option['content'];
+                        $attribute = [
+                            'type'=>'text/javascript',
+                            'src'=>URI_JS.$name.$file_extension
+                        ];
+
+                        if (isset($option['attribute']))  $attribute = array_merge($attribute,$option['attribute']);
+                        $attribute_set = [];
+                        foreach($attribute as $attribute_name=>$attribute_value)
+                        {
+                            $attribute_set[] = ['name'=>$attribute_name,'value'=>$attribute_value];
+                        }
+                        $tag['attribute'] = $attribute_set;
+                        unset($attribute_set);
+
+                        $this->content['field']['script']['_value'][] = $tag;
+                        unset($tag);
+                    }
+                }
                 $this->result['content'] = render_html($this->content['field'],$this->content['template']);
                 $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s').' GMT';
                 $this->result['header']['Content-Length'] = strlen($this->result['content']);
