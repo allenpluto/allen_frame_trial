@@ -37,7 +37,6 @@ function render_xml($field = array(), &$xml = NULL, $parent_node_name = '')
 
 function render_html($field = array(), $template_name = '', $container_name = '', $separator = NULL)
 {
-    //if (empty($template_name)) return '';
 $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLOBALS['start_time'];
 
     $field_parameter = array();
@@ -87,7 +86,11 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
     {
         $field = $field['_value'];
     }
-    if (!is_array($field) OR !isset($field[0]))
+    if (!is_array($field))
+    {
+        $field = ['_placeholder'=>$field];
+    }
+    if (!isset($field[0]))
     {
         $field = [$field];
     }
@@ -170,22 +173,14 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
 
                 // If higher layer template variable decoded, put them on top of match_result array
                 $template_match[$field_row_parameter['template_name']]['match_result'] = array_merge($match_result,$template_match[$field_row_parameter['template_name']]['match_result']);
-                if ($field_row_parameter['template_name'] == 'element_body_section')
-                {
-                    print_r($match_result);
-                }
 
                 unset($matches);
                 unset($match_result);
 
                 // For template variables already decoded, change their code from [[template_variable]] to {{template_variable}}, then loop, so it can decode outer layer tv without conflict
                 $template_match[$field_row_parameter['template_name']]['template_translated'] = strtr($template_match[$field_row_parameter['template_name']]['template_translated'],$template_translate);
+
                 //$field_row_parameter['template'] = preg_replace('/\[\[([^\[]*?)\]\]/','{{$1}}',$field_row_parameter['template']);
-            }
-            if ($field_row_parameter['template_name'] == 'element_body_section')
-            {
-                print_r($template_match[$field_row_parameter['template_name']]['template_translated']);
-                print_r($template_match[$field_row_parameter['template_name']]['match_result']);
             }
         }
         else
@@ -226,11 +221,19 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                         }
                         else
                         {
+                            // either array or string may apply to container
+                            $field_row_variable_container = '';
+                            if (isset($match_result_value['container_name'])) $field_row_variable_container = $match_result_value['container_name'];
+
                             if (is_array($field_row[$match_result_value['name']]))
                             {
                                 // If field value is still an array, it needs to be rendered again
-                                if (!isset($match_result_value['template_name'])) $match_result_value['template_name'] = $field_row_parameter['template_name'].'_'.$match_result_value['name'];
                                 $field_row_variable_template = '';
+                                $field_row_variable_separator = '';
+
+                                // If field value is still an array, it needs to be rendered again
+                                if (!isset($match_result_value['template_name'])) $match_result_value['template_name'] = $field_row_parameter['template_name'].'_'.$match_result_value['name'];
+                                if (isset($match_result_value['separator'])) $field_row_variable_separator = $field_row_parameter['separator'];
 
                                 if (file_exists(PATH_TEMPLATE.$match_result_value['template_name'].FILE_EXTENSION_TEMPLATE))
                                 {
@@ -250,11 +253,16 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                                 }
                                 $field_row[$match_result_value['name']]['_parameter']['parent_row'] = array_merge($field_row,$field_row[$match_result_value['name']]['_parameter']['parent_row']);
                                 unset($field_row[$match_result_value['name']]['_parameter']['parent_row'][$match_result_value['name']]);
-                                $match_result_value['value'] = render_html($field_row[$match_result_value['name']],$field_row_variable_template);
+
+                                $match_result_value['value'] = render_html($field_row[$match_result_value['name']],$field_row_variable_template,$field_row_variable_container,$field_row_variable_separator);
                             }
                             else
                             {
-                                $match_result_value['value'] = $field_row[$match_result_value['name']];
+                                if (empty($field_row_variable_container)) $match_result_value['value'] = $field_row[$match_result_value['name']];
+                                else
+                                {
+                                    $match_result_value['value'] = render_html($field_row[$match_result_value['name']],'container_blank',$field_row_variable_container);
+                                }
                             }
                         }
                     }
@@ -302,7 +310,7 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                     $GLOBALS['time_stack']['analyse parameter for object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
                     try
                     {
-                        $object = new $match_result_value['object']($field[$match_result_value['name']]);
+                        $object = new $match_result_value['object']($field_row[$match_result_value['name']]);
                         $GLOBALS['time_stack']['create object 1 '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
                     }
                     catch (Exception $e)
@@ -315,8 +323,10 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                     $GLOBALS['time_stack']['create object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
 
                     $result = $object->fetch_value();
+//print_r($match_result_value['template_name']);
+//print_r($result);
+//exit();
                     $GLOBALS['time_stack']['fetch value '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
-//print_r($object);
                     unset($object);
                     $sub_field = array_values($result);
                     unset($result);
@@ -337,7 +347,6 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                         foreach($field_row[$match_result_value['name']] as $resource_index=>&$resource)
                         {
                             $resource_obj =  new content($resource);
-                            //print_r($resource_obj);
                             $match_result_value['value'] .= $resource_obj->get_result();
                         }
                     }
@@ -360,23 +369,17 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
             $counter++;
             if ($counter > 4) break;
         }
-if ($field_row_parameter['template_name'] == 'element_body_section')
-{
-    print_r($field_row_rendered_content);
-    print_r($translate_array);
-    exit;
-}
         //$field_row_rendered_content = preg_replace('/{{(.*?)}}/','[[$1]]',$field_row_rendered_content);
 
         // self loop, if page still have untranslated template variables (place holder type excepted, [[+example]], as they are not suppose to be translated at all), use same field and template to render again
         if (preg_match('/\[\[[^\+](.*?)\]\]/', $field_row_rendered_content))
         {
-            $field_row_rendered_content = render_html(['_value'=>$field_row,'_parameter'=>['template'=>$field_row_rendered_content]]);
+            $field_row_rendered_content = render_html(['_value'=>$field_row,'_parameter'=>['template'=>$field_row_rendered_content,'debug'=>true]]);
         }
 
         if (!empty($field_row_parameter['container']) AND !empty($field_row_rendered_content))
         {
-            $field_row_rendered_content = str_replace('[[*_placeholder]]',$field_row_rendered_content,$field_row_parameter['row_container']);
+            $field_row_rendered_content = str_replace('[[*_placeholder]]',$field_row_rendered_content,$field_row_parameter['container']);
         }
 
         $rendered_content[] = $field_row_rendered_content;
@@ -388,6 +391,8 @@ if ($field_row_parameter['template_name'] == 'element_body_section')
     {
         $field_rendered_content = str_replace('[[*_placeholder]]',$field_rendered_content,$field_parameter['container']);
     }
+//file_put_contents('developer/render.html',($field_rendered_content?$field_rendered_content:print_r($field,true).print_r($field_parameter,true)),FILE_APPEND);
+//file_put_contents('developer/render.html','-------------'.($template_name?$template_name:'[empty template name]').'-------------'."\n\n",FILE_APPEND);
 
     return $field_rendered_content;
 

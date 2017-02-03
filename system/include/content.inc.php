@@ -1067,7 +1067,15 @@ if ($this->request['source_type'] == 'data')
                             {
                                 $this->content['field']['complementary'] = base64_encode(json_encode(['remote_addr'=>get_remote_ip(), 'http_user_agent'=>$_SERVER['HTTP_USER_AGENT'], 'submission_id'=>sha1(openssl_random_pseudo_bytes(5))]));
                             }
+                            if ($this->request['document'] == '')
+                            {
+                                $index_organization_obj = new index_organization();
+                                $this->content['field']['featured_business'] = $index_organization_obj->filter_by_featured();
+//print_r($this->content['field']);
+                                //,array('page_size'=>4,'order'=>'RAND()')
+                            }
                         }
+
                 }
 
                 if (isset($this->request['option']['template']))
@@ -1110,7 +1118,7 @@ if ($this->request['source_type'] == 'data')
             //print_r($this->content['script']);exit();
 
 
-                $this->result['content'] = render_html($this->content['field'],$this->content['template']);
+                //$this->result['content'] = render_html($this->content['field'],$this->content['template']);
 
 
                 return true;
