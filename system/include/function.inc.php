@@ -68,9 +68,13 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
     }
     if (isset($field_parameter['container_name']))
     {
-        if (file_exists(PATH_TEMPLATE.$field_parameter['container_name'].FILE_EXTENSION_TEMPLATE)) $field_parameter['container'] = file_get_contents(PATH_TEMPLATE.$field_parameter['container_name'].FILE_EXTENSION_TEMPLATE);
+        if (file_exists(PATH_TEMPLATE.$field_parameter['container_name'].FILE_EXTENSION_TEMPLATE))
         {
-            $GLOBALS['global_message']->warning = 'rendering error: container ['.PATH_TEMPLATE.$field_parameter['container_name'].FILE_EXTENSION_TEMPLATE.'] file does not exist';
+            $field_parameter['container'] = file_get_contents(PATH_TEMPLATE.$field_parameter['container_name'].FILE_EXTENSION_TEMPLATE);
+        }
+        else
+        {
+            $GLOBALS['global_message']->warning = 'render_html error: container ['.PATH_TEMPLATE.$field_parameter['container_name'].FILE_EXTENSION_TEMPLATE.'] file does not exist';
             $field_parameter['container'] = '[[*_placeholder]]';
         }
     }
@@ -115,10 +119,9 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                 $field_row_parameter = $field_parameter;
             }
 
-            if (empty($field_row_parameter['template'])) continue;
-
             if (!isset($field_row_parameter['template_name']))
             {
+                if (empty($field_row_parameter['template'])) continue;
                 $template_counter = 0;
                 while (isset($template_match['template_'.$template_counter]))
                 {
@@ -135,11 +138,40 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                     $template_match['template_'.$template_counter]['template'] = $field_row_parameter['template'];
                 }
             }
+            else
+            {
+                if (!isset($field_parameter['template_name']) OR $field_row_parameter['template_name'] != $field_parameter['template_name'])
+                {
+                    if (file_exists(PATH_TEMPLATE.$field_row_parameter['template_name'].FILE_EXTENSION_TEMPLATE))
+                    {
+                        $field_row_parameter['template'] = file_get_contents(PATH_TEMPLATE.$field_row_parameter['template_name'].FILE_EXTENSION_TEMPLATE);
+                    }
+                    else
+                    {
+                        $GLOBALS['global_message']->notice = 'render_html error: template ['.PATH_TEMPLATE.$field_row_parameter['template_name'].FILE_EXTENSION_TEMPLATE.'] file does not exist';
+                        $field_row_parameter['template'] = '[[*_placeholder]]';
+                    }
+                }
+            }
+            if (isset($field_row_parameter['container_name']) AND (!isset($field_parameter['container_name']) OR $field_row_parameter['container_name'] != $field_parameter['container_name']))
+            {
+                if (file_exists(PATH_TEMPLATE.$field_row_parameter['container_name'].FILE_EXTENSION_TEMPLATE))
+                {
+                    $field_row_parameter['container'] = file_get_contents(PATH_TEMPLATE.$field_row_parameter['container_name'].FILE_EXTENSION_TEMPLATE);
+                }
+                else
+                {
+                    $GLOBALS['global_message']->warning = 'rendering error: container ['.PATH_TEMPLATE.$field_row_parameter['container_name'].FILE_EXTENSION_TEMPLATE.'] file does not exist';
+                    $field_row_parameter['container'] = '[[*_placeholder]]';
+                }
+            }
+
         }
 
         if (isset($field_parameter['parent_row']))
         {
             $field_row = array_merge($field_parameter['parent_row'],$field_row);
+            unset($field_row_parameter['parent_row']);
         }
 
         $match_result = array();
@@ -222,9 +254,6 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                         else
                         {
                             // either array or string may apply to container
-                            $field_row_variable_container = '';
-                            if (isset($match_result_value['container_name'])) $field_row_variable_container = $match_result_value['container_name'];
-
                             if (is_array($field_row[$match_result_value['name']]))
                             {
                                 // If field value is still an array, it needs to be rendered again
@@ -254,15 +283,11 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                                 $field_row[$match_result_value['name']]['_parameter']['parent_row'] = array_merge($field_row,$field_row[$match_result_value['name']]['_parameter']['parent_row']);
                                 unset($field_row[$match_result_value['name']]['_parameter']['parent_row'][$match_result_value['name']]);
 
-                                $match_result_value['value'] = render_html($field_row[$match_result_value['name']],$field_row_variable_template,$field_row_variable_container,$field_row_variable_separator);
+                                $match_result_value['value'] = render_html($field_row[$match_result_value['name']],$field_row_variable_template,'',$field_row_variable_separator);
                             }
                             else
                             {
-                                if (empty($field_row_variable_container)) $match_result_value['value'] = $field_row[$match_result_value['name']];
-                                else
-                                {
-                                    $match_result_value['value'] = render_html($field_row[$match_result_value['name']],'container_blank',$field_row_variable_container);
-                                }
+                                $match_result_value['value'] = $field_row[$match_result_value['name']];
                             }
                         }
                     }
@@ -357,6 +382,21 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
             }
             if (isset($match_result_value['value']))
             {
+                if (isset($match_result_value['container_name']))
+                {
+                    if (file_exists(PATH_TEMPLATE.$match_result_value['container_name'].FILE_EXTENSION_TEMPLATE))
+                    {
+                        $match_result_value['container'] = file_get_contents(PATH_TEMPLATE.$match_result_value['container_name'].FILE_EXTENSION_TEMPLATE);
+                    }
+                    else {
+                        $GLOBALS['global_message']->warning = 'render_html error: container ['.PATH_TEMPLATE.$match_result_value['container_name'].FILE_EXTENSION_TEMPLATE.'] file does not exist';
+                        $match_result_value['container'] = '[[*_placeholder]]';
+                    }
+                }
+                if (isset($match_result_value['container']))
+                {
+                    $match_result_value['value'] = str_replace('[[*_placeholder]]',$match_result_value['value'],$match_result_value['container']);
+                }
                 $translate_array[$match_result_key] = $match_result_value['value'];
             }
             $GLOBALS['time_stack']['render variable '.$match_result_key] = microtime(1) - $GLOBALS['start_time'];
