@@ -109,7 +109,7 @@ if ($this->request['source_type'] == 'data')
             unset($_POST);
         }
 
-        $option_preset = ['data_type','document','file_type','extension','module','template','render'];
+        $option_preset = ['data_type','document','file_type','file_extension','file_extra_extension','module','template','render'];
         foreach($option as $key=>$item)
         {
             // Options from GET, POST overwrite ones decoded from uri
@@ -171,8 +171,8 @@ if ($this->request['source_type'] == 'data')
                 $file_name = array_pop($request_path);
                 $file_part = explode('.',$file_name);
                 $this->request['document'] = array_shift($file_part);
-                if (!empty($file_part)) $this->request['file_type'] = array_pop($file_part);
-                $this->request['extension'] = [];
+                if (!empty($file_part)) $this->request['file_extension'] = array_pop($file_part);
+                $this->request['file_extra_extension'] = [];
                 if ($this->request['file_type'] == 'image')
                 {
                     $image_size = array_keys($this->preference->image['size']);
@@ -181,12 +181,12 @@ if ($this->request['source_type'] == 'data')
                     {
                         if (in_array($file_extension,$image_size))
                         {
-                            $this->request['extension']['image_size'] = $file_extension;
+                            $this->request['file_extra_extension']['image_size'] = $file_extension;
                             unset($file_part[$file_extension_index]);
                         }
                         if (in_array($file_extension,$image_quality))
                         {
-                            $this->request['extension']['quality'] = $file_extension;
+                            $this->request['file_extra_extension']['quality'] = $file_extension;
                             unset($file_part[$file_extension_index]);
                         }
                     }
@@ -197,11 +197,11 @@ if ($this->request['source_type'] == 'data')
                 {
                     if ($file_extension == 'min')
                     {
-                        $this->request['extension']['minify'] = $file_extension;
+                        $this->request['file_extra_extension']['minify'] = $file_extension;
                         unset($file_part[$file_extension_index]);
                     }
                 }
-                ksort($this->request['extension']);
+                ksort($this->request['file_extra_extension']);
                 if (!empty($file_part))
                 {
                     // Put the rest part that is not an extension back to document name, e.g. jquery-1.11.8.min.js
@@ -209,8 +209,8 @@ if ($this->request['source_type'] == 'data')
                 }
                 unset($file_part);
                 $decoded_file_name = $this->request['document'];
-                if (!empty($this->request['extension'])) $decoded_file_name .= '.'.implode('.',$this->request['extension']);
-                if (!empty($this->request['file_type'])) $decoded_file_name .= '.'.$this->request['file_type'];
+                if (!empty($this->request['file_extra_extension'])) $decoded_file_name .= '.'.implode('.',$this->request['file_extra_extension']);
+                if (!empty($this->request['file_extension'])) $decoded_file_name .= '.'.$this->request['file_extension'];
 
                 if ($file_name != $decoded_file_name)
                 {
@@ -270,7 +270,7 @@ if ($this->request['source_type'] == 'data')
                                     {
                                         if (!in_array( $request_path[$i*2],$option))
                                         {
-                                            $this->message->error = __FILE__.'(line '.__LINE__.'): Construction Fail, unknown option ['.$request_path[$i*2].'] for '.$this->request['file_type'];
+                                            $this->message->error = __FILE__.'(line '.__LINE__.'): Construction Fail, unknown option ['.$request_path[$i*2].'] for '.$this->request['module'].'/'.$this->request['method'];
                                             break 2;
                                         }
                                         $this->request['option'][$request_path[$i*2]] = $request_path[$i*2+1];
@@ -298,7 +298,7 @@ if ($this->request['source_type'] == 'data')
                                     {
                                         if (!in_array( $request_path[$i*2],$option))
                                         {
-                                            $this->message->error = __FILE__.'(line '.__LINE__.'): Construction Fail, unknown option ['.$request_path[$i*2].'] for '.$this->request['file_type'];
+                                            $this->message->error = __FILE__.'(line '.__LINE__.'): Construction Fail, unknown option ['.$request_path[$i*2].'] for '.$this->request['module'].'/'.$this->request['method'];
                                             break 2;
                                         }
                                         $this->request['option'][$request_path[$i*2]] = $request_path[$i*2+1];
@@ -332,7 +332,7 @@ if ($this->request['source_type'] == 'data')
                             $this->request['file_path'] .= $this->request['document'].DIRECTORY_SEPARATOR;
                         }
 
-                        $this->request['file_path'] .= 'index.'.$this->request['file_type'];
+                        $this->request['file_path'] .= 'index.'.$this->request['file_extension'];
                         $this->request['file_uri'] .= $this->request['document'];
 
                         $this->request['remote_ip'] = get_remote_ip();
@@ -493,11 +493,11 @@ if ($this->request['source_type'] == 'data')
                 $file_relative_path = $this->request['file_type'].DIRECTORY_SEPARATOR;
                 if (!empty($this->request['sub_path'])) $file_relative_path .= implode(DIRECTORY_SEPARATOR,$this->request['sub_path']).DIRECTORY_SEPARATOR;
                 $this->content['source_file'] = [
-                    'path' => PATH_ASSET.$file_relative_path.$this->request['document'].'.src.'.$this->request['file_type'],
+                    'path' => PATH_ASSET.$file_relative_path.$this->request['document'].'.src.'.$this->request['file_extension'],
                     'source' => 'local_file'
                 ];
-                $source_file_relative_path =  $file_relative_path .  $this->request['document'].'.src.'.$this->request['file_type'];
-                $file_relative_path .= $this->request['document'].'.'.$this->request['file_type'];
+                $source_file_relative_path =  $file_relative_path .  $this->request['document'].'.src.'.$this->request['file_extension'];
+                $file_relative_path .= $this->request['document'].'.'.$this->request['file_extension'];
 
 
                 if (!file_exists(dirname($this->content['source_file']['path']))) mkdir(dirname($this->content['source_file']['path']), 0755, true);
@@ -683,7 +683,7 @@ if ($this->request['source_type'] == 'data')
 
                 }
 
-                foreach ($this->request['extension'] as $extension_index=>$extension)
+                foreach ($this->request['file_extra_extension'] as $extension_index=>$extension)
                 {
                     // General Extensions
                     switch ($extension_index)
@@ -1165,7 +1165,7 @@ if ($this->request['source_type'] == 'data')
                     if (!empty($this->content['target_file']['minify']))
                     {
                         $start_time = microtime(true);
-                        file_put_contents($this->content['target_file']['path'],minify_content(file_get_contents($this->content['target_file']['path']),$this->request['file_type']));
+                        file_put_contents($this->content['target_file']['path'],minify_content(file_get_contents($this->content['target_file']['path']),$this->request['file_extension']));
                         $this->message->notice = 'PHP Minifier Execution Time: '. (microtime(true) - $start_time);
                     }
                     touch($this->content['target_file']['path'],$this->content['source_file']['last_modified']);
@@ -1207,7 +1207,7 @@ if ($this->request['source_type'] == 'data')
                 $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s',$this->content['target_file']['last_modified']).' GMT';
                 $this->result['header']['Content-Length'] = $this->content['target_file']['content_length'];
 
-                switch ($this->request['file_type'])
+                switch ($this->request['file_extension'])
                 {
                     case 'css':
                         $this->result['header']['Content-Type'] = 'text/css';
