@@ -940,37 +940,102 @@ class entity extends base
             if (!array_key_exists('enter_time', $parameter['update_fields'])) $parameter['update_fields']['enter_time'] = $parameter['table'] . '.enter_time';
             if (!array_key_exists('update_time', $parameter['update_fields'])) $parameter['update_fields']['update_time'] = $parameter['table'] . '.update_time';
 
-            $sql = 'INSERT INTO ' . $parameter['sync_table'] . ' (' . implode(',', array_keys($parameter['update_fields'])) . ')
+            if (empty($parameter['advanced_sync']))
+            {
+                $sql = 'INSERT INTO ' . $parameter['sync_table'] . ' (' . implode(',', array_keys($parameter['update_fields'])) . ')
 SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['table'] . ' ' . implode(' ', $parameter['join']) . ' WHERE ' . $parameter['table'] . '.' . $parameter['primary_key'] . ' IN (' . implode(',', $id_group) . ')';
-            if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
-            if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
-            $sql .= ' ON DUPLICATE KEY UPDATE ';
-            $update_fields = array();
-            foreach ($parameter['update_fields'] as $field_index => $field_name) {
-                $update_fields[] = $field_index . '=VALUES(' . $field_index . ')';
-            }
-            $sql .= implode(',', $update_fields);
-            unset($update_fields);
-            $query = $this->query($sql);
-            if ($query !== false) {
-                if ($query->rowCount() == 0) {
-                    $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' no row inserted/updated';
+                if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
+                if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
+                $sql .= ' ON DUPLICATE KEY UPDATE ';
+                $update_fields = array();
+                foreach ($parameter['update_fields'] as $field_index => $field_name) {
+                    $update_fields[] = $field_index . '=VALUES(' . $field_index . ')';
+                }
+                $sql .= implode(',', $update_fields);
+                unset($update_fields);
+                $query = $this->query($sql);
+                if ($query !== false) {
+                    if ($query->rowCount() == 0) {
+                        $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' no row inserted/updated';
+                    }
+                    else
+                    {
+                        $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' '.$query->rowCount().' row(s)/field(s) inserted/updated';
+                    }
                 }
                 else
                 {
-                    $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' '.$query->rowCount().' row(s)/field(s) inserted/updated';
+                    return false;
                 }
             }
             else
             {
-                return false;
+                $sql = 'SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['table'] . ' ' . implode(' ', $parameter['join']) . ' WHERE ' . $parameter['table'] . '.' . $parameter['primary_key'] . ' IN (' . implode(',', $id_group) . ')';
+                if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
+                if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
+                $query = $this->query($sql);
+                if ($query !== false)
+                {
+                    $source_row = $query->fetchAll(PDO::FETCH_ASSOC);
+                    $target_row = $this->advanced_sync($source_row);
+
+                    if (count($target_row) > 0)
+                    {
+
+                        $sql = 'INSERT INTO ' . $parameter['sync_table'] . ' (' . implode(',', array_keys($target_row[0])) . ') VALUES ';
+                        $insert_value = array();
+                        foreach ($target_row as $row_index => $row) {
+                            $insert_value[] = '(' . implode(',',$row) . ')';
+                        }
+                        $sql .= implode($insert_value);
+                        unset($insert_value);
+                        if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
+                        if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
+                        $sql .= ' ON DUPLICATE KEY UPDATE ';
+                        $update_fields = array();
+                        foreach ($target_row[0] as $field_index => $field_name) {
+                            $update_fields[] = $field_index . '=VALUES(' . $field_index . ')';
+                        }
+                        $sql .= implode(',', $update_fields);
+                        unset($update_fields);
+                        $query = $this->query($sql);
+                        if ($query !== false) {
+                            if ($query->rowCount() == 0) {
+                                $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' no row inserted/updated';
+                            }
+                            else
+                            {
+                                $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' '.$query->rowCount().' row(s)/field(s) inserted/updated';
+                            }
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' no row inserted/updated';
+                    }
+                }
+                else
+                {
+                    return false;
+                }
             }
+
         }
         else
         {
             $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' no row inserted/updated';
         }
         return true;
+    }
+
+    // Do some php process for data sync,
+    function advanced_sync($source_rows)
+    {
+        return $source_rows;
     }
 }
 

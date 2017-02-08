@@ -67,21 +67,22 @@ class entity_image extends entity
             {
                 if (isset($record['image_src']))
                 {
-                    $image_size = getimagesize($record['image_src']);
+                    $image_size = @getimagesize($record['image_src']);
                     if ($image_size !== false)
                     {
                         $record['width'] = $image_size[0];
                         $record['height'] = $image_size[1];
                         if (isset($image_size['mime'])) $record['mime'] = $image_size['mime'];
+                        else $record['mime'] = 'image/jpeg';
+
+                        $image_data = file_get_contents($record['image_src']);
+                        if ($image_data !== false)
+                        {
+                            $record['data'] = $image_data;
+                        }
+                        unset($image_data);
                     }
                     unset($image_size);
-
-                    $image_data = file_get_contents($record['image_src']);
-                    if ($image_data !== false)
-                    {
-                        $record['data'] = $image_data;
-                    }
-                    unset($image_data);
                 }
             }
         }
@@ -107,7 +108,8 @@ class entity_image extends entity
             {
                 if (isset($record['data']))
                 {
-                    $file_name = $format->file_name((!empty($record['friendly_url'])?$record['friendly_url']:$record['name']).'-'.$record['id']);
+                    $file_name = $format->file_name((!empty($record['friendly_url'])?$record['friendly_url']:$record['name']));
+                    if (empty($file_name)) $file_name = 'default';
                     // Generate re-sized thumbnail
                     // if (!empty($parameter['size'])) $file_name .= '.'.$parameter['size'];
                     switch($record['mime'])
@@ -125,13 +127,17 @@ class entity_image extends entity
                     }
                     // Create sub path in "Little Endian" structure
                     $sub_path = '';
-                    $sub_path_index = floor($record['id'] / 1000);
-                    while($sub_path_index > 0)
+                    $sub_path_index = $record['id'];
+                    do
                     {
                         $sub_path_remain = $sub_path_index % 1000;
                         $sub_path_index = floor($sub_path_index / 1000);
-                        $sub_path .= $sub_path_remain.DIRECTORY_SEPARATOR;
-                    }
+                        if ($sub_path_index != 0)
+                        {
+                            $sub_path_remain = str_repeat('0', 3-strlen($sub_path_remain)).$sub_path_remain;
+                        }
+                        $sub_path = $sub_path_remain.DIRECTORY_SEPARATOR.$sub_path;
+                    } while($sub_path_index > 0);
                     $record['file_path'] = PATH_IMAGE.$sub_path;
                     $record['file_name'] = $file_name;
                     $record['file'] = $record['file_path'].$record['file_name'];
@@ -141,5 +147,19 @@ class entity_image extends entity
                 }
             }
         }
+    }
+
+    function sync($parameter = array())
+    {
+        if (!isset($parameter['advanced_sync']))
+        {
+            $parameter['advanced_sync'] = function ($source_rows = array())
+            {
+                print_r($source_rows);
+                exit;
+            };
+        }
+
+        return parent::sync($parameter);
     }
 }
