@@ -13,8 +13,8 @@ class view_business_summary_logo extends view_image
         {
             foreach ($this->row as $row_index=>$row_value)
             {
-                $this->row[$row_index]['image_src_xxs'] = URI_IMAGE . 'xxs/' . $row_value['image_file'];
-                $this->row[$row_index]['image_src_xs'] = URI_IMAGE . 'xs/' . $row_value['image_file'];
+                $this->row[$row_index]['xxs_file_uri'] = URI_IMAGE . $row_value['friendly_uri'] . '-' . $row_value['id'] . '.xxs.' . $row_value['file_extension'];
+                $this->row[$row_index]['xs_file_uri'] = URI_IMAGE . $row_value['friendly_uri'] . '-' . $row_value['id'] . '.xs.' . $row_value['file_extension'];
             }
             $result = $this->row;
         }

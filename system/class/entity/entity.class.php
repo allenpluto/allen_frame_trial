@@ -177,6 +177,7 @@ class entity extends base
         {
             $query_errorInfo = $query->errorInfo();
             $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): SQL Error - '.$query_errorInfo[2];
+            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): Request SQL - '.$sql;
             return false;
         }
     }
@@ -806,6 +807,11 @@ class entity extends base
             if (!empty($parameter['where'])) $sql .= ' WHERE ('.implode(' AND ',$parameter['where']).')';
             if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
             unset($update_fields);
+            if (!empty($parameter['advanced_sync']))
+            {
+                // If data need php process, only insert one row
+                $sql .= ' LIMIT 1';
+            }
             $sql .= ';';
             $sql .= 'ALTER TABLE '.$parameter['sync_table'].' ENGINE = MyISAM DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;';
             $sql .= 'ALTER TABLE '.$parameter['sync_table'].' ADD PRIMARY KEY ('.$parameter['primary_key'].');';
@@ -819,28 +825,101 @@ class entity extends base
                 }
             }
             $sql .= ';';
+            $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): table '.$parameter['sync_table'].' init_sync: '.$sql;
             $query = $this->query($sql);
-            if ($query === false) return false;
-            return true;
+            if (empty($parameter['advanced_sync']))
+            {
+                if ($query === false) return false;
+                return true;
+            }
+            else
+            {
+                //  If data need php process, do full_sync after the sync_table is created
+                $query->fetchAll();
+                $parameter['sync_type'] = 'full_sync';
+            }
         }
 
         if ($parameter['sync_type'] == 'full_sync')
         {
             $sql = 'TRUNCATE TABLE '.$parameter['sync_table'].';';
+            $this->query($sql);
             $update_fields = array();
             foreach ($parameter['update_fields'] as $field_index=>$field_value)
             {
                 $update_fields[] = $field_value.' AS '.$field_index;
             }
-            $sql = 'INSERT INTO '.$parameter['sync_table'].'('.implode(',',array_keys($parameter['update_fields'])).') (SELECT '.implode(',',$update_fields).' FROM '.$parameter['table'].' '.implode(' ',$parameter['join']);
-            if (!empty($parameter['where'])) $sql .= ' WHERE ('.implode(' AND ',$parameter['where']).')';
-            if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
-            unset($update_fields);
-            $sql .= ') ON DUPLICATE KEY UPDATE '.$parameter['primary_key'].'='.$parameter['primary_key'].';';
+            if (empty($parameter['advanced_sync']))
+            {
+                $sql = 'INSERT INTO '.$parameter['sync_table'].'('.implode(',',array_keys($parameter['update_fields'])).') (SELECT '.implode(',',$update_fields).' FROM '.$parameter['table'].' '.implode(' ',$parameter['join']);
+                if (!empty($parameter['where'])) $sql .= ' WHERE ('.implode(' AND ',$parameter['where']).')';
+                if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
+                unset($update_fields);
+                $sql .= ') ON DUPLICATE KEY UPDATE '.$parameter['primary_key'].'='.$parameter['primary_key'].';';
 
-            $query = $this->query($sql);
-            if ($query === false) return false;
-            return true;
+                $query = $this->query($sql);
+                if ($query === false) return false;
+                return true;
+            }
+            else
+            {
+                foreach ($parameter['update_fields'] as $field_index=>$field_value)
+                {
+                    $update_fields[] = $field_value.' AS '.$field_index;
+                }
+
+                $sql = 'SELECT ' . implode(',', $update_fields) . ' FROM ' . $parameter['table'] . ' ' . implode(' ', $parameter['join']);
+                if (!empty($parameter['where'])) $sql .= ' WHERE (' . implode(' AND ', $parameter['where']) . ')';
+                if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
+                unset($update_fields);
+
+                $query = $this->query($sql);
+                if ($query !== false)
+                {
+                    $source_row = $query->fetchAll(PDO::FETCH_ASSOC);
+                    $target_row = $this->advanced_sync($source_row);
+
+                    if (count($target_row) > 0 AND count($target_row[0]) > 0)
+                    {
+
+                        $sql = 'INSERT INTO ' . $parameter['sync_table'] . ' (' . implode(',', array_keys($target_row[0])) . ') VALUES ';
+                        $insert_value = array();
+                        foreach ($target_row as $row_index => $row) {
+                            foreach ($row as $column_index => &$column)
+                            {
+                                $column = '"'.addslashes($column).'"';
+                            }
+                            $insert_value[] = '(' . implode(',',$row) . ')';
+                        }
+                        $sql .= implode(',',$insert_value);
+                        unset($insert_value);
+                        if (!empty($parameter['where'])) $sql .= ' WHERE (' . implode(' AND ', $parameter['where']) . ')';
+                        if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
+                        $query = $this->query($sql);
+                        if ($query !== false) {
+                            if ($query->rowCount() == 0) {
+                                $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on full sync to '.$parameter['sync_table'].' no row inserted/updated';
+                            }
+                            else
+                            {
+                                $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on full sync to '.$parameter['sync_table'].' '.$query->rowCount().' row(s)/field(s) inserted/updated';
+                            }
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' no row inserted/updated';
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
 
         if (!isset($parameter['sync_table_primary_key'])) {
@@ -970,7 +1049,12 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
             }
             else
             {
-                $sql = 'SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['table'] . ' ' . implode(' ', $parameter['join']) . ' WHERE ' . $parameter['table'] . '.' . $parameter['primary_key'] . ' IN (' . implode(',', $id_group) . ')';
+                foreach ($parameter['update_fields'] as $field_index=>$field_value)
+                {
+                    $update_fields[] = $field_value.' AS '.$field_index;
+                }
+
+                $sql = 'SELECT ' . implode(',', $update_fields) . ' FROM ' . $parameter['table'] . ' ' . implode(' ', $parameter['join']) . ' WHERE ' . $parameter['table'] . '.' . $parameter['primary_key'] . ' IN (' . implode(',', $id_group) . ')';
                 if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
                 if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
                 $query = $this->query($sql);
@@ -979,17 +1063,21 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
                     $source_row = $query->fetchAll(PDO::FETCH_ASSOC);
                     $target_row = $this->advanced_sync($source_row);
 
-                    if (count($target_row) > 0)
+                    if (count($target_row) > 0 AND count($target_row[0]) > 0)
                     {
 
                         $sql = 'INSERT INTO ' . $parameter['sync_table'] . ' (' . implode(',', array_keys($target_row[0])) . ') VALUES ';
                         $insert_value = array();
                         foreach ($target_row as $row_index => $row) {
+                            foreach ($row as $column_index => &$column)
+                            {
+                                $column = '"'.addslashes($column).'"';
+                            }
                             $insert_value[] = '(' . implode(',',$row) . ')';
                         }
-                        $sql .= implode($insert_value);
+                        $sql .= implode(',',$insert_value);
                         unset($insert_value);
-                        if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
+                        if (!empty($parameter['where'])) $sql .= ' WHERE (' . implode(' AND ', $parameter['where']) . ')';
                         if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
                         $sql .= ' ON DUPLICATE KEY UPDATE ';
                         $update_fields = array();
@@ -1033,9 +1121,16 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
     }
 
     // Do some php process for data sync,
-    function advanced_sync($source_rows)
+    function advanced_sync(&$source_row = array())
     {
-        return $source_rows;
+        foreach($source_row as $index=>&$row)
+        {
+            if (isset($row['friendly_uri']) AND empty($row['friendly_uri']) AND !empty($row['name']))
+            {
+                $row['friendly_uri'] = $this->format->file_name($row['name']);
+            }
+        }
+        return $source_row;
     }
 }
 

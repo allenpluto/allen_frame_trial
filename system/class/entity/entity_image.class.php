@@ -73,7 +73,11 @@ class entity_image extends entity
                         $record['width'] = $image_size[0];
                         $record['height'] = $image_size[1];
                         if (isset($image_size['mime'])) $record['mime'] = $image_size['mime'];
-                        else $record['mime'] = 'image/jpeg';
+                        else
+                        {
+                            $record['mime'] = 'image/jpeg';
+                            $this->message->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image mime type for '.$record['image_src'];
+                        }
 
                         $image_data = file_get_contents($record['image_src']);
                         if ($image_data !== false)
@@ -81,6 +85,10 @@ class entity_image extends entity
                             $record['data'] = $image_data;
                         }
                         unset($image_data);
+                    }
+                    else
+                    {
+                        $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image size for '.$record['image_src'];
                     }
                     unset($image_size);
                 }
@@ -151,15 +159,106 @@ class entity_image extends entity
 
     function sync($parameter = array())
     {
-        if (!isset($parameter['advanced_sync']))
+        $sync_parameter = array();
+
+        // set default sync parameters for index table
+        //$parameter['sync_table'] = str_replace('entity','index',$this->parameter['table']);
+        $sync_parameter['sync_table'] = 'tbl_view_image';
+        $sync_parameter['update_fields'] = array(
+            'id' => 'tbl_entity_image.id',
+            'friendly_uri' => 'tbl_entity_image.friendly_uri',
+            'name' => 'tbl_entity_image.name',
+            'alternate_name' => 'tbl_entity_image.alternate_name',
+            'description' => 'tbl_entity_image.description',
+            'enter_time' => 'tbl_entity_image.enter_time',
+            'update_time' => 'tbl_entity_image.update_time',
+            'width' => 'tbl_entity_image.width',
+            'height' => 'tbl_entity_image.height',
+            'mime' => 'tbl_entity_image.mime',
+            'data' => 'tbl_entity_image.data'
+        );
+        $sync_parameter['advanced_sync'] = true;
+
+        $sync_parameter = array_merge($sync_parameter, $parameter);
+
+        if ($GLOBALS['db']) $db = $GLOBALS['db'];
+        else $db = new db;
+
+        if (!isset($sync_parameter['sync_type']))
         {
-            $parameter['advanced_sync'] = function ($source_rows = array())
+            $sync_parameter['sync_type'] = 'differential_sync';
+        }
+        if (!$db->db_table_exists($sync_parameter['sync_table']))
+        {
+            $sync_parameter['sync_type'] = 'init_sync';
+        }
+        if ($sync_parameter['sync_type'] == 'init_sync')
+        {
+            $init_sync_parameter = $sync_parameter;
+            unset($init_sync_parameter['update_fields']['data']);
+            $init_sync_parameter['update_fields']['file_extension'] = '"'.str_repeat(' ',20).'"';
+            $init_sync_parameter['update_fields']['file_uri'] = '"'.str_repeat(' ',200).'"';
+            $init_sync_parameter['update_fields']['file_path'] = '"'.str_repeat(' ',200).'"';
+            parent::sync($init_sync_parameter);
+        }
+        else
+        {
+            return parent::sync($sync_parameter);
+        }
+    }
+
+    function advanced_sync(&$source_row = array())
+    {
+        parent::advanced_sync($source_row);
+
+        foreach ($source_row as $index=>&$row)
+        {
+            if (isset($row['data']))
             {
-                print_r($source_rows);
-                exit;
-            };
+                if (!isset($row['id']))
+                {
+                    $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row id not set';
+                }
+                if (!isset($row['friendly_uri']))
+                {
+                    $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row friendly uri not set';
+                }
+                $sub_path = '';
+                $sub_path_index = $row['id'];
+                do
+                {
+                    $sub_path_remain = $sub_path_index % 1000;
+                    $sub_path_index = floor($sub_path_index / 1000);
+                    if ($sub_path_index != 0)
+                    {
+                        $sub_path_remain = str_repeat('0', 3-strlen($sub_path_remain)).$sub_path_remain;
+                    }
+                    $sub_path = $sub_path_remain.DIRECTORY_SEPARATOR.$sub_path;
+                } while($sub_path_index > 0);
+                $file_dir = PATH_IMAGE.$sub_path;
+                $file_name = $row['friendly_uri'];
+                switch($row['mime'])
+                {
+                    case 'image/gif':
+                        $row['file_extension'] = '.gif';
+                        break;
+                    case 'image/png':
+                        $row['file_extension'] = '.png';
+                        break;
+                    case 'image/jpeg':
+                    case 'image/pjpeg';
+                    default:
+                        $row['file_extension'] = '.jpg';
+                }
+                $row['file_uri'] = URI_IMAGE.$file_name.'-'.$row['id'].$row['file_extension'];
+                $row['file_path'] = $file_dir.$file_name.$row['file_extension'];
+
+                if (!file_exists($file_dir)) mkdir($file_dir, 0755, true);
+                file_put_contents($row['file_path'],  $row['data']);
+                unset($row['data']);
+            }
         }
 
-        return parent::sync($parameter);
+        return $source_row;
     }
 }
