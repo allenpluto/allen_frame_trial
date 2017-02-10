@@ -226,6 +226,29 @@ if ($this->request['source_type'] == 'data')
                     $this->request['file_path'] .= implode(DIRECTORY_SEPARATOR,$this->request['sub_path']).DIRECTORY_SEPARATOR;
                     $this->request['file_uri'] .= implode('/',$this->request['sub_path']).'/';
                 }
+                if ($this->request['file_type'] == 'image' AND preg_match('/-(\d*)$/',$this->request['document']))
+                {
+                    // images have special directory structure, images loaded from database real storage path is constructed by id
+                    $file_name_parts = explode('-',$this->request['document']);
+                    $file_id = array_pop($file_name_parts);
+                    $sub_folder = array();
+                    do
+                    {
+                        $sub_image_id = $file_id % 1000;
+                        array_unshift($sub_folder, $sub_image_id);
+                        $file_id = floor($file_id / 1000);
+                    } while ($file_id >= 1);
+                    foreach ($sub_folder as $index=>&$sub_image_id)
+                    {
+                        if ($index != 0)
+                        {
+                            $sub_image_id = str_repeat('0', 3-strlen($sub_image_id)).$sub_image_id;
+                        }
+                    }
+                    $this->request['file_path_alt'] = $this->request['file_path'].implode(DIRECTORY_SEPARATOR,$sub_folder).DIRECTORY_SEPARATOR.implode('-',$file_name_parts);
+                    if (!empty($this->request['file_extra_extension'])) $this->request['file_path_alt'] .= '.'.implode('.',$this->request['file_extra_extension']);
+                    if (!empty($this->request['file_extension'])) $this->request['file_path_alt'] .= '.'.$this->request['file_extension'];
+                }
                 $this->request['file_path'] .= $file_name;
                 $this->request['file_uri'] .= $file_name;
                 unset($file_name);
@@ -479,6 +502,11 @@ if ($this->request['source_type'] == 'data')
                     'uri'=>$this->request['file_uri']
                 ];
 
+                if (isset($this->request['file_path_alt']) AND !file_exists($this->content['target_file']['path']))
+                {
+                    $this->content['target_file']['path'] = $this->request['file_path_alt'];
+                }
+
                 if (file_exists($this->content['target_file']['path']))
                 {
                     $this->content['target_file']['last_modified'] = filemtime($this->content['target_file']['path']);
@@ -587,7 +615,7 @@ if ($this->request['source_type'] == 'data')
                             $this->result['status'] = 404;
                             return false;
                         }
-                        $entity_class = 'entity_'.$this->request['file_type'];
+                        /*$entity_class = 'entity_'.$this->request['file_type'];
                         if (!class_exists($entity_class))
                         {
                             // Error Handling, last ditch failed, source file does not exist in database either
@@ -631,7 +659,7 @@ if ($this->request['source_type'] == 'data')
                             touch($this->content['source_file']['path'], $this->content['source_file']['last_modified']);
                         }
 
-                        if (!empty($record['mime'])) $this->content['source_file']['content_type'] = $record['mime'];
+                        if (!empty($record['mime'])) $this->content['source_file']['content_type'] = $record['mime'];*/
                     }
                 }
 

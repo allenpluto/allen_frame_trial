@@ -798,21 +798,24 @@ class entity extends base
         if ($parameter['sync_type'] == 'init_sync')
         {
             $sql = 'DROP TABLE IF EXISTS '.$parameter['sync_table'].';';
+            $query = $this->query($sql);
+
             $update_fields = array();
             foreach ($parameter['update_fields'] as $field_index=>$field_value)
             {
                 $update_fields[] = $field_value.' AS '.$field_index;
             }
-            $sql .= 'CREATE TABLE '.$parameter['sync_table'].' SELECT '.implode(',',$update_fields).' FROM '.$parameter['table'].' '.implode(' ',$parameter['join']);
+            $sql = 'CREATE TABLE '.$parameter['sync_table'].' (SELECT '.implode(',',$update_fields).' FROM '.$parameter['table'].' '.implode(' ',$parameter['join']);
             if (!empty($parameter['where'])) $sql .= ' WHERE ('.implode(' AND ',$parameter['where']).')';
             if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
             unset($update_fields);
             if (!empty($parameter['advanced_sync']))
             {
-                // If data need php process, only insert one row
+                // If php data process needed, only insert one row
                 $sql .= ' LIMIT 1';
             }
-            $sql .= ';';
+            $sql .= ');';
+
             $sql .= 'ALTER TABLE '.$parameter['sync_table'].' ENGINE = MyISAM DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;';
             $sql .= 'ALTER TABLE '.$parameter['sync_table'].' ADD PRIMARY KEY ('.$parameter['primary_key'].');';
             $sql .= 'ALTER TABLE '.$parameter['sync_table'].' MODIFY enter_time TIMESTAMP NOT NULL DEFAULT "0000-00-00 00:00:00"';
@@ -825,25 +828,23 @@ class entity extends base
                 }
             }
             $sql .= ';';
+            if (!empty($parameter['advanced_sync']))
+            {
+                // If php data process needed, empty table after it is created
+                $sql .= 'TRUNCATE TABLE '.$parameter['sync_table'].';';
+            }
             $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): table '.$parameter['sync_table'].' init_sync: '.$sql;
             $query = $this->query($sql);
-            if (empty($parameter['advanced_sync']))
-            {
-                if ($query === false) return false;
-                return true;
-            }
-            else
-            {
-                //  If data need php process, do full_sync after the sync_table is created
-                $query->fetchAll();
-                $parameter['sync_type'] = 'full_sync';
-            }
+            if ($query === false) return false;
+            return true;
         }
 
         if ($parameter['sync_type'] == 'full_sync')
         {
             $sql = 'TRUNCATE TABLE '.$parameter['sync_table'].';';
             $this->query($sql);
+//            $query = $this->_conn->prepare($sql);
+//            $query->execute();
             $update_fields = array();
             foreach ($parameter['update_fields'] as $field_index=>$field_value)
             {
@@ -877,7 +878,7 @@ class entity extends base
                 if ($query !== false)
                 {
                     $source_row = $query->fetchAll(PDO::FETCH_ASSOC);
-                    $target_row = $this->advanced_sync($source_row);
+                    $target_row = $this->advanced_sync_update($source_row);
 
                     if (count($target_row) > 0 AND count($target_row[0]) > 0)
                     {
@@ -969,6 +970,10 @@ class entity extends base
         // id_group to delete
         if (count($sync_id_group['delete']) > 0)
         {
+            if (!empty($parameter['advanced_sync']))
+            {
+                $this->advanced_sync_delete($sync_id_group['delete']);
+            }
             $sql = 'DELETE FROM '.$parameter['sync_table'].' WHERE '.$parameter['sync_table_primary_key'].' IN ('.implode(',',$sync_id_group['delete']).')';
             $query = $this->query($sql);
             if ($query !== false)
@@ -1061,7 +1066,7 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
                 if ($query !== false)
                 {
                     $source_row = $query->fetchAll(PDO::FETCH_ASSOC);
-                    $target_row = $this->advanced_sync($source_row);
+                    $target_row = $this->advanced_sync_update($source_row);
 
                     if (count($target_row) > 0 AND count($target_row[0]) > 0)
                     {
@@ -1121,7 +1126,7 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
     }
 
     // Do some php process for data sync,
-    function advanced_sync(&$source_row = array())
+    function advanced_sync_update(&$source_row = array())
     {
         foreach($source_row as $index=>&$row)
         {
@@ -1131,6 +1136,11 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
             }
         }
         return $source_row;
+    }
+
+    function advanced_sync_delete($delete_id_group = array())
+    {
+        return true;
     }
 }
 

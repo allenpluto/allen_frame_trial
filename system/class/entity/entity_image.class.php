@@ -200,6 +200,9 @@ class entity_image extends entity
             $init_sync_parameter['update_fields']['file_uri'] = '"'.str_repeat(' ',200).'"';
             $init_sync_parameter['update_fields']['file_path'] = '"'.str_repeat(' ',200).'"';
             parent::sync($init_sync_parameter);
+
+            $sync_parameter['sync_type'] = 'full_sync';
+            return parent::sync($sync_parameter);
         }
         else
         {
@@ -207,9 +210,9 @@ class entity_image extends entity
         }
     }
 
-    function advanced_sync(&$source_row = array())
+    function advanced_sync_update(&$source_row = array())
     {
-        parent::advanced_sync($source_row);
+        parent::advanced_sync_update($source_row);
 
         foreach ($source_row as $index=>&$row)
         {
@@ -260,5 +263,28 @@ class entity_image extends entity
         }
 
         return $source_row;
+    }
+
+    function advanced_sync_delete($delete_id_group = array())
+    {
+        $view_image_obj = new view_image($delete_id_group);
+        $image_array = $view_image_obj->fetch_value();
+        foreach ($image_array as $image_row_index=>$image_row)
+        {
+            $current_image_folder = dirname($image_row['file_path']);
+            if (file_exists($current_image_folder))
+            {
+                $current_image_files = scandir($current_image_folder);
+                foreach ($current_image_files as $current_image_file_index=>$current_image_file)
+                {
+                    if (is_file($current_image_file)) unlink($current_image_file);
+                }
+                while (@rmdir($current_image_folder))
+                {
+                    $current_image_folder = dirname($current_image_folder);
+                }
+            }
+        }
+        return true;
     }
 }
