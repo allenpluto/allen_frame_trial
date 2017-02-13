@@ -254,7 +254,7 @@ class entity_image extends entity
                         $row['file_extension'] = '.jpg';
                 }
                 $row['file_uri'] = URI_IMAGE.$file_name.'-'.$row['id'].$row['file_extension'];
-                $row['file_path'] = $file_dir.$file_name.$row['file_extension'];
+                $row['file_path'] = $file_dir.$file_name.'-'.$row['id'].$row['file_extension'];
 
                 if (!file_exists($file_dir)) mkdir($file_dir, 0755, true);
                 file_put_contents($row['file_path'],  $row['data']);

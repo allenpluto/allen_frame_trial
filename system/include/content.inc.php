@@ -173,35 +173,24 @@ if ($this->request['source_type'] == 'data')
                 $this->request['document'] = array_shift($file_part);
                 if (!empty($file_part)) $this->request['file_extension'] = array_pop($file_part);
                 $this->request['file_extra_extension'] = [];
-                if ($this->request['file_type'] == 'image')
+
+                if (is_array($this->preference->{$this->request['file_type']}))
                 {
-                    $image_size = array_keys($this->preference->image['size']);
-                    $image_quality = array_keys($this->preference->image['quality']);
-                    foreach ($file_part as $file_extension_index=>$file_extension)
+                    foreach ($this->preference->{$this->request['file_type']} as $file_option_name=>$file_option_value)
                     {
-                        if (in_array($file_extension,$image_size))
+                        $file_option = array();
+                        $file_option = array_keys($file_option_value);
+                        foreach ($file_part as $file_extension_index=>$file_extension)
                         {
-                            $this->request['file_extra_extension']['image_size'] = $file_extension;
-                            unset($file_part[$file_extension_index]);
+                            if (in_array($file_extension, $file_option)) {
+                                $this->request['file_extra_extension'][$file_option_name] = $file_extension;
+                                unset($file_part[$file_extension_index]);
+                                break;
+                            }
                         }
-                        if (in_array($file_extension,$image_quality))
-                        {
-                            $this->request['file_extra_extension']['quality'] = $file_extension;
-                            unset($file_part[$file_extension_index]);
-                        }
-                    }
-                    unset($image_size);
-                    unset($image_quality);
-                }
-                foreach ($file_part as $file_extension_index=>$file_extension)
-                {
-                    if ($file_extension == 'min')
-                    {
-                        $this->request['file_extra_extension']['minify'] = $file_extension;
-                        unset($file_part[$file_extension_index]);
+                        unset($file_option);
                     }
                 }
-                ksort($this->request['file_extra_extension']);
                 if (!empty($file_part))
                 {
                     // Put the rest part that is not an extension back to document name, e.g. jquery-1.11.8.min.js
@@ -226,7 +215,9 @@ if ($this->request['source_type'] == 'data')
                     $this->request['file_path'] .= implode(DIRECTORY_SEPARATOR,$this->request['sub_path']).DIRECTORY_SEPARATOR;
                     $this->request['file_uri'] .= implode('/',$this->request['sub_path']).'/';
                 }
-                if ($this->request['file_type'] == 'image' AND preg_match('/-(\d*)$/',$this->request['document']))
+                $this->request['file_uri'] .= $file_name;
+
+                if (preg_match('/-(\d*)$/',$this->request['document']))
                 {
                     // images have special directory structure, images loaded from database real storage path is constructed by id
                     $file_name_parts = explode('-',$this->request['document']);
@@ -245,12 +236,12 @@ if ($this->request['source_type'] == 'data')
                             $sub_image_id = str_repeat('0', 3-strlen($sub_image_id)).$sub_image_id;
                         }
                     }
-                    $this->request['file_path_alt'] = $this->request['file_path'].implode(DIRECTORY_SEPARATOR,$sub_folder).DIRECTORY_SEPARATOR.implode('-',$file_name_parts);
-                    if (!empty($this->request['file_extra_extension'])) $this->request['file_path_alt'] .= '.'.implode('.',$this->request['file_extra_extension']);
-                    if (!empty($this->request['file_extension'])) $this->request['file_path_alt'] .= '.'.$this->request['file_extension'];
+                    $this->request['file_path'] = $this->request['file_path'].implode(DIRECTORY_SEPARATOR,$sub_folder).DIRECTORY_SEPARATOR.$file_name;
                 }
-                $this->request['file_path'] .= $file_name;
-                $this->request['file_uri'] .= $file_name;
+                else
+                {
+                    $this->request['file_path'] .= $file_name;
+                }
                 unset($file_name);
                 break;
             case 'data':
@@ -615,7 +606,17 @@ if ($this->request['source_type'] == 'data')
                             $this->result['status'] = 404;
                             return false;
                         }
-                        /*$entity_class = 'entity_'.$this->request['file_type'];
+//                        $view_class = 'view_'.$this->request['file_type'];
+//                        if (!class_exists($view_class))
+//                        {
+//                            // Error Handling, last ditch failed, source file does not exist in database either
+//                            $this->message->error = 'Building: cannot find source file';
+//                            $this->result['status'] = 404;
+//                            return false;
+//                        }
+//                        $view_obj = new $view_class($document_id);
+
+                        $entity_class = 'entity_'.$this->request['file_type'];
                         if (!class_exists($entity_class))
                         {
                             // Error Handling, last ditch failed, source file does not exist in database either
@@ -631,7 +632,8 @@ if ($this->request['source_type'] == 'data')
                             $this->result['status'] = 404;
                             return false;
                         }
-                        $record = array_shift($entity_obj->row);
+                        $entity_obj->sync(['sync_type'=>'update_current']);
+                        /*$record = array_shift($entity_obj->row);
 
                         if (empty($record['data']))
                         {
@@ -696,9 +698,9 @@ if ($this->request['source_type'] == 'data')
 
                     if (!isset($this->content['default_file'])) $this->content['default_file'] = [];
                     $this->content['default_file']['path'] = PATH_ASSET.$file_relative_path;
-                    if ($this->content['source_file']['width'] > max($this->preference->image['size']))
+                    if ($this->content['source_file']['width'] > max($this->preference->{$this->request['file_type']}['size']))
                     {
-                        $this->content['default_file']['width'] = max($this->preference->image['size']);
+                        $this->content['default_file']['width'] = max($this->preference->{$this->request['file_type']}['size']);
                         $this->content['default_file']['height'] = $this->content['source_file']['height'] / $this->content['source_file']['width'] * $this->content['default_file']['width'];
                     }
                     else
@@ -707,7 +709,7 @@ if ($this->request['source_type'] == 'data')
                         $this->content['default_file']['height'] = $this->content['source_file']['height'];
                     }
                     // Set default image quality as 'max'
-                    $this->content['default_file']['quality'] = $this->preference->image['quality']['max'];
+                    $this->content['default_file']['quality'] = $this->preference->{$this->request['file_type']}['quality']['max'];
 
                 }
 

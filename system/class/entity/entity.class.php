@@ -939,7 +939,7 @@ class entity extends base
         switch ($parameter['sync_type'])
         {
             case 'update_current':
-                // update_current, force update current object id_group rows
+                // update_current, force update current object id_group rows, force update target_table even the update date suggests it's latest
                 $sync_id_group = array(
                     'delete' => array(),
                     'update' => array(),
@@ -947,7 +947,7 @@ class entity extends base
                 );
                 break;
             case 'delete_current':
-                // delete_current, force delete current object id_group rows
+                // delete_current, force delete current object id_group rows, (it only delete records from target_table (generated views, indexes), leave source_table untouched)
                 $sync_id_group = array(
                     'delete' => $this->id_group,
                     'update' => array(),
