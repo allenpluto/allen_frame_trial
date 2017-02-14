@@ -172,6 +172,7 @@ class entity_image extends entity
             'description' => 'tbl_entity_image.description',
             'enter_time' => 'tbl_entity_image.enter_time',
             'update_time' => 'tbl_entity_image.update_time',
+            'view_time' => 'NOW()',
             'width' => 'tbl_entity_image.width',
             'height' => 'tbl_entity_image.height',
             'mime' => 'tbl_entity_image.mime',
@@ -199,6 +200,7 @@ class entity_image extends entity
             $init_sync_parameter['update_fields']['file_extension'] = '"'.str_repeat(' ',20).'"';
             $init_sync_parameter['update_fields']['file_uri'] = '"'.str_repeat(' ',200).'"';
             $init_sync_parameter['update_fields']['file_path'] = '"'.str_repeat(' ',200).'"';
+            $init_sync_parameter['update_fields']['file_size'] = 10^10;
             parent::sync($init_sync_parameter);
 
             $sync_parameter['sync_type'] = 'full_sync';
@@ -243,22 +245,24 @@ class entity_image extends entity
                 switch($row['mime'])
                 {
                     case 'image/gif':
-                        $row['file_extension'] = '.gif';
+                        $row['file_extension'] = 'gif';
                         break;
                     case 'image/png':
-                        $row['file_extension'] = '.png';
+                        $row['file_extension'] = 'png';
                         break;
                     case 'image/jpeg':
                     case 'image/pjpeg';
                     default:
-                        $row['file_extension'] = '.jpg';
+                        $row['file_extension'] = 'jpg';
                 }
-                $row['file_uri'] = URI_IMAGE.$file_name.'-'.$row['id'].$row['file_extension'];
-                $row['file_path'] = $file_dir.$file_name.'-'.$row['id'].$row['file_extension'];
+                $row['file_uri'] = URI_IMAGE.$file_name.'-'.$row['id'].'.'.$row['file_extension'];
+                $row['file_path'] = $file_dir.$file_name.'-'.$row['id'].'.'.$row['file_extension'];
 
                 if (!file_exists($file_dir)) mkdir($file_dir, 0755, true);
                 file_put_contents($row['file_path'],  $row['data']);
                 unset($row['data']);
+
+                $row['file_size'] = filesize($row['file_path']);
             }
         }
 

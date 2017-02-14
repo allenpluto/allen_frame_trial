@@ -222,6 +222,7 @@ if ($this->request['source_type'] == 'data')
                     // images have special directory structure, images loaded from database real storage path is constructed by id
                     $file_name_parts = explode('-',$this->request['document']);
                     $file_id = array_pop($file_name_parts);
+                    $this->request['file_id'] = $file_id;
                     $sub_folder = array();
                     do
                     {
@@ -493,11 +494,6 @@ if ($this->request['source_type'] == 'data')
                     'uri'=>$this->request['file_uri']
                 ];
 
-                if (isset($this->request['file_path_alt']) AND !file_exists($this->content['target_file']['path']))
-                {
-                    $this->content['target_file']['path'] = $this->request['file_path_alt'];
-                }
-
                 if (file_exists($this->content['target_file']['path']))
                 {
                     $this->content['target_file']['last_modified'] = filemtime($this->content['target_file']['path']);
@@ -505,55 +501,85 @@ if ($this->request['source_type'] == 'data')
                 }
                 else
                 {
+                    mkdir(dirname($this->content['target_file']['path']), 0755, true);
                     $this->content['target_file']['last_modified'] = 0;
                     $this->content['target_file']['content_length'] = 0;
                 }
 
-                $file_relative_path = $this->request['file_type'].DIRECTORY_SEPARATOR;
-                if (!empty($this->request['sub_path'])) $file_relative_path .= implode(DIRECTORY_SEPARATOR,$this->request['sub_path']).DIRECTORY_SEPARATOR;
+//                $file_relative_path = $this->request['file_type'].DIRECTORY_SEPARATOR;
+//                if (!empty($this->request['sub_path'])) $file_relative_path .= implode(DIRECTORY_SEPARATOR,$this->request['sub_path']).DIRECTORY_SEPARATOR;
+//                $this->content['source_file'] = [
+//                    'path' => PATH_ASSET.$file_relative_path.$this->request['document'].'.src.'.$this->request['file_extension'],
+//                    'source' => 'local_file'
+//                ];
+//                $source_file_relative_path =  $file_relative_path .  $this->request['document'].'.src.'.$this->request['file_extension'];
+//                $file_relative_path .= $this->request['document'].'.'.$this->request['file_extension'];
+
                 $this->content['source_file'] = [
-                    'path' => PATH_ASSET.$file_relative_path.$this->request['document'].'.src.'.$this->request['file_extension'],
+                    'path' => dirname($this->request['file_path']).DIRECTORY_SEPARATOR.$this->request['document'].'.'.$this->request['file_extension'],
                     'source' => 'local_file'
                 ];
-                $source_file_relative_path =  $file_relative_path .  $this->request['document'].'.src.'.$this->request['file_extension'];
-                $file_relative_path .= $this->request['document'].'.'.$this->request['file_extension'];
-
-
-                if (!file_exists(dirname($this->content['source_file']['path']))) mkdir(dirname($this->content['source_file']['path']), 0755, true);
 
                 if (isset($this->request['option']['source']))
                 {
-                    if ((strpos($this->request['option']['source'],URI_SITE_BASE) == FALSE)  AND (preg_match('/^http/',$this->request['option']['source']) == 1))
+                    if (preg_match('/^http/',$this->request['option']['source']) == 1)
                     {
-                        // If source_file is not relative uri and not start with current site uri base, it is an external (cross domain) source file
-                        $this->content['source_file']['original_file'] = $this->request['option']['source'];
-                        $this->content['source_file']['source'] = 'remote_file';
+                        if (strpos($this->request['option']['source'],URI_SITE_BASE) == FALSE)
+                        {
+                            // If source_file is not relative uri and not start with current site uri base, it is an external (cross domain) source file
+                            $this->content['source_file']['original_file'] = $this->request['option']['source'];
+                            $this->content['source_file']['source'] = 'remote_file';
+                        }
+                        else
+                        {
+                            // If source_file is in local server, but reference by uri rather than path, decode recursively
+                            $source_content = new content(str_replace(URI_SITE_BASE,'',$this->request['option']['source']));
+                            $source_file_path = $source_content->request['file_path'];
+                            unset($source_content);
+
+                            if (!file_exists($source_file_path))
+                            {
+                                $this->message->error = 'Building: source file does not exist '.$source_file_path;
+                                $this->result['status'] = 404;
+                                return false;
+                            }
+                            $this->content['source_file']['original_file'] = $source_file_path;
+                        }
                     }
                     else
                     {
-                        $this->content['source_file']['original_file'] = str_replace(URI_SITE_BASE,PATH_SITE_BASE,$this->request['option']['source']);
+                        // source file not leading by http is assumed to be local file path
+                        if (!file_exists($this->request['option']['source']))
+                        {
+                            $this->message->error = 'Building: source file does not exist '.$this->request['option']['source'];
+                            $this->result['status'] = 404;
+                            return false;
+                        }
+                        $this->content['source_file']['original_file'] = $this->request['option']['source'];
                     }
 
-                    if ($this->content['source_file']['source'] == 'local_file')
-                    {
-                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']['original_file']);
-                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']['original_file']);
-                    }
-                    else
+                    if ($this->content['source_file']['source'] == 'remote_file')
                     {
                         // External source file
                         $file_header = @get_headers($this->content['source_file']['original_file'],true);
-                        if (strpos( $file_header[0], '200 OK' ) === false) {
+                        if (strpos( $file_header[0], '200 OK' ) === false)
+                        {
                             // Error Handling, fail to get external source file header
                             $this->message->error = 'Source File not accessible - '.$file_header[0];
                             return false;
                         }
-                        if (isset($file_header['Last-Modified'])) {
+                        if (isset($file_header['Last-Modified']))
+                        {
                             $this->content['source_file']['last_modified'] = strtotime($file_header['Last-Modified']);
-                        } else {
-                            if (isset($file_header['Expires'])) {
+                        }
+                        else
+                        {
+                            if (isset($file_header['Expires']))
+                            {
                                 $this->content['source_file']['last_modified'] = strtotime($file_header['Expires']);
-                            } else {
+                            }
+                            else
+                            {
                                 if (isset($file_header['Date'])) $this->content['source_file']['last_modified'] = strtotime($file_header['Date']);
                                 else $this->content['source_file']['last_modified'] = ('+1 day');
                             }
@@ -576,92 +602,72 @@ if ($this->request['source_type'] == 'data')
                 }
                 else
                 {
-                    if (file_exists(PATH_ASSET.$source_file_relative_path))
+                    if (file_exists($this->content['source_file']['path']))
                     {
-                        $this->content['source_file']['original_file'] = PATH_ASSET.$source_file_relative_path;
-                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']['original_file']);
-                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']['original_file']);
+                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']);
+                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']);
                     }
-                    elseif (file_exists(PATH_ASSET.$file_relative_path))
+                    elseif (file_exists(str_replace(PATH_ASSET,PATH_CONTENT,$this->content['source_file']['path'])))
                     {
-                        $this->content['source_file']['original_file'] = PATH_ASSET.$file_relative_path;
-                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']['original_file']);
-                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']['original_file']);
-                    }
-                    elseif (file_exists(PATH_CONTENT.$file_relative_path))
-                    {
-                        $this->content['source_file']['original_file'] = PATH_CONTENT.$file_relative_path;
-                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']['original_file']);
-                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']['original_file']);
+                        // If source file does not exist in asset folder, check if there is a corresponding file in content folder
+                        $this->content['source_file']['original_file'] = str_replace(PATH_ASSET,PATH_CONTENT,$this->content['source_file']['path']);
                     }
                     else
                     {
                         // If file source doesn't exist in content folder, try database
-                        $document_name_part = explode('-',$this->request['document']);
-                        $document_id = end($document_name_part);
-                        if (empty($document_id) OR !is_numeric($document_id))
+                        if (empty($this->request['file_id']))
                         {
                             // Error Handling, fail to get source file from database, last part of file name is not a valid id
-                            $this->message->error = 'Building: fail to get source file from database, file not in standard format';
-                            $this->result['status'] = 404;
-                            return false;
-                        }
-//                        $view_class = 'view_'.$this->request['file_type'];
-//                        if (!class_exists($view_class))
-//                        {
-//                            // Error Handling, last ditch failed, source file does not exist in database either
-//                            $this->message->error = 'Building: cannot find source file';
-//                            $this->result['status'] = 404;
-//                            return false;
-//                        }
-//                        $view_obj = new $view_class($document_id);
-
-                        $entity_class = 'entity_'.$this->request['file_type'];
-                        if (!class_exists($entity_class))
-                        {
-                            // Error Handling, last ditch failed, source file does not exist in database either
                             $this->message->error = 'Building: cannot find source file';
                             $this->result['status'] = 404;
                             return false;
                         }
-                        $entity_obj = new $entity_class($document_id);
-                        if (empty($entity_obj->row))
+
+                        $view_class = 'view_'.$this->request['file_type'];
+                        if (!class_exists($view_class))
                         {
-                            // Error Handling, fail to get source file from database, cannot find matched record
-                            $this->message->error = 'Building: fail to get source file from database, invalid id';
+                            // Error Handling, view class does not exist for given file type
+                            $this->message->error = 'Building: cannot find source file';
                             $this->result['status'] = 404;
                             return false;
                         }
-                        $entity_obj->sync(['sync_type'=>'update_current']);
-                        /*$record = array_shift($entity_obj->row);
+                        $view_obj = new $view_class($this->request['file_id']);
 
-                        if (empty($record['data']))
+                        if (!empty($view_obj->id_group))
                         {
-                            // Error Handling, image record found, but image data is not stored in database
-                            $this->message->error = 'Building: fail to get source file from database, image data not stored';
-                            $this->result['status'] = 404;
-                            return false;
+                            $file_record = end($view_obj->fetch_value());
                         }
 
-                        $this->content['source_file']['source'] = 'local_data';
-                        $this->content['source_file']['original_file'] = $this->content['source_file']['path'];
-
-                        if (!empty($record['update_time']))
+                        if (empty($file_record['file_path']) OR !file_exists($file_record['file_path']))
                         {
-                            $this->content['source_file']['last_modified'] = strtotime($record['update_time']);
-                        }
-                        else
-                        {
-                            $this->content['source_file']['last_modified'] = time();
+                            $entity_class = 'entity_'.$this->request['file_type'];
+                            if (!class_exists($entity_class))
+                            {
+                                // Error Handling, last ditch failed, source file does not exist in database either
+                                $this->message->error = 'Building: cannot find source file';
+                                $this->result['status'] = 404;
+                                return false;
+                            }
+                            $entity_obj = new $entity_class($this->request['file_id']);
+                            if (empty($entity_obj->row))
+                            {
+                                // Error Handling, fail to get source file from database, cannot find matched record
+                                $this->message->error = 'Building: fail to get source file from database, invalid id';
+                                $this->result['status'] = 404;
+                                return false;
+                            }
+                            $entity_obj->sync(['sync_type'=>'update_current']);
+
+                            $view_obj->get();
+                            if (!empty($view_obj->id_group))
+                            {
+                                $file_record = end($view_obj->fetch_value());
+                            }
                         }
 
-                        if ($this->content['source_file']['last_modified'] > $this->content['target_file']['last_modified'])
-                        {
-                            file_put_contents($this->content['source_file']['path'],$record['data']);
-                            touch($this->content['source_file']['path'], $this->content['source_file']['last_modified']);
-                        }
-
-                        if (!empty($record['mime'])) $this->content['source_file']['content_type'] = $record['mime'];*/
+                        if (isset($file_record['file_size'])) $this->content['source_file']['content_length'] = $file_record['file_size'];
+                        if (isset($file_record['update_time'])) $this->content['source_file']['last_modified'] = $file_record['update_time'];
+                        if (isset($file_record['mime'])) $this->content['source_file']['content_type'] = $file_record['mime'];
                     }
                 }
 
@@ -670,23 +676,26 @@ if ($this->request['source_type'] == 'data')
                     if(file_exists($this->content['target_file']['path'])) unlink($this->content['target_file']['path']);
                 }
 
-                if ($this->content['source_file']['path'] == $this->content['source_file']['original_file'])
+                if (isset($this->content['source_file']['original_file']))
                 {
-                    unset($this->content['source_file']['original_file']);
-                }
-                else
-                {
-                    if ($this->content['source_file']['last_modified'] > $this->content['target_file']['last_modified'])
+                    if ($this->content['source_file']['path'] == $this->content['source_file']['original_file'])
                     {
-                        copy($this->content['source_file']['original_file'],$this->content['source_file']['path']);
-                        touch($this->content['source_file']['path'], $this->content['source_file']['last_modified']);
-
-                        if(!isset($this->content['source_file']['content_length'])) $this->content['source_file']['content_length'] = filesize($this->content['source_file']['path']);
-                        if(!isset($this->content['source_file']['content_type'])) $this->content['source_file']['content_type'] = mime_content_type($this->content['source_file']['path']);
+                        unset($this->content['source_file']['original_file']);
                     }
                     else
                     {
-                        if(file_exists($this->content['source_file']['path'])) unlink($this->content['source_file']['path']);
+                        if ($this->content['source_file']['last_modified'] > $this->content['target_file']['last_modified'])
+                        {
+                            copy($this->content['source_file']['original_file'],$this->content['source_file']['path']);
+                            touch($this->content['source_file']['path'], $this->content['source_file']['last_modified']);
+
+                            if(!isset($this->content['source_file']['content_length'])) $this->content['source_file']['content_length'] = filesize($this->content['source_file']['path']);
+                            if(!isset($this->content['source_file']['content_type'])) $this->content['source_file']['content_type'] = mime_content_type($this->content['source_file']['path']);
+                        }
+//                        else
+//                        {
+//                            if(file_exists($this->content['source_file']['path'])) unlink($this->content['source_file']['path']);
+//                        }
                     }
                 }
 
@@ -697,7 +706,7 @@ if ($this->request['source_type'] == 'data')
                     $this->content['source_file']['height'] = $source_image_size[1];
 
                     if (!isset($this->content['default_file'])) $this->content['default_file'] = [];
-                    $this->content['default_file']['path'] = PATH_ASSET.$file_relative_path;
+                    $this->content['default_file']['path'] = $this->content['source_file']['path'];
                     if ($this->content['source_file']['width'] > max($this->preference->{$this->request['file_type']}['size']))
                     {
                         $this->content['default_file']['width'] = max($this->preference->{$this->request['file_type']}['size']);

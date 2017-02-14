@@ -134,8 +134,18 @@ class db
         $result = array();
         $sql = 'SELECT ' . $parameter['source_primary_key'] . '
         FROM ' . $parameter['source_table'] . '
-        WHERE ' . $parameter['source_primary_key'] . ' NOT IN
-        (SELECT ' . $parameter['target_primary_key'] .' FROM ' . $parameter['target_table'] . ')';
+        WHERE 1';
+        if (isset($parameter['id_group']))
+        {
+            $sql .= ' AND ' . $parameter['source_primary_key'] . ' IN ('.implode(',',$parameter['id_group']).') ';
+        }
+        $sql .= ' AND ' . $parameter['source_primary_key'] . ' NOT IN
+        (SELECT ' . $parameter['target_primary_key'] .' FROM ' . $parameter['target_table'] . ' WHERE 1';
+        if (isset($parameter['id_group']))
+        {
+            $sql .= ' AND ' . $parameter['target_primary_key'] . ' IN ('.implode(',',$parameter['id_group']).') ';
+        }
+        $sql .= ')';
         if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
         $pdo_statement_obj = self::$_conn->query($sql);
         if (self::$_conn->errorCode() == '00000')
@@ -157,8 +167,22 @@ class db
 
         $sql = 'SELECT ' . $parameter['target_primary_key'] . '
         FROM ' . $parameter['target_table'] . '
-        WHERE ' . $parameter['target_primary_key'] . ' NOT IN
-        (SELECT ' . $parameter['source_primary_key'] .' FROM ' . $parameter['source_table'] . (empty($parameter['where'])?'':' WHERE (' . implode(' AND ', $parameter['where']) . ')') . ')';
+        WHERE 1';
+        if (isset($parameter['id_group']))
+        {
+            $sql .= ' AND ' . $parameter['target_primary_key'] . ' IN ('.implode(',',$parameter['id_group']).') ';
+        }
+        $sql .= ' AND ' . $parameter['target_primary_key'] . ' NOT IN
+        (SELECT ' . $parameter['source_primary_key'] .' FROM ' . $parameter['source_table'] . ' WHERE 1';
+        if (isset($parameter['id_group']))
+        {
+            $sql .= ' AND ' . $parameter['source_primary_key'] . ' IN ('.implode(',',$parameter['id_group']).') ';
+        }
+        if (!empty($parameter['where']))
+        {
+            $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
+        }
+        $sql .= ')';
         $pdo_statement_obj = self::$_conn->query($sql);
         if (self::$_conn->errorCode() == '00000')
         {
@@ -181,6 +205,10 @@ class db
         FROM ' . $parameter['source_table'] . '
         JOIN ' . $parameter['target_table'] . ' ON ' . $parameter['source_table'] . '.' . $parameter['source_primary_key'] . '=' . $parameter['target_table'] . '.' . $parameter['target_primary_key'] . '
         WHERE '.$parameter['source_table'].'.update_time > '.$parameter['target_table'].'.update_time';
+        if (isset($parameter['id_group']))
+        {
+            $sql .= ' AND ' . $parameter['source_table'] . '.' . $parameter['source_primary_key'] . ' IN ('.implode(',',$parameter['id_group']).') ';
+        }
         if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
         $pdo_statement_obj = self::$_conn->query($sql);
         if (self::$_conn->errorCode() == '00000')

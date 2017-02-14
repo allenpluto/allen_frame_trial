@@ -957,13 +957,19 @@ class entity extends base
             case 'differential_sync':
             default:
                 // differential_sync, compare source table and target table id and updated date field to get the sync rows
-                $sync_id_group = $db->db_compare_records(array(
+                $compare_records_parameter = array(
                     'source_table'=>$parameter['table'],
                     'source_primary_key'=>$parameter['primary_key'],
                     'target_table'=>$parameter['sync_table'],
                     'target_primary_key'=>$parameter['sync_table_primary_key'],
                     'where'=>(!empty($parameter['where'])?$parameter['where']:'')
-                ));
+                );
+                if (!empty($this->id_group))
+                {
+                    $compare_records_parameter['id_group'] = $this->id_group;
+                }
+                $sync_id_group = $db->db_compare_records($compare_records_parameter);
+                unset($compare_records_parameter);
                 if ($sync_id_group === false) return false;
         }
 
@@ -1023,6 +1029,7 @@ class entity extends base
             // default table fields remove two timestamp fields, but on sync, they are required
             if (!array_key_exists('enter_time', $parameter['update_fields'])) $parameter['update_fields']['enter_time'] = $parameter['table'] . '.enter_time';
             if (!array_key_exists('update_time', $parameter['update_fields'])) $parameter['update_fields']['update_time'] = $parameter['table'] . '.update_time';
+            if (!array_key_exists('view_time', $parameter['update_fields'])) $parameter['update_fields']['update_time'] = 'NOW()';
 
             if (empty($parameter['advanced_sync']))
             {
