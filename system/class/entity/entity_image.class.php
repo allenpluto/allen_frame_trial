@@ -8,6 +8,8 @@ class entity_image extends entity
 {
     function __construct($value = Null, $parameter = array())
     {
+        include_once(PATH_PREFERENCE.'image'.FILE_EXTENSION_INCLUDE);
+
         $default_parameter = [
             'store_data'=>true
         ];
@@ -63,11 +65,14 @@ class entity_image extends entity
     {
         if (isset($parameter['row']))
         {
+            $max_image_width = max($this->preference->image['size']);
+            $image_quality = $this->preference->image['quality']['max'];
+
             foreach($parameter['row'] as $record_index => &$record)
             {
-                if (isset($record['image_src']))
+                if (isset($record['source_file']))
                 {
-                    $image_size = @getimagesize($record['image_src']);
+                    $image_size = @getimagesize($record['source_file']);
                     if ($image_size !== false)
                     {
                         $record['width'] = $image_size[0];
@@ -76,19 +81,53 @@ class entity_image extends entity
                         else
                         {
                             $record['mime'] = 'image/jpeg';
-                            $this->message->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image mime type for '.$record['image_src'];
+                            $this->message->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image mime type for '.$record['source_file'];
                         }
 
-                        $image_data = file_get_contents($record['image_src']);
+                        $image_data = file_get_contents($record['source_file']);
+
                         if ($image_data !== false)
                         {
+                            if ($record['width'] > $max_image_width AND ($record['mime'] == 'image/jpeg' OR $record['mime'] == 'image/png'))
+                            {
+                                $original_record = $record;
+                                $record['height'] = $record['height'] / $record['width'] * $max_image_width;
+                                $record['width'] = $max_image_width;
+
+                                // Set default image quality as 'max'
+                                //$record['quality'] = $this->preference->image['quality']['max'];
+                                $source_image = imagecreatefromstring($image_data);
+                                $target_image = imagecreatetruecolor($record['width'],  $record['height']);
+
+                                imagecopyresampled($target_image,$source_image,0,0,0,0,$record['width'], $record['height'],$original_record['width'],$original_record['height']);
+                                imageinterlace($target_image,true);
+
+                                ob_start();
+                                if ($record['mime'] == 'image/jpeg') imagejpeg($target_image, NULL, $image_quality['image/jpeg']);
+                                if ($record['mime'] == 'image/png')
+                                {
+                                    imagesavealpha($target_image, true);
+                                    imagepng($target_image, NULL, $image_quality['image/png'][0], $image_quality['image/png'][1]);
+                                }
+                                $image_data = ob_get_contents();
+                                ob_get_clean();
+
+                                imagedestroy($source_image);
+                                imagedestroy($target_image);
+                                unset($original_record);
+                            }
+
                             $record['data'] = $image_data;
+                        }
+                        else
+                        {
+                            $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image size for '.$record['source_file'];
                         }
                         unset($image_data);
                     }
                     else
                     {
-                        $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image size for '.$record['image_src'];
+                        $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image size for '.$record['source_file'];
                     }
                     unset($image_size);
                 }
@@ -172,11 +211,12 @@ class entity_image extends entity
             'description' => 'tbl_entity_image.description',
             'enter_time' => 'tbl_entity_image.enter_time',
             'update_time' => 'tbl_entity_image.update_time',
-            'view_time' => 'NOW()',
+            'view_time' => '"'.date('Y-m-d H:i:s').'"',
             'width' => 'tbl_entity_image.width',
             'height' => 'tbl_entity_image.height',
             'mime' => 'tbl_entity_image.mime',
-            'data' => 'tbl_entity_image.data'
+            'data' => 'tbl_entity_image.data',
+            'source_file' => 'tbl_entity_image.source_file'
         );
         $sync_parameter['advanced_sync'] = true;
 
@@ -218,13 +258,17 @@ class entity_image extends entity
 
         foreach ($source_row as $index=>&$row)
         {
-            if (isset($row['data']))
+            if (!empty($row['source_file']) AND empty($row['data']))
             {
-                if (!isset($row['id']))
+
+            }
+            if (!empty($row['data']))
+            {
+                if (empty($row['id']))
                 {
                     $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row id not set';
                 }
-                if (!isset($row['friendly_uri']))
+                if (empty($row['friendly_uri']))
                 {
                     $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row friendly uri not set';
                 }

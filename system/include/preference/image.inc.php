@@ -9,7 +9,7 @@ if (!isset($global_preference)) $global_preference = preference::get_instance();
 
 // Image Size (width grid)
 $global_preference->image = array(
-    'size'=>array(
+    'width'=>array(
         'xxs'=>45,
         'xs'=>90,
         's'=>180,

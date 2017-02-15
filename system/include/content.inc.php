@@ -501,7 +501,7 @@ if ($this->request['source_type'] == 'data')
                 }
                 else
                 {
-                    mkdir(dirname($this->content['target_file']['path']), 0755, true);
+                    if (!file_exists(dirname($this->content['target_file']['path']))) mkdir(dirname($this->content['target_file']['path']), 0755, true);
                     $this->content['target_file']['last_modified'] = 0;
                     $this->content['target_file']['content_length'] = 0;
                 }
@@ -604,8 +604,8 @@ if ($this->request['source_type'] == 'data')
                 {
                     if (file_exists($this->content['source_file']['path']))
                     {
-                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']);
-                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']);
+                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']['path']);
+                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']['path']);
                     }
                     elseif (file_exists(str_replace(PATH_ASSET,PATH_CONTENT,$this->content['source_file']['path'])))
                     {
@@ -635,71 +635,105 @@ if ($this->request['source_type'] == 'data')
 
                         if (!empty($view_obj->id_group))
                         {
-                            $file_record = end($view_obj->fetch_value());
+                            $file_record = $view_obj->fetch_value();
+                            $file_record = end($file_record);
                         }
 
                         if (empty($file_record['file_path']) OR !file_exists($file_record['file_path']))
                         {
-                            $entity_class = 'entity_'.$this->request['file_type'];
-                            if (!class_exists($entity_class))
-                            {
-                                // Error Handling, last ditch failed, source file does not exist in database either
-                                $this->message->error = 'Building: cannot find source file';
-                                $this->result['status'] = 404;
-                                return false;
-                            }
-                            $entity_obj = new $entity_class($this->request['file_id']);
-                            if (empty($entity_obj->row))
-                            {
-                                // Error Handling, fail to get source file from database, cannot find matched record
-                                $this->message->error = 'Building: fail to get source file from database, invalid id';
-                                $this->result['status'] = 404;
-                                return false;
-                            }
-                            $entity_obj->sync(['sync_type'=>'update_current']);
-
-                            $view_obj->get();
-                            if (!empty($view_obj->id_group))
-                            {
-                                $file_record = end($view_obj->fetch_value());
-                            }
+                            $this->message->error = 'Building: cannot find source file';
+                            $this->result['status'] = 404;
+                            return false;
+//                            $entity_class = 'entity_'.$this->request['file_type'];
+//                            if (!class_exists($entity_class))
+//                            {
+//                                // Error Handling, last ditch failed, source file does not exist in database either
+//                                $this->message->error = 'Building: cannot find source file';
+//                                $this->result['status'] = 404;
+//                                return false;
+//                            }
+//                            $entity_obj = new $entity_class($this->request['file_id']);
+//                            if (empty($entity_obj->row))
+//                            {
+//                                // Error Handling, fail to get source file from database, cannot find matched record
+//                                $this->message->error = 'Building: fail to get source file from database, invalid id';
+//                                $this->result['status'] = 404;
+//                                return false;
+//                            }
+//                            $entity_obj->sync(['sync_type'=>'update_current']);
+//
+//                            $view_obj->get();
+//                            if (!empty($view_obj->id_group))
+//                            {
+//                                $file_record = end($view_obj->fetch_value());
+//                            }
                         }
 
                         if (isset($file_record['file_size'])) $this->content['source_file']['content_length'] = $file_record['file_size'];
                         if (isset($file_record['update_time'])) $this->content['source_file']['last_modified'] = $file_record['update_time'];
                         if (isset($file_record['mime'])) $this->content['source_file']['content_type'] = $file_record['mime'];
+                        if (isset($file_record['width'])) $this->content['source_file']['width'] = $file_record['width'];
+                        if (isset($file_record['height'])) $this->content['source_file']['height'] = $file_record['height'];
                     }
                 }
 
-                if ($this->content['source_file']['last_modified'] > $this->content['target_file']['last_modified'])
-                {
-                    if(file_exists($this->content['target_file']['path'])) unlink($this->content['target_file']['path']);
-                }
+                if(!isset($this->content['source_file']['content_length'])) $this->content['source_file']['content_length'] = filesize($this->content['source_file']['path']);
+                if(!isset($this->content['source_file']['last_modified'])) $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']['path']);
+                if(!isset($this->content['source_file']['content_type'])) $this->content['source_file']['content_type'] = mime_content_type($this->content['source_file']['path']);
 
-                if (isset($this->content['source_file']['original_file']))
+
+                if ($this->content['target_file']['path'] == $this->content['source_file']['path'])
                 {
-                    if ($this->content['source_file']['path'] == $this->content['source_file']['original_file'])
+                    if (isset($this->content['source_file']['content_length'])) $this->content['target_file']['content_length'] = $this->content['source_file']['content_length'];
+                    if (isset($this->content['source_file']['last_modified'])) $this->content['target_file']['last_modified'] = $this->content['source_file']['last_modified'];
+                    if (isset($this->content['source_file']['content_type'])) $this->content['target_file']['content_type'] = $this->content['source_file']['content_type'];
+                }
+                else
+                {
+                    if ($this->content['source_file']['last_modified'] > $this->content['target_file']['last_modified'])
                     {
-                        unset($this->content['source_file']['original_file']);
+                        if(file_exists($this->content['target_file']['path'])) unlink($this->content['target_file']['path']);
                     }
-                    else
+
+                    if (isset($this->content['source_file']['original_file']))
                     {
-                        if ($this->content['source_file']['last_modified'] > $this->content['target_file']['last_modified'])
+                        if ($this->content['source_file']['path'] == $this->content['source_file']['original_file'])
                         {
-                            copy($this->content['source_file']['original_file'],$this->content['source_file']['path']);
-                            touch($this->content['source_file']['path'], $this->content['source_file']['last_modified']);
-
-                            if(!isset($this->content['source_file']['content_length'])) $this->content['source_file']['content_length'] = filesize($this->content['source_file']['path']);
-                            if(!isset($this->content['source_file']['content_type'])) $this->content['source_file']['content_type'] = mime_content_type($this->content['source_file']['path']);
+                            unset($this->content['source_file']['original_file']);
                         }
-//                        else
-//                        {
-//                            if(file_exists($this->content['source_file']['path'])) unlink($this->content['source_file']['path']);
-//                        }
+                        else
+                        {
+                            if ($this->content['source_file']['last_modified'] > $this->content['target_file']['last_modified'])
+                            {
+                                copy($this->content['source_file']['original_file'],$this->content['source_file']['path']);
+                                touch($this->content['source_file']['path'], $this->content['source_file']['last_modified']);
+
+                                $this->content['source_file']['content_length'] = filesize($this->content['source_file']['path']);
+                                $this->content['source_file']['content_type'] = mime_content_type($this->content['source_file']['path']);
+                            }
+                        }
                     }
+                    foreach ($this->request['file_extra_extension'] as $extension_index=>$extension)
+                    {
+                        $this->content['target_file'][$extension_index] = $this->preference->{$this->request['file_type']}[$extension_index][$extension];
+                    }
+
                 }
 
                 if ($this->request['file_type'] == 'image')
+                {
+                    $source_image_size = getimagesize($this->content['source_file']['path']);
+                    $this->content['source_file']['width'] = $source_image_size[0];
+                    $this->content['source_file']['height'] = $source_image_size[1];
+
+                    if (!isset($this->content['target_file']['width'])) $this->content['target_file']['width'] = $this->content['source_file']['width'];
+                    if (!isset($this->content['target_file']['height'])) $this->content['target_file']['height'] = $this->content['source_file']['height'] / $this->content['source_file']['width'] * $this->content['target_file']['width'];
+
+                    // If image quality is not specified, use the fast generate setting
+                    if (!isset($this->content['target_file']['quality'])) $this->content['target_file']['quality'] = $this->preference->image['quality']['spd'];
+                }
+
+/*                if ($this->request['file_type'] == 'image')
                 {
                     $source_image_size = getimagesize($this->content['source_file']['path']);
                     $this->content['source_file']['width'] = $source_image_size[0];
@@ -745,10 +779,9 @@ if ($this->request['source_type'] == 'data')
                                 break;
                         }
                     }
-                }
+                }*/
 
-                // If image quality is not specified, use the fast generate setting
-                if (!isset($this->content['target_file']['quality'])) $this->content['target_file']['quality'] = $this->preference->image['quality']['spd'];
+
                 break;
             case 'data':
             default:
@@ -1226,12 +1259,12 @@ if ($this->request['source_type'] == 'data')
                 }
 
                 // Try up to 10 times to delete the source file
-                $unlink_retry_counter = 10;
-                while (!unlink($this->content['source_file']['path']) AND $unlink_retry_counter > 0)
-                {
-                    sleep(1);
-                    $unlink_retry_counter--;
-                }
+//                $unlink_retry_counter = 10;
+//                while (!unlink($this->content['source_file']['path']) AND $unlink_retry_counter > 0)
+//                {
+//                    sleep(1);
+//                    $unlink_retry_counter--;
+//                }
 
                 $this->content['target_file']['last_modified'] = filemtime($this->content['target_file']['path']);
                 $this->content['target_file']['content_length'] = filesize($this->content['target_file']['path']);
@@ -1284,55 +1317,55 @@ if ($this->request['source_type'] == 'data')
                     return false;
                 }
 
-                // If the source file is not copied from default file, generate default file
-                if (!isset($this->content['source_file']['original_file']) OR $this->content['source_file']['original_file'] != $this->content['default_file']['path'])
-                {
-                    if ($this->content['source_file']['width'] != $this->content['default_file']['width'])
-                    {
-                        // Resize the image if it is not the same size
-                        $default_image = imagecreatetruecolor($this->content['default_file']['width'],  $this->content['default_file']['height']);
-                        imagecopyresampled($default_image,$source_image,0,0,0,0,$this->content['default_file']['width'], $this->content['default_file']['height'],$this->content['source_file']['width'],$this->content['source_file']['height']);
-                    }
-                    else
-                    {
-                        $default_image = $source_image;
-                    }
-                    imageinterlace($default_image,true);
-
-                    // Save Default Image with Max Quality Set
-                    $image_quality = $this->content['default_file']['quality'];
-                    switch($this->content['source_file']['content_type'])
-                    {
-                        case 'image/png':
-                            imagesavealpha($default_image, true);
-                            imagepng($default_image, $this->content['default_file']['path'], $image_quality['image/png'][0], $image_quality['image/png'][1]);
-                            break;
-                        case 'image/gif':
-                            // If source is gif, directly copy it, any resize will lose frame data (lose animation effect)
-                            copy($this->content['source_file']['path'],$this->content['default_file']['path']);
-                            $this->content['default_file']['width'] = $this->content['source_file']['width'];
-                            $this->content['default_file']['height'] = $this->content['source_file']['height'];
-                            break;
-                        case 'image/jpg':
-                        case 'image/jpeg':
-                        default:
-                            imagejpeg($default_image, $this->content['default_file']['path'], $image_quality['image/jpeg']);
-                    }
-                    $this->content['default_file']['content_length'] = filesize($this->content['default_file']['path']);
-                    if ($this->content['default_file']['content_length'] > $this->content['source_file']['content_length'])
-                    {
-                        // If somehow resized image getting bigger in size, just overwrite it with original file
-                        copy($this->content['source_file']['path'],$this->content['default_file']['path']);
-                        $this->content['default_file']['content_length'] = $this->content['source_file']['content_length'];
-                    }
-                    touch($this->content['default_file']['path'],$this->content['source_file']['last_modified']);
-                    $this->content['default_file']['last_modified'] = $this->content['source_file']['last_modified'];
-                    // Default image create process finish here, unset default file gd object
-                    unset($default_image);
-                }
+//                // If the source file is not copied from default file, generate default file
+//                if (!isset($this->content['source_file']['original_file']) OR $this->content['source_file']['original_file'] != $this->content['default_file']['path'])
+//                {
+//                    if ($this->content['source_file']['width'] != $this->content['default_file']['width'])
+//                    {
+//                        // Resize the image if it is not the same size
+//                        $default_image = imagecreatetruecolor($this->content['default_file']['width'],  $this->content['default_file']['height']);
+//                        imagecopyresampled($default_image,$source_image,0,0,0,0,$this->content['default_file']['width'], $this->content['default_file']['height'],$this->content['source_file']['width'],$this->content['source_file']['height']);
+//                    }
+//                    else
+//                    {
+//                        $default_image = $source_image;
+//                    }
+//                    imageinterlace($default_image,true);
+//
+//                    // Save Default Image with Max Quality Set
+//                    $image_quality = $this->content['default_file']['quality'];
+//                    switch($this->content['source_file']['content_type'])
+//                    {
+//                        case 'image/png':
+//                            imagesavealpha($default_image, true);
+//                            imagepng($default_image, $this->content['default_file']['path'], $image_quality['image/png'][0], $image_quality['image/png'][1]);
+//                            break;
+//                        case 'image/gif':
+//                            // If source is gif, directly copy it, any resize will lose frame data (lose animation effect)
+//                            copy($this->content['source_file']['path'],$this->content['default_file']['path']);
+//                            $this->content['default_file']['width'] = $this->content['source_file']['width'];
+//                            $this->content['default_file']['height'] = $this->content['source_file']['height'];
+//                            break;
+//                        case 'image/jpg':
+//                        case 'image/jpeg':
+//                        default:
+//                            imagejpeg($default_image, $this->content['default_file']['path'], $image_quality['image/jpeg']);
+//                    }
+//                    $this->content['default_file']['content_length'] = filesize($this->content['default_file']['path']);
+//                    if ($this->content['default_file']['content_length'] > $this->content['source_file']['content_length'])
+//                    {
+//                        // If somehow resized image getting bigger in size, just overwrite it with original file
+//                        copy($this->content['source_file']['path'],$this->content['default_file']['path']);
+//                        $this->content['default_file']['content_length'] = $this->content['source_file']['content_length'];
+//                    }
+//                    touch($this->content['default_file']['path'],$this->content['source_file']['last_modified']);
+//                    $this->content['default_file']['last_modified'] = $this->content['source_file']['last_modified'];
+//                    // Default image create process finish here, unset default file gd object
+//                    unset($default_image);
+//                }
 
                 // If the required file is not the default file, generate the required file
-                if ($this->content['default_file']['path'] != $this->content['target_file']['path'])
+                if ($this->content['source_file']['path'] != $this->content['target_file']['path'])
                 {
                     if ($this->content['source_file']['width'] != $this->content['target_file']['width'])
                     {
@@ -1346,7 +1379,6 @@ if ($this->request['source_type'] == 'data')
                     }
                     imageinterlace($target_image,true);
 
-                    // Save Default Image with Max Quality Set
                     $image_quality = $this->content['target_file']['quality'];
                     switch($this->content['source_file']['content_type'])
                     {
@@ -1379,7 +1411,7 @@ if ($this->request['source_type'] == 'data')
                     $unlink_retry_counter--;
                 }
 
-                $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s',$this->content['target_file']['last_modified']).' GMT';
+                $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s',strtotime($this->content['target_file']['last_modified'])).' GMT';
                 $this->result['header']['Content-Length'] = $this->content['target_file']['content_length'];
                 $this->result['header']['Content-Type'] = $this->content['target_file']['content_type'];
 

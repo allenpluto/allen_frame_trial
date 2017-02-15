@@ -44,6 +44,14 @@ class view extends base
             $this->parameter['table'] = DATABASE_TABLE_PREFIX.get_class($this);
         }
 
+        if (!$db->db_table_exists($this->parameter['table']))
+        {
+            $entity_class = preg_replace('/^view/','entity',get_class($this));
+            $entity_obj = new $entity_class();
+            $entity_obj->sync(['sync_type'=>'init_sync']);
+            unset($entity_obj);
+        }
+
         // parameter['table_fields'] in view suggest the columns being selected, when multiple tables are joined, fields would probably need reference the tables they are in and might need alias, e.g. parameter['table_fields'] = 'tbl_entity_organization.id, tbl_entity_organization.name, parent_organization.id AS parent_id, parent_organization.name AS parent_name'
         if (!isset($this->parameter['table_fields']))
         {

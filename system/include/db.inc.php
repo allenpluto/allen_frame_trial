@@ -104,13 +104,16 @@ class db
 
     function db_table_exists($table)
     {
+        $table = trim($table,'`');
         $sql = 'SHOW TABLES LIKE "'.$table.'"';
         $pdo_statement_obj = self::$_conn->query($sql);
 
         if (self::$_conn->errorCode() == '00000')
         {
-            if (count($pdo_statement_obj->fetchAll(PDO::FETCH_ASSOC)) == 0)
+            $result = $pdo_statement_obj->fetchAll(PDO::FETCH_ASSOC);
+            if (count($result) == 0)
             {
+                $GLOBALS['global_message']->notice = print_r($result,true);
                 $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): '.$table.' does not exist';
                 return false;
             }
