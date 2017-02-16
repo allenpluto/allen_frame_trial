@@ -24,48 +24,11 @@ class entity_image extends entity
         return $this;
     }
 
-    function get($parameter = array())
-    {
-        $format = format::get_obj();
-        $preference = preference::get_instance();
-        if(parent::get($parameter) === false) return false;
-
-        if (!empty($this->row))
-        {
-            foreach($this->row as $record_index=>&$record)
-            {
-                $record['document'] = $this->format->file_name((!empty($record['friendly_url'])?$record['friendly_url']:$record['name']).'-'.$record['id']);
-                switch($record['mime'])
-                {
-                    case 'image/gif':
-                        $record['file_type'] = 'gif';
-                        break;
-                    case 'image/png':
-                        $record['file_type'] = 'png';
-                        break;
-                    case 'image/jpeg':
-                    case 'image/pjpeg';
-                    default:
-                        $record['file_type'] = 'jpg';
-                }
-                $record['sub_path'] = [];
-                $sub_path_index = floor($record['id'] / 1000);
-                while($sub_path_index > 0)
-                {
-                    $sub_path_remain = $sub_path_index % 1000;
-                    $sub_path_index = floor($sub_path_index / 1000);
-                    $record['sub_path'][] = $sub_path_remain;
-                }
-            }
-        }
-    }
-
-
     function set($parameter = array())
     {
         if (isset($parameter['row']))
         {
-            $max_image_width = max($this->preference->image['size']);
+            $max_image_width = max($this->preference->image['width']);
             $image_quality = $this->preference->image['quality']['max'];
 
             foreach($parameter['row'] as $record_index => &$record)
@@ -130,70 +93,16 @@ class entity_image extends entity
                         $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image size for '.$record['source_file'];
                     }
                     unset($image_size);
+                    if (preg_match('/^data:/',$record['source_file']))
+                    {
+                        $record['source_file'] = '';
+                    }
                 }
             }
         }
 
         $result = parent::set($parameter);
-        if ($result === false) return false;
-
-        $this->generate_cache_file();
-        //$listing_image = explode(',', $_POST['listing_logo_thumb']);
-
-        //file_put_contents($file_path,  base64_decode($listing_image[count($listing_image)-1]));
-
-    }
-
-    function generate_cache_file($parameter = array())
-    {
-        if (!empty($this->row))
-        {
-            $format = format::get_obj();
-            $preference = preference::get_instance();
-
-            foreach($this->row as $record_index=>&$record)
-            {
-                if (isset($record['data']))
-                {
-                    $file_name = $format->file_name((!empty($record['friendly_url'])?$record['friendly_url']:$record['name']));
-                    if (empty($file_name)) $file_name = 'default';
-                    // Generate re-sized thumbnail
-                    // if (!empty($parameter['size'])) $file_name .= '.'.$parameter['size'];
-                    switch($record['mime'])
-                    {
-                        case 'image/gif':
-                            $file_name .= '.gif';
-                            break;
-                        case 'image/png':
-                            $file_name .= '.png';
-                            break;
-                        case 'image/jpeg':
-                        case 'image/pjpeg';
-                        default:
-                            $file_name .= '.jpg';
-                    }
-                    // Create sub path in "Little Endian" structure
-                    $sub_path = '';
-                    $sub_path_index = $record['id'];
-                    do
-                    {
-                        $sub_path_remain = $sub_path_index % 1000;
-                        $sub_path_index = floor($sub_path_index / 1000);
-                        if ($sub_path_index != 0)
-                        {
-                            $sub_path_remain = str_repeat('0', 3-strlen($sub_path_remain)).$sub_path_remain;
-                        }
-                        $sub_path = $sub_path_remain.DIRECTORY_SEPARATOR.$sub_path;
-                    } while($sub_path_index > 0);
-                    $record['file_path'] = PATH_IMAGE.$sub_path;
-                    $record['file_name'] = $file_name;
-                    $record['file'] = $record['file_path'].$record['file_name'];
-
-                    if (!file_exists(PATH_IMAGE.$sub_path)) mkdir($record['file_path'], 0755, true);
-                    file_put_contents($record['file'],  $record['data']);
-                }
-            }
-        }
+        return $result;
     }
 
     function sync($parameter = array())
@@ -258,56 +167,53 @@ class entity_image extends entity
 
         foreach ($source_row as $index=>&$row)
         {
-            if (!empty($row['source_file']) AND empty($row['data']))
+            if (empty($row['id']))
             {
-
+                $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row id not set';
             }
+            if (empty($row['friendly_uri']))
+            {
+                $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row friendly uri not set';
+            }
+            $sub_path = '';
+            $sub_path_index = $row['id'];
+            do
+            {
+                $sub_path_remain = $sub_path_index % 1000;
+                $sub_path_index = floor($sub_path_index / 1000);
+                if ($sub_path_index != 0)
+                {
+                    $sub_path_remain = str_repeat('0', 3-strlen($sub_path_remain)).$sub_path_remain;
+                }
+                $sub_path = $sub_path_remain.DIRECTORY_SEPARATOR.$sub_path;
+            } while($sub_path_index > 0);
+            $file_dir = PATH_IMAGE.$sub_path;
+            $file_name = $row['friendly_uri'];
+            switch($row['mime'])
+            {
+                case 'image/gif':
+                    $row['file_extension'] = 'gif';
+                    break;
+                case 'image/png':
+                    $row['file_extension'] = 'png';
+                    break;
+                case 'image/jpeg':
+                case 'image/pjpeg';
+                default:
+                    $row['file_extension'] = 'jpg';
+            }
+            $row['file_uri'] = URI_IMAGE.$file_name.'-'.$row['id'].'.'.$row['file_extension'];
+            $row['file_path'] = $file_dir.$file_name.'-'.$row['id'].'.'.$row['file_extension'];
+
             if (!empty($row['data']))
             {
-                if (empty($row['id']))
-                {
-                    $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row id not set';
-                }
-                if (empty($row['friendly_uri']))
-                {
-                    $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row friendly uri not set';
-                }
-                $sub_path = '';
-                $sub_path_index = $row['id'];
-                do
-                {
-                    $sub_path_remain = $sub_path_index % 1000;
-                    $sub_path_index = floor($sub_path_index / 1000);
-                    if ($sub_path_index != 0)
-                    {
-                        $sub_path_remain = str_repeat('0', 3-strlen($sub_path_remain)).$sub_path_remain;
-                    }
-                    $sub_path = $sub_path_remain.DIRECTORY_SEPARATOR.$sub_path;
-                } while($sub_path_index > 0);
-                $file_dir = PATH_IMAGE.$sub_path;
-                $file_name = $row['friendly_uri'];
-                switch($row['mime'])
-                {
-                    case 'image/gif':
-                        $row['file_extension'] = 'gif';
-                        break;
-                    case 'image/png':
-                        $row['file_extension'] = 'png';
-                        break;
-                    case 'image/jpeg':
-                    case 'image/pjpeg';
-                    default:
-                        $row['file_extension'] = 'jpg';
-                }
-                $row['file_uri'] = URI_IMAGE.$file_name.'-'.$row['id'].'.'.$row['file_extension'];
-                $row['file_path'] = $file_dir.$file_name.'-'.$row['id'].'.'.$row['file_extension'];
-
                 if (!file_exists($file_dir)) mkdir($file_dir, 0755, true);
-                file_put_contents($row['file_path'],  $row['data']);
-                unset($row['data']);
-
-                $row['file_size'] = filesize($row['file_path']);
+                $file_put_contents_result = file_put_contents($row['file_path'],  $row['data']);
+                $this->message->notice = 'Set file from data: '.$row['file_path'].' '.$file_put_contents_result;
             }
+            unset($row['data']);
+
+            $row['file_size'] = filesize($row['file_path']);
         }
 
         return $source_row;

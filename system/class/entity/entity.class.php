@@ -486,6 +486,10 @@ class entity extends base
             {
                 if (isset($record[$field_name]))
                 {
+                    if ($field_name == 'friendly_uri')
+                    {
+                        $record[$field_name] = $this->format->file_name($record[$field_name]);
+                    }
                     $bind_value[':'.$field_name] = $record[$field_name];
                 }
                 else
@@ -1101,6 +1105,7 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
                         $query = $this->query($sql);
                         if ($query !== false) {
                             if ($query->rowCount() == 0) {
+                                $GLOBALS['global_message']->notice = $sql;
                                 $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' no row inserted/updated';
                             }
                             else

@@ -30,6 +30,7 @@ class view extends base
      */
     function __construct($value = null, $parameter = array())
     {
+        parent::__construct();
         if (!empty($parameter)) $this->set_parameter($parameter);
 
         if ($GLOBALS['db']) $db = $GLOBALS['db'];
@@ -114,8 +115,8 @@ class view extends base
                 if (is_string($value))
                 {
                     $parameter = array(
-                        'bind_param' => array(':friendly_url'=>$value),
-                        'where' => array('`friendly_url` = :friendly_url')
+                        'bind_param' => array(':friendly_uri'=>$value),
+                        'where' => array('`friendly_uri` = :friendly_uri')
                     );
                     $this->get($parameter);
                 }
@@ -130,30 +131,6 @@ class view extends base
                 $this->id_group = $id_group;
                 $this->get();
             }
-
-            /*if (is_array($value))
-            {
-                $this->id_group = $value;
-                $this->get();
-            }
-            else    // Simplified usage, not secured
-            {
-                if (is_numeric($value)) // try to initialize with id
-                {
-                    $this->id_group = array('id'=>$value);
-                    $this->get();
-                }
-                else // try to initialize with friendly url
-                {
-                    $parameter = array(
-                        'bind_param' => array(':friendly_url'=>$value),
-                        'where' => array('`friendly_url` = :friendly_url')
-                    );
-                    $this->get($parameter);
-                }
-            }
-            $this->parameter['page_count'] = ceil(count($this->id_group)/$this->parameter['page_size']);
-*/
         }
 
         return true;
@@ -325,6 +302,14 @@ class view extends base
         $result = $this->query($sql,$bind_param);
         if ($result !== false)
         {
+            foreach ($result as $row_index=>&$row)
+            {
+                if (!empty($row['extra_field']))
+                {
+                    $extra_field = json_decode($row['extra_field'],true);
+                    $row = array_merge($row,$extra_field);
+                }
+            }
             $this->row = $result;
         }
         else
