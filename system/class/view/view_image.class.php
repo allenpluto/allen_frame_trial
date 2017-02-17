@@ -13,6 +13,22 @@ class view_image extends view
         'page_size' => 1
     );
 
+    function __construct($value = Null, $parameter = array())
+    {
+        if (!empty($value))
+        {
+            $entity_image_obj = new entity_image($value);
+            $entity_image_obj->sync(['sync_type'=>'update_current']);
+            unset($entity_image_obj);
+        }
+
+        $this->parameter['page_size'] = $GLOBALS['global_preference']->view_category_page_size;
+
+        parent::__construct($value, $parameter);
+
+        return $this;
+    }
+
     function fetch_value($parameter = array())
     {
         $parameter = array_merge($this->parameter,$parameter);

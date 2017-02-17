@@ -627,7 +627,7 @@ if ($this->request['source_type'] == 'data')
                         if (!class_exists($view_class))
                         {
                             // Error Handling, view class does not exist for given file type
-                            $this->message->error = 'Building: cannot find source file';
+                            $this->message->error = 'Building: cannot find source file - view class does not exist';
                             $this->result['status'] = 404;
                             return false;
                         }
@@ -641,7 +641,7 @@ if ($this->request['source_type'] == 'data')
 
                         if (empty($file_record['file_path']) OR !file_exists($file_record['file_path']))
                         {
-                            $this->message->error = 'Building: cannot find source file';
+                            $this->message->error = 'Building: cannot find source file - file does not exist';
                             $this->result['status'] = 404;
                             return false;
 //                            $entity_class = 'entity_'.$this->request['file_type'];

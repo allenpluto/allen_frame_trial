@@ -84,7 +84,7 @@ class entity_image extends entity
                         }
                         else
                         {
-                            $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image size for '.$record['source_file'];
+                            $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image data for '.$record['source_file'];
                         }
                         unset($image_data);
                     }
@@ -165,18 +165,21 @@ class entity_image extends entity
     {
         parent::advanced_sync_update($source_row);
 
-        foreach ($source_row as $index=>&$row)
+        $max_image_width = max($this->preference->image['width']);
+        $image_quality = $this->preference->image['quality']['max'];
+
+        foreach ($source_row as $record_index=>&$record)
         {
-            if (empty($row['id']))
+            if (empty($record['id']))
             {
                 $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row id not set';
             }
-            if (empty($row['friendly_uri']))
+            if (empty($record['friendly_uri']))
             {
                 $this->message->error = __FILE__ . '(line ' . __LINE__ . '): image sync row friendly uri not set';
             }
             $sub_path = '';
-            $sub_path_index = $row['id'];
+            $sub_path_index = $record['id'];
             do
             {
                 $sub_path_remain = $sub_path_index % 1000;
@@ -188,32 +191,100 @@ class entity_image extends entity
                 $sub_path = $sub_path_remain.DIRECTORY_SEPARATOR.$sub_path;
             } while($sub_path_index > 0);
             $file_dir = PATH_IMAGE.$sub_path;
-            $file_name = $row['friendly_uri'];
-            switch($row['mime'])
+            $file_name = $record['friendly_uri'];
+            switch($record['mime'])
             {
                 case 'image/gif':
-                    $row['file_extension'] = 'gif';
+                    $record['file_extension'] = 'gif';
                     break;
                 case 'image/png':
-                    $row['file_extension'] = 'png';
+                    $record['file_extension'] = 'png';
                     break;
                 case 'image/jpeg':
                 case 'image/pjpeg';
                 default:
-                    $row['file_extension'] = 'jpg';
+                    $record['file_extension'] = 'jpg';
             }
-            $row['file_uri'] = URI_IMAGE.$file_name.'-'.$row['id'].'.'.$row['file_extension'];
-            $row['file_path'] = $file_dir.$file_name.'-'.$row['id'].'.'.$row['file_extension'];
+            $record['file_uri'] = URI_IMAGE.$file_name.'-'.$record['id'].'.'.$record['file_extension'];
+            $record['file_path'] = $file_dir.$file_name.'-'.$record['id'].'.'.$record['file_extension'];
 
-            if (!empty($row['data']))
+            if (!empty($record['data']))
             {
                 if (!file_exists($file_dir)) mkdir($file_dir, 0755, true);
-                $file_put_contents_result = file_put_contents($row['file_path'],  $row['data']);
-                $this->message->notice = 'Set file from data: '.$row['file_path'].' '.$file_put_contents_result;
+                $file_put_contents_result = file_put_contents($record['file_path'],  $record['data']);
+                $this->message->notice = 'Set file from data: '.$record['file_path'].' '.$file_put_contents_result;
             }
-            unset($row['data']);
+            elseif (!empty($record['source_file']))
+            {
+                $image_size = @getimagesize($record['source_file']);
+                if ($image_size !== false)
+                {
+                    $record['width'] = $image_size[0];
+                    $record['height'] = $image_size[1];
+                    if (isset($image_size['mime'])) $record['mime'] = $image_size['mime'];
+                    else
+                    {
+                        $record['mime'] = 'image/jpeg';
+                        $this->message->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image mime type for '.$record['source_file'];
+                    }
 
-            $row['file_size'] = filesize($row['file_path']);
+                    $image_data = file_get_contents($record['source_file']);
+
+                    if ($image_data !== false)
+                    {
+                        if ($record['width'] > $max_image_width AND ($record['mime'] == 'image/jpeg' OR $record['mime'] == 'image/png'))
+                        {
+                            $original_record = $record;
+                            $record['height'] = $record['height'] / $record['width'] * $max_image_width;
+                            $record['width'] = $max_image_width;
+
+                            // Set default image quality as 'max'
+                            //$record['quality'] = $this->preference->image['quality']['max'];
+                            $source_image = imagecreatefromstring($image_data);
+                            $target_image = imagecreatetruecolor($record['width'],  $record['height']);
+
+                            imagecopyresampled($target_image,$source_image,0,0,0,0,$record['width'], $record['height'],$original_record['width'],$original_record['height']);
+                            imageinterlace($target_image,true);
+
+                            ob_start();
+                            if ($record['mime'] == 'image/jpeg') imagejpeg($target_image, NULL, $image_quality['image/jpeg']);
+                            if ($record['mime'] == 'image/png')
+                            {
+                                imagesavealpha($target_image, true);
+                                imagepng($target_image, NULL, $image_quality['image/png'][0], $image_quality['image/png'][1]);
+                            }
+                            $image_data = ob_get_contents();
+                            ob_get_clean();
+
+                            imagedestroy($source_image);
+                            imagedestroy($target_image);
+                            unset($original_record);
+                        }
+                        if (!file_exists($file_dir)) mkdir($file_dir, 0755, true);
+                        $file_put_contents_result = file_put_contents($record['file_path'],  $image_data);
+                        $this->message->notice = 'Set file from data: '.$record['file_path'].' '.$file_put_contents_result;
+                    }
+                    else
+                    {
+                        $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): tbl_entity_image failed to get image data for '.$record['source_file'];
+                    }
+                    unset($image_data);
+                }
+                else
+                {
+                    $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): tbl_entity_image failed to get image size for '.$record['source_file'];
+                }
+                unset($image_size);
+            }
+            else
+            {
+                $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): tbl_entity_image failed to generate image on sync, source file and data are not set in id:'.$record['id'];
+            }
+
+            unset($record['data']);
+            unset($record['source_file']);
+
+            $record['file_size'] = filesize($record['file_path']);
         }
 
         return $source_row;

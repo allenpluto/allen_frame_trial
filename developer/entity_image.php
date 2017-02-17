@@ -47,7 +47,8 @@ echo '<pre>';
 //3. getimagesize works for all formats. If file does not exist, it returns false. However, it also raise PHP warning for non-existing local file path. Solution: use @getimagesize to disable warning on this function call
 
 $entity = new entity_image();
-$row = $entity->get(['where'=>'`data`=""','limit'=>10]);
+//$row = $entity->get(['where'=>'`data`=""','limit'=>10]);
+$row = $entity->get(['where'=>'`id` IN (19234,146468,149770)','limit'=>10]);
 print_r($row);
 $entity->set(['row'=>$row]);
 
