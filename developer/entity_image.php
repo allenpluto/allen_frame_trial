@@ -48,7 +48,7 @@ echo '<pre>';
 
 $entity = new entity_image();
 //$row = $entity->get(['where'=>'`data`=""','limit'=>10]);
-$row = $entity->get(['where'=>'`id` IN (19234,146468,149770)','limit'=>10]);
+$row = $entity->get(['where'=>'`id` IN (12968,147620,149732)','limit'=>10]);
 print_r($row);
 $entity->set(['row'=>$row]);
 

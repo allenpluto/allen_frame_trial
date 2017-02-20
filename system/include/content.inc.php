@@ -1406,7 +1406,7 @@ if ($this->request['source_type'] == 'data')
                         unset($tag);
                     }
                 }
-                $this->result['content'] = render_html($this->content['field'],$this->content['template']);
+                $this->result['content'] = render_html(['_value'=>$this->content['field'],'_parameter'=>[]],$this->content['template']);
                 $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s').' GMT';
                 $this->result['header']['Content-Length'] = strlen($this->result['content']);
                 $this->result['header']['Content-Type'] = 'text/html';

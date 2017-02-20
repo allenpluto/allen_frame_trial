@@ -38,6 +38,7 @@ function render_xml($field = array(), &$xml = NULL, $parent_node_name = '')
 function render_html($field = array(), $template_name = '', $container_name = '', $separator = NULL)
 {
 $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLOBALS['start_time'];
+    static $global_field = array();
 
     $field_parameter = array();
     if (isset($field['_parameter']))
@@ -348,17 +349,43 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                     $GLOBALS['time_stack']['create object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
 
                     $result = $object->fetch_value();
-//print_r($match_result_value['template_name']);
-//print_r($result);
-//exit();
+
                     $GLOBALS['time_stack']['fetch value '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
                     unset($object);
-                    $sub_field = array_values($result);
-                    unset($result);
-                    $sub_field_parent_row = $field_row;
-                    if (isset($match_result_value['field'])) $sub_field_parent_row = array_merge($sub_field_parent_row, json_decode($match_result_value['field'],true));
-                    $match_result_value['value'] = render_html(['_value'=>$sub_field,'_parameter'=>['parent_row'=>$sub_field_parent_row]],$match_result_value['template_name']);
-                    unset($sub_field_parent_row);
+                    if (empty($result)) $match_result_value['value'] = '';
+                    else
+                    {
+                        $sub_field = array_values($result);
+                        unset($result);
+                        $sub_field_parent_row = $field_row;
+                        if (isset($match_result_value['field']))
+                        {
+                            $decoded_field = $match_result_value['field'];
+                            if (preg_match_all('/{{(?:.*?)}}/',$decoded_field,$decoded_field_matches))
+                            {
+                                $sub_translate_array = array();
+                                //print_r($decoded_field_matches);
+                                foreach ($decoded_field_matches[0] as $sub_match_result_key_index=>$sub_match_result_key)
+                                {
+                                    $sub_translate_array[$sub_match_result_key] = $match_result[$sub_match_result_key]['value'];
+                                }
+                                //print_r($sub_translate_array);
+                                $decoded_field = strtr($decoded_field,$sub_translate_array);
+                            }
+                            $decoded_field = json_decode($decoded_field);
+                            if (is_array($decoded_field))
+                            {
+                                $sub_field_parent_row = array_merge($sub_field_parent_row, $decoded_field);
+                            }
+                            else
+                            {
+                                $GLOBALS['global_message']->warning = 'rendering error: object '.$match_result_value['name'].' field '.$match_result_value['field'].' is not proper json_encode format';
+                            }
+                        }
+                        $match_result_value['value'] = render_html(['_value'=>$sub_field,'_parameter'=>['parent_row'=>$sub_field_parent_row]],$match_result_value['template_name']);
+                        //print_r($match_result_value);
+                        unset($sub_field_parent_row);
+                    }
 
                     break;
                 case '-':
@@ -366,16 +393,17 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                     break;
                 case '+':
                     // do not replace, keep for further operation, such as insert style or script
-                    $match_result_value['value'] = '';
-                    if (isset($field_row[$match_result_value['name']]))
-                    {
-                        foreach($field_row[$match_result_value['name']] as $resource_index=>&$resource)
-                        {
-                            $resource_obj =  new content($resource);
-                            $match_result_value['value'] .= $resource_obj->get_result();
-                        }
-                    }
-                    else $match_result_value['value'] = '';
+                    $match_result_value['value'] = preg_replace('/^\[\[(\W*)/','[[*',$match_result_value['raw_code']);
+//                    $match_result_value['value'] = '';
+//                    if (isset($field_row[$match_result_value['name']]))
+//                    {
+//                        foreach($field_row[$match_result_value['name']] as $resource_index=>&$resource)
+//                        {
+//                            $resource_obj =  new content($resource);
+//                            $match_result_value['value'] .= $resource_obj->get_result();
+//                        }
+//                    }
+//                    else $match_result_value['value'] = '';
                     break;
                 default:
                     $match_result_value['value'] = '';
@@ -397,7 +425,16 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                 {
                     $match_result_value['value'] = str_replace('[[*_placeholder]]',$match_result_value['value'],$match_result_value['container']);
                 }
-                $translate_array[$match_result_key] = $match_result_value['value'];
+                if (empty($match_result_value['output']))
+                {
+                    $translate_array[$match_result_key] = $match_result_value['value'];
+                }
+                else
+                {
+                    if (!isset($global_field[$match_result_value['output']])) $global_field[$match_result_value['output']] = array();
+                    $global_field[$match_result_value['output']][] = $match_result_value['value'];
+                    $translate_array[$match_result_key] = '';
+                }
             }
             $GLOBALS['time_stack']['render variable '.$match_result_key] = microtime(1) - $GLOBALS['start_time'];
         }
@@ -433,7 +470,7 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
     }
 //file_put_contents('developer/render.html',($field_rendered_content?$field_rendered_content:print_r($field,true).print_r($field_parameter,true)),FILE_APPEND);
 //file_put_contents('developer/render.html','-------------'.($template_name?$template_name:'[empty template name]').'-------------'."\n\n",FILE_APPEND);
-
+//print_r($global_field);
     return $field_rendered_content;
 
 }
