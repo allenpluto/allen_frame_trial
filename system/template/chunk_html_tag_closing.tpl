@@ -1,1 +1,1 @@
-[[*value]]</[[*name]]>
+[[*content]]</[[*name]]>

@@ -1329,8 +1329,16 @@ if ($this->request['source_type'] == 'data')
             case 'html':
                 if (!isset($this->content['field'])) $this->content['field'] = array();
                 if (!isset($this->content['template'])) $this->content['template'] = '';
+                $GLOBALS['global_field'] = array();
+                $this->result['content'] = render_html(['_value'=>$this->content['field'],'_parameter'=>[]],$this->content['template']);
+//echo 'test point 3'."\n";
+//print_r($GLOBALS['global_field']);
+                if (isset($GLOBALS['global_field']['style'])) $this->content['style'] = array_merge($this->content['style'],$GLOBALS['global_field']['style']);
+                if (isset($GLOBALS['global_field']['script'])) $this->content['script'] = array_merge($this->content['script'],$GLOBALS['global_field']['script']);
+                $this->result['content'] = preg_replace('/\[\[\+/','[[*',$this->result['content']);
                 if (!empty($this->content['style']))
                 {
+//print_r($this->content['style']);
                     $this->content['field']['style'] = ['_value'=>[],'_parameter'=>['template_name'=>'chunk_html_tag']];
                     $file_extension = '.css';
                     if ($this->preference->minify_css)
@@ -1406,7 +1414,8 @@ if ($this->request['source_type'] == 'data')
                         unset($tag);
                     }
                 }
-                $this->result['content'] = render_html(['_value'=>$this->content['field'],'_parameter'=>[]],$this->content['template']);
+                $this->result['content'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>$this->result['content']]]);
+
                 $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s').' GMT';
                 $this->result['header']['Content-Length'] = strlen($this->result['content']);
                 $this->result['header']['Content-Type'] = 'text/html';

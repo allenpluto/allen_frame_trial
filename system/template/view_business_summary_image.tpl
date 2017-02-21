@@ -1,2 +1,1 @@
-<div class="block_thumb_image_container"></div>
-        #listing_block_container_[[*listing_id]] .block_thumb_image_container {background-image: url('[[*s_file_uri]]');} @media only screen and (min-width:768px) {#listing_block_container_[[*id]] .block_thumb_image_container {background-image: url('[[*m_file_uri]]');}}
+<div class="block_thumb_image_container"></div>[[~style:field=`{"content":"#listing_block_container_[[*listing_id]] .block_thumb_image_container {background-image: url('[[*s_file_uri]]');} @media only screen and (min-width:768px) {#listing_block_container_[[*listing_id]] .block_thumb_image_container {background-image: url('[[*m_file_uri]]');}}"}`]]
