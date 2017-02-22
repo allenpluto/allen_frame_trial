@@ -37,10 +37,8 @@ function render_xml($field = array(), &$xml = NULL, $parent_node_name = '')
 
 function render_html($field = array(), $template_name = '', $container_name = '', $separator = NULL)
 {
-$GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLOBALS['start_time'];
+    $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLOBALS['start_time'];
     $global_field = &$GLOBALS['global_field'];
-//echo 'test point 1'."\n";
-//print_r($global_field);
     $field_parameter = array();
     if (isset($field['_parameter']))
     {
@@ -215,8 +213,6 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
 
                 // For template variables already decoded, change their code from [[template_variable]] to {{template_variable}}, then loop, so it can decode outer layer tv without conflict
                 $template_match[$field_row_parameter['template_name']]['template_translated'] = strtr($template_match[$field_row_parameter['template_name']]['template_translated'],$template_translate);
-
-                //$field_row_parameter['template'] = preg_replace('/\[\[([^\[]*?)\]\]/','{{$1}}',$field_row_parameter['template']);
             }
         }
         else
@@ -228,8 +224,11 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
         $translate_array = array();
         $match_result = $template_match[$field_row_parameter['template_name']]['match_result'];
 
-        foreach($match_result as $match_result_key=>&$match_result_value)
+        preg_match_all('/\{\{(?:.*?)\}\}/',$template_match[$field_row_parameter['template_name']]['template_translated'],$translated_matches);
+
+        foreach($translated_matches[0] as $match_result_key)
         {
+            $match_result_value = &$match_result[$match_result_key];
             //$match_result_value = array_merge($match_result_value,$field_row_parameter);
             if (isset($match_result_value['condition']))
             {
@@ -346,9 +345,6 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                     {
                         $GLOBALS['global_message']->warning = 'rendering error: output '.$match_result_value['name'].' field is not set';
                     }
-//print_r('test point 1');
-//print_r($decoded_field);
-//print_r($match_result_value);
                     break;
                 case '':
                     // Object, fetch value and render for each row
@@ -410,7 +406,6 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                             $sub_field_parent_row = array_merge($sub_field_parent_row, $match_result_value['field_decoded']);
                         }
                         $match_result_value['value'] = render_html(['_value'=>$sub_field,'_parameter'=>['parent_row'=>$sub_field_parent_row]],$match_result_value['template_name']);
-                        //print_r($match_result_value);
                         unset($sub_field_parent_row);
                     }
 
@@ -421,19 +416,6 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                 case '+':
                     // do not replace, keep for further operation, such as insert style or script
                     $match_result_value['value'] = $match_result_value['raw_code'];
-//                    $match_result_value['value'] = preg_replace('/^\[\[(\W*)/','[[*',$match_result_value['raw_code']);
-
-                    $debug = true;
-//                    $match_result_value['value'] = '';
-//                    if (isset($field_row[$match_result_value['name']]))
-//                    {
-//                        foreach($field_row[$match_result_value['name']] as $resource_index=>&$resource)
-//                        {
-//                            $resource_obj =  new content($resource);
-//                            $match_result_value['value'] .= $resource_obj->get_result();
-//                        }
-//                    }
-//                    else $match_result_value['value'] = '';
                     break;
                 default:
                     $match_result_value['value'] = '';
@@ -462,10 +444,7 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
                 else
                 {
                     if (!isset($global_field[$match_result_value['output']])) $global_field[$match_result_value['output']] = array();
-//echo 'test point 2'."\n";
-//print_r($match_result_value);
                     $global_field[$match_result_value['output']][] = $match_result_value['value'];
-//print_r($global_field);
                     $translate_array[$match_result_key] = '';
                 }
             }
@@ -476,25 +455,30 @@ $GLOBALS['time_stack']['analyse template '.$template_name] = microtime(1) - $GLO
             $GLOBALS['time_stack']['render variable '.$match_result_key] = microtime(1) - $GLOBALS['start_time'];
         }
 
-        $counter = 0;
-        while(preg_match('/{{(.*?)}}/',$field_row_rendered_content))
+        $field_row_rendered_content = strtr($field_row_rendered_content,$translate_array);
+
+        while (preg_match_all('/\{\{(.*?)\}\}/',$field_row_rendered_content,$rendered_matches))
         {
-            $field_row_rendered_content = strtr($field_row_rendered_content,$translate_array);
-            $counter++;
-            if ($counter > 4) break;
+            $rendered_translate_array = array();
+            foreach($rendered_matches[0] as $match_result_key)
+            {
+                if (isset($match_result[$match_result_key]['raw_code']))
+                {
+                    $rendered_translate_array[$match_result_key] = $match_result[$match_result_key]['raw_code'];
+                }
+                else
+                {
+                    $rendered_translate_array[$match_result_key] = '';
+                    $GLOBALS['global_message']->warning = $match_result_key.' has no matched raw_code';
+                }
+
+            }
+            $field_row_rendered_content = strtr($field_row_rendered_content,$rendered_translate_array);
         }
-        //$field_row_rendered_content = preg_replace('/{{(.*?)}}/','[[$1]]',$field_row_rendered_content);
 
         // self loop, if page still have untranslated template variables (place holder type excepted, [[+example]], as they are not suppose to be translated at all), use same field and template to render again
         if (preg_match('/\[\[[^\+](.*?)\]\]/', $field_row_rendered_content))
         {
-//print_r($field_row_rendered_content);
-if (!empty($debug))
-{
-//    print_r($field_row);
-//    print_r($global_field);
-//    print_r($field_row_rendered_content);
-}
             $field_row_rendered_content = render_html(['_value'=>$field_row,'_parameter'=>['template'=>$field_row_rendered_content,'debug'=>true]]);
         }
 
@@ -512,9 +496,6 @@ if (!empty($debug))
     {
         $field_rendered_content = str_replace('[[*_placeholder]]',$field_rendered_content,$field_parameter['container']);
     }
-//file_put_contents('developer/render.html',($field_rendered_content?$field_rendered_content:print_r($field,true).print_r($field_parameter,true)),FILE_APPEND);
-//file_put_contents('developer/render.html','-------------'.($template_name?$template_name:'[empty template name]').'-------------'."\n\n",FILE_APPEND);
-//print_r($global_field);
 
     return $field_rendered_content;
 
