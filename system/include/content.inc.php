@@ -324,6 +324,7 @@ if ($this->request['source_type'] == 'data')
                             default:
                                 //$this->request['document'] = $request_path_part;
                         }
+
                         break;
                     case 'members':
                         $method = ['account','listing','dashboard'];
@@ -343,20 +344,33 @@ if ($this->request['source_type'] == 'data')
                         break;
                     default:
                         $this->request['document'] = $request_path_part;
-                        if (!empty($this->request['document']))
-                        {
-                            $this->request['file_path'] .= $this->request['document'].DIRECTORY_SEPARATOR;
-                        }
-
-                        $this->request['file_path'] .= 'index.'.$this->request['file_extension'];
-                        $this->request['file_uri'] .= $this->request['document'];
-
                         $this->request['remote_ip'] = get_remote_ip();
                 }
                 if (!isset($this->request['method']))
                 {
                     $this->request['method'] = '';
                 }
+
+                if (!empty($this->request['module']))
+                {
+                    $this->request['file_path'] .= $this->request['module'].DIRECTORY_SEPARATOR;
+                    $this->request['file_uri'] .= $this->request['module'].'/';
+                }
+
+                if (!empty($this->request['method']))
+                {
+                    $this->request['file_path'] .= $this->request['method'].DIRECTORY_SEPARATOR;
+                    $this->request['file_uri'] .= $this->request['method'].'/';
+                }
+
+                if (!empty($this->request['document']))
+                {
+                    $this->request['file_path'] .= $this->request['document'].DIRECTORY_SEPARATOR;
+                    $this->request['file_uri'] .= $this->request['document'];
+                }
+
+                $this->request['file_path'] .= 'index.'.$this->request['file_extension'];
+
 
                 break;
         }
@@ -380,6 +394,7 @@ if ($this->request['source_type'] == 'data')
 
         if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) != parse_url($this->request['file_uri'],PHP_URL_PATH))
         {
+            $this->message->notice = 'Redirect - request uri ['.parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH).'] is different from decoded uri ['.parse_url($this->request['file_uri'],PHP_URL_PATH).']';
             $this->result['status'] = 301;
             $this->result['header']['Location'] =  $this->request['file_uri'].'?'.http_build_query($this->request['option']);
         }
@@ -842,6 +857,13 @@ if ($this->request['source_type'] == 'data')
                         }
 
                         break;
+                    case 'listing':
+                        switch($this->request['method'])
+                        {
+                            case '':
+                                break;
+                        }
+                        break;
                     case 'default':
                     default:
                         // If page is login, check for user login session
@@ -1001,7 +1023,6 @@ if ($this->request['source_type'] == 'data')
                                 $entity_api_log_obj->set_log($log_record);
                             }
                         }
-
                         if ($this->request['document'] == 'logout')
                         {
                             // success or fail, logout page always redirect to login page after process complete
@@ -1046,7 +1067,6 @@ if ($this->request['source_type'] == 'data')
                             $entity_api_session_obj->delete();
                             return true;
                         }
-
                         if (isset($this->request['option']['field']))
                         {
                             $this->content['field'] = array_merge($this->content['field'],$this->request['option']['field']);
@@ -1098,7 +1118,6 @@ if ($this->request['source_type'] == 'data')
                                 //,array('page_size'=>4,'order'=>'RAND()')
                             }
                         }
-
                 }
 
                 if (isset($this->request['option']['template']))
@@ -1111,12 +1130,11 @@ if ($this->request['source_type'] == 'data')
                     $template_name_part = [];
                     if (!empty($this->request['module'])) $template_name_part[] = $this->request['module'];
                     else $template_name_part[] = 'default';
-                    if (isset($this->request['method'])) $template_name_part[] = $this->request['method'];
+                    if (!empty($this->request['method'])) $template_name_part[] = $this->request['method'];
                     if (isset($this->request['document'])) $template_name_part[] = $this->request['document'];
-
+//print_r($template_name_part);
                     $default_css = array();
                     $default_js = array();
-
                     while (!empty($template_name_part))
                     {
                         if (file_exists(PATH_CONTENT_CSS.implode('_',$template_name_part).'.css'))

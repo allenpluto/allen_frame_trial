@@ -113,7 +113,7 @@ class db
             $result = $pdo_statement_obj->fetchAll(PDO::FETCH_ASSOC);
             if (count($result) == 0)
             {
-                $GLOBALS['global_message']->notice = print_r($result,true);
+                $GLOBALS['global_message']->notice = $sql;
                 $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): '.$table.' does not exist';
                 return false;
             }
