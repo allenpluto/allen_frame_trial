@@ -37,6 +37,10 @@ class view extends base
         else $db = new db;
         $this->_conn = $db->db_get_connection();
 
+        if (!isset($this->parameter['entity']))
+        {
+            $this->parameter['entity'] = preg_replace('/^view/','entity',get_class($this));
+        }
         // By default, view object name as database view table name, but if certain view object does not have corresponded view table in db, table name to be overwritten, columns and primary key also need to be defined specifically
 
         // parameter['table'] in view does not necessarily mean one table, can be multiple tables with JOIN conditions, e.g. $this->parameter['table'] = 'tbl_entity_organization JOIN tbl_entity_organization parent_organization ON tbl_entity_organization.parent_organization_id = parent_organization.id'
@@ -47,8 +51,7 @@ class view extends base
 
         if (!$db->db_table_exists($this->parameter['table']))
         {
-            $entity_class = preg_replace('/^view/','entity',get_class($this));
-            $entity_obj = new $entity_class();
+            $entity_obj = new $this->parameter['entity']();
             $entity_obj->sync(['sync_type'=>'init_sync']);
             unset($entity_obj);
         }
@@ -128,6 +131,13 @@ class view extends base
             }
             else
             {
+                if ($this->parameter['entity'] == 'entity_web_page' OR $this->parameter['entity'] == 'entity_image')
+                {
+                    $entity_obj = new $this->parameter['entity']();
+                    $entity_obj->sync(['id_group'=>$id_group]);
+                    unset($entity_obj);
+                }
+
                 $this->id_group = $id_group;
                 $this->get();
             }

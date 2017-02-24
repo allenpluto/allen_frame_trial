@@ -939,6 +939,10 @@ class entity extends base
             }
         }
 
+        $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' '.$parameter['sync_type'];
+
+        // on sync, some id may exists in sync_table, but removed from entity table, so cannot rely on $this->id_group
+        if (!isset($parameter['id_group'])) $parameter['id_group'] = $this->id_group;
 
         switch ($parameter['sync_type'])
         {
@@ -947,13 +951,13 @@ class entity extends base
                 $sync_id_group = array(
                     'delete' => array(),
                     'update' => array(),
-                    'insert' => $this->id_group
+                    'insert' => $parameter['id_group']
                 );
                 break;
             case 'delete_current':
                 // delete_current, force delete current object id_group rows, (it only delete records from target_table (generated views, indexes), leave source_table untouched)
                 $sync_id_group = array(
-                    'delete' => $this->id_group,
+                    'delete' => $parameter['id_group'],
                     'update' => array(),
                     'insert' => array()
                 );
@@ -968,11 +972,12 @@ class entity extends base
                     'target_primary_key'=>$parameter['sync_table_primary_key'],
                     'where'=>(!empty($parameter['where'])?$parameter['where']:'')
                 );
-                if (!empty($this->id_group))
+                if (!empty($parameter['id_group']))
                 {
-                    $compare_records_parameter['id_group'] = $this->id_group;
+                    $compare_records_parameter['id_group'] = $parameter['id_group'];
                 }
                 $sync_id_group = $db->db_compare_records($compare_records_parameter);
+                $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' differential_sync '.json_encode($sync_id_group);
                 unset($compare_records_parameter);
                 if ($sync_id_group === false) return false;
         }

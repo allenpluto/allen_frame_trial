@@ -27,6 +27,7 @@ class content extends base {
             // Error Log, error during reading input uri and parameters
             $this->message->error = 'Fail: Error during request_decoder';
         }
+        $this->time_stack['request_decoder'] = microtime(1);
 //echo '<pre>';
 //print_r(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH).'<br>');
 //print_r(parse_url($this->request['file_uri'], PHP_URL_PATH).'<br>');
@@ -51,6 +52,7 @@ if ($this->request['source_type'] == 'data')
             // Error Log, error during building data object
             $this->message->error = 'Fail: Error during build_content';
         }
+        $this->time_stack['build_content'] = microtime(1);
 //print_r('build_content: <br>');
 //print_r($this);
 //exit();
@@ -61,6 +63,7 @@ if ($this->request['source_type'] == 'data')
             // Error Log, error during rendering
             $this->message->error = 'Fail: Error during render';
         }
+        $this->time_stack['generate_rendering'] = microtime(1);
 //print_r('generate_rendering: <br>');
 //print_r(filesize($this->content['target_file']['path']));
 //print_r($this);
@@ -625,7 +628,7 @@ if ($this->request['source_type'] == 'data')
                     elseif (file_exists(str_replace(PATH_ASSET,PATH_CONTENT,$this->content['source_file']['path'])))
                     {
                         // If source file does not exist in asset folder, check if there is a corresponding file in content folder
-                        $this->content['source_file']['original_file'] = str_replace(PATH_ASSET,PATH_CONTENT,$this->content['source_file']['path']);
+                        $this->content['source_file']['path'] = str_replace(PATH_ASSET,PATH_CONTENT,$this->content['source_file']['path']);
                     }
                     else
                     {
@@ -861,6 +864,11 @@ if ($this->request['source_type'] == 'data')
                         switch($this->request['method'])
                         {
                             case '':
+                                $index_category_obj = new index_category();
+                                $index_category_obj->filter_by_active();
+                                $index_category_obj->filter_by_listing_count();
+                                $this->content['field']['category'] = $index_category_obj->id_group;
+                                $this->content['field']['page_content'] = '[[category]]';
                                 break;
                         }
                         break;
@@ -1375,7 +1383,8 @@ if ($this->request['source_type'] == 'data')
                                 'non_void_element'=>false
                             ];
                             $attribute['rel'] = 'stylesheet';
-                            $attribute['href'] = URI_CSS.$name.$file_extension;
+                            if (!empty($option['name'])) $attribute['href'] = URI_CSS.$option['name'].$file_extension;
+                            else $attribute['href'] = URI_CSS.$name.$file_extension;
                         }
                         else
                         {

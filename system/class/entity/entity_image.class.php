@@ -142,6 +142,7 @@ class entity_image extends entity
         {
             $sync_parameter['sync_type'] = 'init_sync';
         }
+
         if ($sync_parameter['sync_type'] == 'init_sync')
         {
             $init_sync_parameter = $sync_parameter;
@@ -225,7 +226,7 @@ class entity_image extends entity
                     else
                     {
                         $record['mime'] = 'image/jpeg';
-                        $this->message->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' failed to get image mime type for '.$record['source_file'];
+                        $this->message->notice = __FILE__ . '(line ' . __LINE__ . '): '.$this->parameter['table'].' failed to get image mime type for '.$record['source_file'];
                     }
 
                     $image_data = file_get_contents($record['source_file']);

@@ -8,6 +8,7 @@ class view_business_summary extends view_organization
     var $parameter = array(
         'namespace' => 'business',
         'path' => '/',
+        'entity' => 'entity_organization',
         'table' => '`tbl_view_organization`',
         'primary_key' => 'id'
     );

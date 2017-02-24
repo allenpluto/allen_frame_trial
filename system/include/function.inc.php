@@ -329,7 +329,7 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                 case '$':
                     // Chunk, load sub-template
                     if (!isset($match_result_value['condition'])) $match_result_value['condition'] = true;
-                    else $match_result_value['condition'] = $field_row[$match_result_value['condition']];
+                    else $match_result_value['condition'] = !empty($field_row[$match_result_value['condition']]);
                     if (!isset($match_result_value['alternative_chunk'])) $match_result_value['alternative_chunk'] = '';
                     if (isset($match_result_value['field_decoded'])) $field_row = array_merge($field_row, $match_result_value['field_decoded']);
                     if ($match_result_value['condition']) $match_result_value['value'] = render_html($field_row,$match_result_value['name']);
