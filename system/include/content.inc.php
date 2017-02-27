@@ -617,13 +617,20 @@ if ($this->request['source_type'] == 'data')
                             $this->content['source_file']['content_type'] = $file_header['Content-Type'];
                         }
                     }
+                    else
+                    {
+//                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']['original_file']);
+//                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']['original_file']);
+//                        $this->content['source_file']['content_type'] = mime_content_type($this->content['source_file']['original_file']);
+                        $this->content['source_file']['path'] = $this->content['source_file']['original_file'];
+                    }
                 }
                 else
                 {
                     if (file_exists($this->content['source_file']['path']))
                     {
-                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']['path']);
-                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']['path']);
+//                        $this->content['source_file']['content_length'] = filesize($this->content['source_file']['path']);
+//                        $this->content['source_file']['last_modified'] = filemtime($this->content['source_file']['path']);
                     }
                     elseif (file_exists(str_replace(PATH_ASSET,PATH_CONTENT,$this->content['source_file']['path'])))
                     {
@@ -874,6 +881,10 @@ if ($this->request['source_type'] == 'data')
                         break;
                     case 'default':
                     default:
+                        $this->content['script'] = [
+                            'jquery'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js']
+                        ];
+
                         // If page is login, check for user login session
                         if ($this->request['document'] == 'login')
                         {
@@ -1109,10 +1120,6 @@ if ($this->request['source_type'] == 'data')
                                 return false;
                             }
                             $this->content['field'] = array_merge($this->content['field'],end($page_fetched_value));
-
-                            $this->content['script'] = [
-                                'jquery'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js']
-                            ];
 
                             if ($this->request['document'] == 'login' OR $this->request['document'] == 'signup' )
                             {
@@ -1427,6 +1434,11 @@ if ($this->request['source_type'] == 'data')
                             'type'=>'text/javascript',
                             'src'=>URI_JS.$name.$file_extension
                         ];
+
+                        if (isset($option['source']))
+                        {
+                            $attribute['src'] .= '?source='.urlencode($option['source']);
+                        }
 
                         if (isset($option['attribute']))  $attribute = array_merge($attribute,$option['attribute']);
                         $attribute_set = [];

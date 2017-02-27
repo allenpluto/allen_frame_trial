@@ -33,7 +33,6 @@
                  --><span class="rating_star"></span><!--
              --></div>
             </div>
-            [[$aggregaterating]]
         </div>
     </div>
     <div class="clear"></div>

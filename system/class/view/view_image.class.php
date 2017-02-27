@@ -32,9 +32,15 @@ class view_image extends view
         {
             if (!file_exists($row['file_path']))
             {
-                $this->message->warning = 'View Image local source file does not exist'.$row['file_path'];
+                $this->message->warning = 'View Image local source file does not exist '.$row['file_path'];
                 $sync_id_group[] = $row['id'];
             }
+        }
+        if (!empty($sync_id_group))
+        {
+            $entity_obj = new $this->parameter['entity']();
+            $entity_obj->sync(['id_group'=>$sync_id_group,'sync_type'=>'update_current']);
+            unset($entity_obj);
         }
         return $result;
     }
