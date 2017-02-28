@@ -7,7 +7,7 @@
  */
 define('PATH_SITE_BASE','C:\\wamp\\www\\allen_frame_trial\\');
 include('../system/config/config.php');
-$timestamp = time();
+$start_stamp = microtime(1);
 echo '<pre>';
 
 // TEST IMAGE ENTITY
@@ -47,11 +47,12 @@ echo '<pre>';
 //3. getimagesize works for all formats. If file does not exist, it returns false. However, it also raise PHP warning for non-existing local file path. Solution: use @getimagesize to disable warning on this function call
 
 $entity = new entity_image();
-//$row = $entity->get(['where'=>'`data`=""','limit'=>10]);
-$row = $entity->get(['where'=>'`id` IN (12968,147620,149732)','limit'=>10]);
+$row = $entity->get(['where'=>'`data`=""','limit'=>10]);
+//$row = $entity->get(['where'=>'`id` IN (12968,147620,149732)','limit'=>10]);
 print_r($row);
 $entity->set(['row'=>$row]);
 
+echo "\nexecution time:".(microtime(1)-$start_stamp);
 
 
 //$entity = new entity_image();
@@ -72,4 +73,4 @@ $entity->set(['row'=>$row]);
 //$entity = new entity_image('construction-services-4');
 //print_r($entity);
 
-print_r(message::get_instance()->display());
+//print_r(message::get_instance()->display());

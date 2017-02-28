@@ -640,14 +640,6 @@ if ($this->request['source_type'] == 'data')
                     else
                     {
                         // If file source doesn't exist in content folder, try database
-                        if (empty($this->request['file_id']))
-                        {
-                            // Error Handling, fail to get source file from database, last part of file name is not a valid id
-                            $this->message->error = 'Building: cannot find source file';
-                            $this->result['status'] = 404;
-                            return false;
-                        }
-
                         $view_class = 'view_'.$this->request['file_type'];
                         if (!class_exists($view_class))
                         {
@@ -656,7 +648,22 @@ if ($this->request['source_type'] == 'data')
                             $this->result['status'] = 404;
                             return false;
                         }
-                        $view_obj = new $view_class($this->request['file_id']);
+                        switch ($this->request['file_type'])
+                        {
+                            case 'image':
+                                if (empty($this->request['file_id']))
+                                {
+                                    // Error Handling, fail to get source file from database, last part of file name is not a valid id
+                                    $this->message->error = 'Building: cannot find source file';
+                                    $this->result['status'] = 404;
+                                    return false;
+                                }
+
+                                $view_obj = new $view_class($this->request['file_id']);
+                                break;
+                            default:
+                                print_r($this);exit;
+                        }
 
                         if (!empty($view_obj->id_group))
                         {

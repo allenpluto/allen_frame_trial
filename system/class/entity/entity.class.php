@@ -816,7 +816,7 @@ class entity extends base
             if (!empty($parameter['advanced_sync']))
             {
                 // If php data process needed, only insert one row
-                $sql .= ' LIMIT 1';
+                $sql .= ' LIMIT 0';
             }
             $sql .= ');';
 
@@ -824,6 +824,13 @@ class entity extends base
             $sql .= 'ALTER TABLE '.$parameter['sync_table'].' ADD PRIMARY KEY ('.$parameter['primary_key'].');';
             $sql .= 'ALTER TABLE '.$parameter['sync_table'].' MODIFY enter_time TIMESTAMP NOT NULL DEFAULT "0000-00-00 00:00:00"';
             $sql .= ', MODIFY update_time TIMESTAMP NOT NULL DEFAULT "0000-00-00 00:00:00"';
+            if (isset($parameter['advanced_sync_update_fields']))
+            {
+                foreach ($parameter['advanced_sync_update_fields'] as $advanced_sync_update_field=>$advanced_sync_update_field_attribute)
+                {
+                    $sql .= ', ADD `'.$advanced_sync_update_field.'` '.$advanced_sync_update_field_attribute;
+                }
+            }
             if (isset($parameter['fulltext_key']))
             {
                 foreach ($parameter['fulltext_key'] as $fulltext_index=>$fulltext_fields)
@@ -832,11 +839,6 @@ class entity extends base
                 }
             }
             $sql .= ';';
-            if (!empty($parameter['advanced_sync']))
-            {
-                // If php data process needed, empty table after it is created
-                $sql .= 'TRUNCATE TABLE '.$parameter['sync_table'].';';
-            }
             $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): table '.$parameter['sync_table'].' init_sync: '.$sql;
             $query = $this->query($sql);
             if ($query === false) return false;
@@ -856,11 +858,11 @@ class entity extends base
             }
             if (empty($parameter['advanced_sync']))
             {
-                $sql = 'INSERT INTO '.$parameter['sync_table'].'('.implode(',',array_keys($parameter['update_fields'])).') (SELECT '.implode(',',$update_fields).' FROM '.$parameter['table'].' '.implode(' ',$parameter['join']);
+                $sql = 'INSERT IGNORE INTO '.$parameter['sync_table'].'('.implode(',',array_keys($parameter['update_fields'])).') (SELECT '.implode(',',$update_fields).' FROM '.$parameter['table'].' '.implode(' ',$parameter['join']);
                 if (!empty($parameter['where'])) $sql .= ' WHERE ('.implode(' AND ',$parameter['where']).')';
                 if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
                 unset($update_fields);
-                $sql .= ') ON DUPLICATE KEY UPDATE '.$parameter['primary_key'].'='.$parameter['primary_key'].';';
+                $sql .= ');';
 
                 $query = $this->query($sql);
                 if ($query === false) return false;
@@ -868,9 +870,12 @@ class entity extends base
             }
             else
             {
-                foreach ($parameter['update_fields'] as $field_index=>$field_value)
+                if (isset($parameter['advanced_sync_fetch_fields']))
                 {
-                    $update_fields[] = $field_value.' AS '.$field_index;
+                    foreach ($parameter['advanced_sync_fetch_fields'] as $field_index=>$field_value)
+                    {
+                        $update_fields[] = $field_value.' AS '.$field_index;
+                    }
                 }
 
                 $sql = 'SELECT ' . implode(',', $update_fields) . ' FROM ' . $parameter['table'] . ' ' . implode(' ', $parameter['join']);
@@ -1074,7 +1079,20 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
                 {
                     $update_fields[] = $field_value.' AS '.$field_index;
                 }
-
+                if (isset($parameter['advanced_sync_fetch_fields']))
+                {
+                    foreach ($parameter['advanced_sync_fetch_fields'] as $field_index=>$field_value)
+                    {
+                        $update_fields[] = $field_value.' AS '.$field_index;
+                    }
+                }
+                if (isset($parameter['advanced_sync_update_fields']))
+                {
+                    foreach ($parameter['advanced_sync_update_fields'] as $field_index=>$field_value)
+                    {
+                        $update_fields[] = '"" AS '.$field_index;
+                    }
+                }
                 $sql = 'SELECT ' . implode(',', $update_fields) . ' FROM ' . $parameter['table'] . ' ' . implode(' ', $parameter['join']) . ' WHERE ' . $parameter['table'] . '.' . $parameter['primary_key'] . ' IN (' . implode(',', $id_group) . ')';
                 if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
                 if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
@@ -1083,6 +1101,18 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
                 {
                     $source_row = $query->fetchAll(PDO::FETCH_ASSOC);
                     $target_row = $this->advanced_sync_update($source_row);
+
+                    if (isset($parameter['advanced_sync_fetch_fields']))
+                    {
+                        foreach ($target_row as $row_index=>&$row)
+                        {
+                            foreach ($parameter['advanced_sync_fetch_fields'] as $field_index=>$field_value)
+                            {
+                                if (isset($row[$field_index])) unset($row[$field_index]);
+//                                $update_fields[] = $field_value.' AS '.$field_index;
+                            }
+                        }
+                    }
 
                     if (count($target_row) > 0 AND count($target_row[0]) > 0)
                     {

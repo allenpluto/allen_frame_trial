@@ -123,9 +123,17 @@ class entity_image extends entity
             'view_time' => '"'.date('Y-m-d H:i:s').'"',
             'width' => 'tbl_entity_image.width',
             'height' => 'tbl_entity_image.height',
-            'mime' => 'tbl_entity_image.mime',
+            'mime' => 'tbl_entity_image.mime'
+        );
+        $sync_parameter['advanced_sync_fetch_fields'] = array(
             'data' => 'tbl_entity_image.data',
             'source_file' => 'tbl_entity_image.source_file'
+        );
+        $sync_parameter['advanced_sync_update_fields'] = array(
+            'file_extension' => 'VARCHAR(20) NOT NULL DEFAULT ""',
+            'file_uri' => 'VARCHAR(200) NOT NULL DEFAULT ""',
+            'file_path' => 'VARCHAR(200) NOT NULL DEFAULT ""',
+            'file_size' => 'INT(100) NOT NULL DEFAULT "0"'
         );
         $sync_parameter['advanced_sync'] = true;
 
@@ -147,13 +155,15 @@ class entity_image extends entity
         {
             $init_sync_parameter = $sync_parameter;
             unset($init_sync_parameter['update_fields']['data']);
-            $init_sync_parameter['update_fields']['file_extension'] = '"'.str_repeat(' ',20).'"';
-            $init_sync_parameter['update_fields']['file_uri'] = '"'.str_repeat(' ',200).'"';
-            $init_sync_parameter['update_fields']['file_path'] = '"'.str_repeat(' ',200).'"';
-            $init_sync_parameter['update_fields']['file_size'] = 10^10;
-            parent::sync($init_sync_parameter);
-
-            $sync_parameter['sync_type'] = 'full_sync';
+//            $init_sync_parameter['update_fields']['file_extension'] = '"'.str_repeat(' ',20).'"';
+//            $init_sync_parameter['update_fields']['file_uri'] = '"'.str_repeat(' ',200).'"';
+//            $init_sync_parameter['update_fields']['file_path'] = '"'.str_repeat(' ',200).'"';
+//            $init_sync_parameter['update_fields']['file_size'] = 10^10;
+//            parent::sync($init_sync_parameter);
+//
+//            $sync_parameter['sync_type'] = 'differential_sync';
+//print_r($sync_parameter);
+//exit;
             return parent::sync($sync_parameter);
         }
         else
@@ -282,8 +292,8 @@ class entity_image extends entity
                 $this->message->warning = __FILE__ . '(line ' . __LINE__ . '): tbl_entity_image failed to generate image on sync, source file and data are not set in id:'.$record['id'];
             }
 
-            unset($record['data']);
-            unset($record['source_file']);
+//            unset($record['data']);
+//            unset($record['source_file']);
 
             $record['file_size'] = filesize($record['file_path']);
         }
