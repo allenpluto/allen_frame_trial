@@ -771,8 +771,11 @@ if ($this->request['source_type'] == 'data')
                 $this->content['status'] = 'OK';
                 $this->content['message'] = '';
                 $this->content['field'] = array();
-                $this->content['script'] = array();
-                $this->content['style'] = array();
+//                $this->content['script'] = array();
+//                $this->content['style'] = array();
+                $this->content['style'] = ['default'=>[]];
+                $this->content['script'] = ['jquery'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js'],'default'=>[]];
+
                 $this->content['field']['base'] = URI_SITE_BASE;
 
                 switch($this->request['module'])
@@ -888,10 +891,6 @@ if ($this->request['source_type'] == 'data')
                         break;
                     case 'default':
                     default:
-                        $this->content['script'] = [
-                            'jquery'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js']
-                        ];
-
                         // If page is login, check for user login session
                         if ($this->request['document'] == 'login')
                         {

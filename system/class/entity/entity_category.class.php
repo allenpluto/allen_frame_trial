@@ -5,6 +5,17 @@
 
 class entity_category extends entity
 {
+    function __construct($value = Null, $parameter = array())
+    {
+        $default_parameter = [
+            'relational_fields'=>[
+                'gallery'=>[]
+            ]
+        ];
+        $parameter = array_merge($default_parameter, $parameter);
+        return parent::__construct($value, $parameter);
+    }
+
     function sync($parameter = array())
     {
         $sync_parameter = array();

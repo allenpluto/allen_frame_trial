@@ -646,114 +646,14 @@ print_r($global_message->display());
 print_r('Executing time: '.(time() - $timestamp).'<br>');
 $format = format::get_obj();*/
 //print_r(json_decode('{"id":"home_featured_listing_container","title":"<h2>Featured</h2>","content":"<div class=\"listing_block_wrapper block_wrapper ajax_loader_container\"><div class="system_debug"></div><div class=\"clear\"></div></div>"}'));
-print_r(json_encode(['content'=>'<h2>1. WELCOME TO ADVERBUY PTY LTD TRADING AS TOP4</h2>
-    <p>Thanks for using our products and services ("Services"). The Services are provided by Adverbuy Pty Ltd Trading as Top4 . ("Adverbuy Pty Ltd Trading as Top4"), located at 339 Windsor Road Baulkham hills NSW 2153</p>
-    <p>By using our Services, you are agreeing to these terms. Please read them carefully.</p>
-    <p>Our Services are very diverse, so sometimes additional terms or product requirements may apply. Additional terms will be available with the relevant Services and those additional terms become part of your agreement with us if you use those Services.</p>
-    <h2>2. USING YOUR SERVICES</h2>
-    <p>You must follow any policies made available to you within the Services.</p>
-    <p>Do not misuse our Services, for example, do not interfere with our Services or try to access them using a method other than the interface and the instructions that we provide. You may use our Services only as permitted by law, .including applicable export and control laws and regulations. We may suspend or stop providing our Services to you if you do not comply with our terms or policies or if we are investigating suspected misconduct.</p>
-    <p>Using our Services does not give you ownership of any intellectual property rights in our Services or the content that you access. You may not use content from our Services unless you obtain permission from its owner or are otherwise permitted by law. These terms do not grant you the right to use any branding or logos used in our Services. Do not remove, obscure or alter any legal notices displayed in or along with our Services.</p>
-    <p>Our Services display some content that is not Adverbuy Pty Ltd Trading as Top4. This content is the sole responsibility of the entity that makes it available. We may review content to determine whether it is illegal or violates our policies, and we may remove or refuse to display content that we reasonably believe violates our policies or the law. But that does not necessarily mean that we review content, so please do not assume that we do.</p>
-    <p>In connection with your use of the Services, we may send you service announcements, administrative messages and other information. You may opt out of some of those communications.</p>
-    <h2>3. MEMBERSHIP</h2>
-    <p>When registering as a member, you must provide us with accurate, complete and up-to-date registration information, as requested. It is your responsibility to inform us of any changes to your registration information. We will treat your personal information strictly in accordance with our Privacy Policy.</p>
-    <p>You must not:</p>
-    <ul>
-      <li>register as a member multiple times.</li>
-      <li>impersonate or create a membership for any person other than yourself.</li>
-    </ul>
-    <p>We may at any time request a form of identification to verify your identity.</p>
-    <p>You must ensure the security and confidentiality of your membership details, including any username and/or password assigned to you. You are wholly responsible for all activities which occur under your membership details (including unauthorised use of your credit card). You must notify us immediately if you become aware of any unauthorised use of your membership details. You must not permit your membership details to be used by or transferred to any other person.</p>
-    <p>We reserve the right to, in our sole discretion, suspend or terminate your membership or access to all or any part of the Top4, including if we believe you are abusing the services in any way, have breached the Conditions or are no longer an active member.</p>
-    <h2>4. YOUR CONDUCT</h2>
-    <p>You must not:</p>
-    <ol style="list-style:lower-latin;">
-        <li>use the Top4 in breach of any applicable laws or regulations;</li>
-        <li>use the Top4 (or Material obtained from the Top4):
-            <ul>
-                <li>to transmit (or authorise the transmission of) "junk mail," "chain letters," unsolicited emails, instant messaging, "spimming," or "spamming";</li>
-                <li>to impersonate any person or entity;</li>
-                <li>to solicit money, passwords or personal information from any person;</li>
-                <li>to harm, abuse, harass, stalk, threaten or otherwise offend others; or</li>
-                <li>for any unlawful purpose;</li>
-            </ul>
-        </li>
-        <li>use the Top4 to upload, post, transmit or otherwise make available (or attempt to upload, post, transmit or otherwise make available) any Material that:
-            <ul>
-                <li>is not your original work, or which in any way violates or infringes (or could reasonably be expected to violate or infringe) the intellectual property or other rights of another person;</li>
-                <li>contains, promotes, or provides information about unlawful activities or conduct;</li>
-                <li>is, or could reasonably be expected to be, defamatory, obscene, offensive, threatening, abusive, pornographic, vulgar, profane, indecent or otherwise unlawful, including Material that racially or religiously vilifies, incites violence or hatred, or is likely to offend, insult or humiliate others based on race, religion, ethnicity, gender, age, sexual orientation or any physical or mental disability;</li>
-                <li>exploits another person in any manner;</li>
-                <li>contains nudity, excessive violence, or sexual acts or references;</li>
-                <li>includes an image or personal information of another person or persons unless you have their consent;</li>
-                <li>poses or creates a privacy or security risk to any person;</li>
-                <li>you know or suspect (or ought reasonably to have known or suspected) to be false, misleading or deceptive;</li>
-                <li>contains large amounts of untargeted, unwanted or repetitive content;</li>
-                <li>contains restricted or password only access pages, or hidden content;</li>
-                <li>contains viruses, or other computer codes, files or programs designed to interrupt, limit or destroy the functionality of other computer software or hardware;</li>
-                <li>advertises, promotes or solicits any goods or services or commercial activities (except where expressly permitted or authorised by us); or</li>
-                <li>contains financial, legal, medical or other professional advice;</li>
-            </ul>
-        </li>
-        <li>interfere with, disrupt, or create an undue burden on the Top4;</li>
-        <li>use any robot, spider, or other device or process to retrieve, index, or in any way reproduce, modify or circumvent the navigational structure, security or presentation of the Top4;</li>
-        <li>use the Top4 with the assistance of any automated scripting tool or software;</li>
-        <li>frame or mirror any part of the Top4 without our prior written authorisation;</li>
-        <li>use code or other devices containing any reference to the Top4 to direct other persons to any other web page;</li>
-        <li>except to the extent permitted by law, modify, adapt, sublicense, translate, sell, reverse engineer, decipher, decompile or otherwise disassemble any portion of the Top4 or cause any other person to do so; or</li>
-        <li>delete any attributions or legal or proprietary notices on the Top4.</li>
-    </ol>
-    <h2>5. PRIVACY AND COPYRIGHT PROTECTION</h2>
-    <p>Adverbuy Pty Ltd Trading as Top4\'s Privacy Policies explain how we treat your personal data and protect your privacy when you use our Services. By using our Services, you agree that Adverbuy Pty Ltd Trading as Top4 can use such data in accordance with our Privacy Policies.</p>
-    <p>We provide information to help copyright holders manage their intellectual property online. If you think that somebody is violating your copyright and want to notify us, you can find information about submitting notices and Adverbuy Pty Ltd Trading as Top4\'s policy about responding to notices in our Help Centre.</p>
-    <h2>6. THE METERIAL THAT IS POSTED TO THE SITE</h2>
-    <p>By uploading, transmitting, posting or otherwise making available any Material via the Top4, you:</p>
-    <ol style="list-style:lower-latin;">
-        <li>grant us a non-exclusive, worldwide, royalty-free, perpetual, licence to use, reproduce, edit and exploit the Material in any form and for any purpose;</li>
-        <li>except where expressly authorised by us, also grant each user of the Top4 a non-exclusive, worldwide, royalty-free, perpetual, licence to use, reproduce, edit and exploit the Material in any form for any purpose, subject to the Conditions;</li>
-        <li>warrant that you have the right to grant the abovementioned licences;</li>
-        <li>warrant that the Material does not breach the Conditions; and</li>
-        <li>unconditionally waive all moral rights (as defined by the Copyright Act 1968) which you may have in respect of the Material.</li>
-    </ol>
-    <p>We reserve the right to:</p>
-    <ul>
-      <li>review, modify, reformat, reject or remove any Material which you upload, post, transmit or otherwise make available; and</li>
-      <li>monitor use of the Top4, and store or disclose any information that we collect, including for the purposes of any police investigation or governmental request.</li>
-    </ul>
-    <p>We are not responsible for, nor do we accept no liability with respect to, any Material uploaded, posted, or otherwise made available on the Top4 by any person other than us. For the avoidance of doubt, we will not be taken to have uploaded, posted, transmitted or otherwise made Material available on the Top4 simply by facilitating others to post, transmit or other make Material available. Furthermore, we do not endorse any opinion, advice or statement made by any person other than us.</p>
-    <h2>7. ADVERTISMENTS ON THE SITE</h2>
-    <p>We may feature or display links and pointers to websites operated by third parties on the Top4. Such websites do not form part of the Top4 and are not under our control. We do not accept any responsibility in connection with any such website. If you link to any such websites, you leave the Top4 entirely at your own risk.</p>
-    <p>You must not link to the Top4 from any other website (or otherwise authorise any other person to link from a third party website to the Top4) without our prior written consent.</p>
-    <p>The Top4 may feature or display third party advertising. By featuring or displaying such advertising, we do not in any way represent that we recommend or endorse the relevant advertiser, its products or services.</p>
-    <h2>8. ABOUT SOFTWARE IN OUR SERVICES</h2>
-    <p>When a Service requires or includes downloadable software, this software may be updated automatically on your device once a new version or feature is available. Some Services may let you adjust your automatic update settings.</p>
-    <p>Adverbuy Pty Ltd Trading as Top4 gives you a personal, worldwide, royalty-free, non-assignable and non-exclusive licence to use the software provided to you by Adverbuy Pty Ltd Trading as Top4 as part of the Services. This licence is for the sole purpose of enabling you to use and enjoy the benefit of the Services as provided by Adverbuy Pty Ltd Trading as Top4 in the manner permitted by these terms. You may not copy, modify, distribute, sell or lease any part of our Services or .luded software, nor may you reverse engineer or attempt to extract the source code of that software, unless laws prohibit those restrictions or you have our written permission.</p>
-    <p>Open-source software is important to us. Some software used in our Services may be offered under an open-source licence that we will make available to you. There may be provisions in the open-source licence that expressly override some of these terms.</p>
-    <h2>9. MODIFYING AND TERMINATING OUR SERVICES</h2>
-    <p>We are constantly changing and improving our Services. We may add or remove functionalities or features and we may suspend or stop a Service altogether.</p>
-    <p>You can stop using our Services at any time, although we would be sorry to see you go. Adverbuy Pty Ltd Trading as Top4 may also stop providing Services to you or add or create new limits to our Services at any time.</p>
-    <p>We believe that you own your data, and preserving your access to such data is important. If we discontinue a Service, where reasonably possible, we will give you reasonable advance notice and a chance to remove information from that Service.</p>
-    <p>
-    <h2>10. WARRANTIES AND DISCLAIMERS</h2>
-    <p>You use the Top4 at your own sole risk.</p>
-    <p>Except where expressly stated otherwise, Material on the Top4 is provided as general information only. It is not intended as advice and must not be relied upon as such. You should make your own inquiries and take independent advice tailored to your specific circumstances prior to making any decisions.</p>
-    <p>We do not make any representation or warranty that any Material on the Top4 will be reliable, accurate or complete, nor do we accept any responsibility arising in any way from errors or omissions.</p>
-    <p>We will not be liable for loss resulting from any action or decision by you in reliance on the Material on the Top4, nor any interruption, delay in operation or transmission, virus, communications failure, Internet access difficulties, or malfunction in equipment or software.</p>
-    <p>You acknowledge that we are not responsible for, and accept no liability in relation to, any other users\' use of, access to or conduct in connection with the Top4 in any circumstance.</p>
-    <h2>11. LIABILITY OF OUR SERVICES</h2>
-    <p>When permitted by law, Adverbuy Pty Ltd Trading as Top4 and Adverbuy Pty Ltd Trading as Top4\'s suppliers and distributors will not be responsible for lost profits, revenues or data, financial losses or indirect, special, consequential, exemplary or punitive damages.</p>
-    <p>To the extent permitted by law, the total liability of Adverbuy Pty Ltd Trading as Top4 and its suppliers and distributors or any claim under these terms. Luding for any implied warranties, is limited to the amount that you paid us to use the services(or, if we choose, to supplying you with the services again)</p>
-    <p>In all cases, Adverbuy Pty Ltd Trading as Top4 and its suppliers and distributors will not be liable for any loss or damage that is not reasonably foreseeable.</p>
-    <h2>12. BUSINESS USES OF OUR SERVICES</h2>
-    <p>If you are using our Services on behalf of a business, that business accepts these terms. It will hold harmless and indemnify Adverbuy Pty Ltd Trading as Top4 and its affiliates, officers, agents and employees from any claim, action or proceedings arising from or related to the use of the Services or violation of these terms, .luding any liability or expense arising from claims, losses, damages, judgements, litigation costs and legal fees.</p>
-    <h2>13. ABOUT THESE TERMS</h2>
-    <p>We may modify these terms or any additional terms that apply to a Service to, for example, reflect changes to the law or changes to our Services. You should look at the terms regularly. We\'ll post notice of modifications to these terms on this page. We\'ll post notice of modified additional terms in the applicable Service. Changes will not apply retrospectively and will become effective no earlier than fourteen days after they are posted. However, changes addressing new functions for a Service or changes made for legal reasons will be effective immediately. If you do not agree to the modified terms for a Service, you should discontinue your use of that Service.</p>
-    <p>If there is any .consistency between these terms and the additional terms, the additional terms will prevail to the extent of the .consistency.</p>
-    <p>These terms govern the relationship between Adverbuy Pty Ltd Trading as Top4 and you. They do not create any third party beneficiary rights.</p>
-    <p>If you do not comply with these terms and we do not take action immediately, this doesn\'t mean that we are giving up any rights that we may have (such as taking action in the future).</p>
-    <p>If it turns out that a particular term is not enforceable, this will not affect any other terms.</p>
-    <p>The laws of Sydney Australia ,, will apply to any disputes arising out of or relating to these terms or the Services. All claims arising out of or relating to these terms or the Services will be litigated exclusively in the federal or state courts of New South Wales, Australia , and you and Adverbuy Pty Ltd Trading as Top4 consent to personal jurisdiction in those courts.</p>']));
+$source = '`id`, `friendly_url`, `name`, `alternate_name`, `description`, `image_id`, `enter_time`, `update_time`, `abn`, `account_id`, `subpremise`, `street_address`, `street_address_alt`, `place_id`, `suburb_id`, `keywords`, `logo_id`, `banner_id`, `email`, `telephone`, `alternate_telephone`, `mobile`, `fax_number`, `website_url`, `content`, `status`, `hours_work`, `facebook_link`, `twitter_link`, `linkedin_link`, `youtube_link`, `blog_link`, `pinterest_link`, `googleplus_link`, `import_error`';
+$array = explode(',',$source);
+foreach ($array as $index=>&$item)
+{
+    $item = '`tbl_entity_listing`.'.trim($item);
+}
+$result = implode(',',$array);
+print_r($result);
 exit;
 
 $css_test_line = ".column_container:after

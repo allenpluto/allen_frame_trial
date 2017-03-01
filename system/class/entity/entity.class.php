@@ -232,17 +232,17 @@ class entity extends base
         if (isset($parameter['relational_fields']))
         {
             if (isset($parameter['relational_fields'][0])) $parameter['relational_fields'] = array_flip($parameter['relational_fields']);
-            foreach ($parameter['relational_filed'] as $relational_field_name=>$relational_field)
+            foreach ($parameter['relational_fields'] as $relational_field_name=>&$relational_field)
             {
                 if (empty($relational_field))
                 {
                     if (isset($this->parameter['relational_fields'][$relational_field_name]))
                     {
-                        $parameter['relational_fields'][$relational_field_name] = $this->parameter['relational_fields'][$relational_field_name];
+                        $relational_field = $this->parameter['relational_fields'][$relational_field_name];
                     }
                     else
                     {
-                        $parameter['relational_fields'][$relational_field_name] = $this->construct_relational_fields([$relational_field_name]);
+                        $relational_field = $this->construct_relational_fields([$relational_field_name]);
                     }
                 }
             }

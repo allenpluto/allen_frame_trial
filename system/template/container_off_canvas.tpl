@@ -9,4 +9,4 @@
         <div id="footer_wrapper" class="wrapper">
         </div><!-- #footer_wrapper -->
     </div>
-</div>[[~style:field=`{"name":"off_canvas"}`]]
+</div>[[-~style:field=`{"name":"off_canvas"}`]]
