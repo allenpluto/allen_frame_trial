@@ -377,9 +377,49 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                         break;
                     }
                     $GLOBALS['time_stack']['analyse parameter for object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
+
+                    $field_row_value = $field_row[$match_result_value['name']];
+                    if (!is_array($field_row_value))
+                    {
+                        $field_row_value = explode(',',$field_row_value);
+                    }
+                    if (isset($match_result_value['page_size']))
+                    {
+                        // If page_size is set in object variable, crop the id_group before initial the object to avoid too many advanced sync slow down site load (may causing php execution timeout break if too many image files need to be downloaded)
+                        $fetch_parameter['page_size'] = intval($match_result_value['page_size']);
+                        if (isset($match_result_value['page_number']))
+                        {
+                            if ($match_result_value['page_number'] == 'random')
+                            {
+                                $fetch_parameter['page_number'] = rand(0, floor(count($field_row_value)/$fetch_parameter['page_size']));
+                            }
+                            else
+                            {
+                                $fetch_parameter['page_number'] = intval($match_result_value['page_number']);
+                            }
+                        }
+                        else
+                        {
+                            $match_result_value['page_number'] = 0;
+                        }
+                        if (count($field_row_value) > $fetch_parameter['page_size'])
+                        {
+                            $sub_field_row_value = array();
+                            $field_row_value_index = $match_result_value['page_size']*$match_result_value['page_number'];
+                            while (isset($field_row_value[$field_row_value_index]))
+                            {
+                                $sub_field_row_value[] = $field_row_value[$field_row_value_index];
+                                $field_row_value_index++;
+                                if ($field_row_value_index >= $match_result_value['page_size']*($match_result_value['page_number']+1)) break;
+                            }
+                            $field_row_value = $sub_field_row_value;
+                            unset($sub_field_row_value);
+                        }
+                    }
+
                     try
                     {
-                        $object = new $match_result_value['object']($field_row[$match_result_value['name']]);
+                        $object = new $match_result_value['object']($field_row_value);
                         $GLOBALS['time_stack']['create object 1 '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
                     }
                     catch (Exception $e)
@@ -391,7 +431,9 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                     }
                     $GLOBALS['time_stack']['create object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
 
-                    $result = $object->fetch_value();
+                    $fetch_parameter = array();
+
+                    $result = $object->fetch_value($fetch_parameter);
 
                     $GLOBALS['time_stack']['fetch value '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
                     unset($object);

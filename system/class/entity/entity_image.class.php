@@ -239,6 +239,9 @@ class entity_image extends entity
                         $this->message->notice = __FILE__ . '(line ' . __LINE__ . '): '.$this->parameter['table'].' failed to get image mime type for '.$record['source_file'];
                     }
 
+                    $image_fetch_log = PATH_ASSET.'log'.DIRECTORY_SEPARATOR.'image_fetch_log.txt';
+                    if (!file_exists(dirname($image_fetch_log))) mkdir(dirname($image_fetch_log), 0755, true);
+                    file_put_contents($image_fetch_log,'REQUEST IMAGE: '.$record['source_file']."\n",FILE_APPEND);
                     $image_data = file_get_contents($record['source_file']);
 
                     if ($image_data !== false)

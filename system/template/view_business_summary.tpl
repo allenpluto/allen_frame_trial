@@ -1,7 +1,7 @@
 <div id="listing_block_container_[[*id]]" class="block_container listing_block_container[[*extra_classes]]" itemscope="" itemtype="[[*schema_itemtype]]">
     <div class="block_thumb_container">
-        [[image_id:object=`view_business_summary_image`:field=`{"listing_id":"[[*id]]"}`]]
-        [[logo_id:object=`view_business_summary_logo`]]
+        [[image:object=`view_business_summary_image`:field=`{"listing_id":"[[*id]]"}`:page_size=`1`:page_number=`0`]]
+        [[logo:object=`view_business_summary_logo`]]
         <div class="clear"></div>
     </div>
     <div class="block_content_container">
