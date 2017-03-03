@@ -27,6 +27,7 @@ class view_image extends view
     {
         $parameter = array_merge($this->parameter,$parameter);
         $result = parent::fetch_value($parameter);
+        if ($result == false) return $result;
         $sync_id_group = array();
         foreach ($result as $row_index=>$row)
         {

@@ -131,13 +131,16 @@ class view extends base
             }
             else
             {
-                if ($this->parameter['entity'] == 'entity_web_page' OR $this->parameter['entity'] == 'entity_image')
+                if ($this->parameter['entity'] == 'entity_web_page' OR $this->parameter['entity'] == 'entity_image' OR $this->parameter['entity'] == 'entity_organization')
                 {
-                    $entity_obj = new $this->parameter['entity']();
+                    if (!empty($id_group))
+                    {
+                        $entity_obj = new $this->parameter['entity']();
 //print_r("<pre>\n--------test point 1--------\n");
 //print_r($id_group);
-                    $entity_obj->sync(['id_group'=>$id_group]);
-                    unset($entity_obj);
+                        $entity_obj->sync(['id_group'=>$id_group]);
+                        unset($entity_obj);
+                    }
                 }
 
                 $this->id_group = $id_group;

@@ -5,6 +5,12 @@
 
 class view_organization extends view
 {
+    var $parameter = array(
+        'entity' => 'entity_organization',
+        'table' => 'tbl_view_organization',
+        'primary_key' => 'id'
+    );
+
     function fetch_value($parameter = array())
     {
         $format = format::get_obj();

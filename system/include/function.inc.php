@@ -386,23 +386,25 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                     if (isset($match_result_value['page_size']))
                     {
                         // If page_size is set in object variable, crop the id_group before initial the object to avoid too many advanced sync slow down site load (may causing php execution timeout break if too many image files need to be downloaded)
-                        $fetch_parameter['page_size'] = intval($match_result_value['page_size']);
+                        $match_result_value['page_size'] = intval($match_result_value['page_size']);
                         if (isset($match_result_value['page_number']))
                         {
                             if ($match_result_value['page_number'] == 'random')
                             {
-                                $fetch_parameter['page_number'] = rand(0, floor(count($field_row_value)/$fetch_parameter['page_size']));
+                                $match_result_value['page_number'] = rand(0, ceil(count($field_row_value)/$match_result_value['page_size'])-1);
                             }
                             else
                             {
-                                $fetch_parameter['page_number'] = intval($match_result_value['page_number']);
+                                $match_result_value['page_number'] = intval($match_result_value['page_number']);
+                                if ($match_result_value['page_number'] < 0) $match_result_value['page_number'] = 0;
+                                if ($match_result_value['page_number'] > ceil(count($field_row_value)/$match_result_value['page_size'])-1) $match_result_value['page_number'] = ceil(count($field_row_value)/$match_result_value['page_size'])-1;
                             }
                         }
                         else
                         {
                             $match_result_value['page_number'] = 0;
                         }
-                        if (count($field_row_value) > $fetch_parameter['page_size'])
+                        if (count($field_row_value) > $match_result_value['page_size'])
                         {
                             $sub_field_row_value = array();
                             $field_row_value_index = $match_result_value['page_size']*$match_result_value['page_number'];
@@ -412,6 +414,7 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                                 $field_row_value_index++;
                                 if ($field_row_value_index >= $match_result_value['page_size']*($match_result_value['page_number']+1)) break;
                             }
+//echo "\ntest point 1\n".$match_result_value['page_number']."\n".$field_row_value_index."\n";print_r($field_row_value);print_r($sub_field_row_value);exit;
                             $field_row_value = $sub_field_row_value;
                             unset($sub_field_row_value);
                         }

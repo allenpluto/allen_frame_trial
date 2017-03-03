@@ -986,6 +986,11 @@ class entity extends base
                 unset($compare_records_parameter);
                 if ($sync_id_group === false) return false;
         }
+//if (get_class($this) == 'entity_image')
+//{
+//    $image_fetch_log = PATH_ASSET.'log'.DIRECTORY_SEPARATOR.'image_fetch_log.txt';
+//    file_put_contents($image_fetch_log,'sync image: '.$parameter['sync_type']."\n".print_r($sync_id_group,true)."\n",FILE_APPEND);
+//}
 
         // id_group to delete
         if (count($sync_id_group['delete']) > 0)
