@@ -9,6 +9,7 @@ class entity_category extends entity
     {
         $default_parameter = [
             'relational_fields'=>[
+                'organization'=>[],
                 'gallery'=>[]
             ]
         ];
@@ -18,110 +19,26 @@ class entity_category extends entity
 
     function sync($parameter = array())
     {
-        $sync_parameter = array();
-
         // set default sync parameters for index table
-        //$parameter['sync_table'] = str_replace('entity','index',$this->parameter['table']);
         $sync_parameter['sync_table'] = 'tbl_index_category';
         $sync_parameter['update_fields'] = array(
             'id' => 'tbl_entity_category.id',
             'name' => 'tbl_entity_category.name',
-            'alternate_name' => 'tbl_entity_category.alternate_name',
-            'description' => 'tbl_entity_category.description',
             'enter_time' => 'tbl_entity_category.enter_time',
             'update_time' => 'tbl_entity_category.update_time',
             'keywords' => 'tbl_entity_category.keywords',
-            'category_id' => 'tbl_entity_category.category_id',
-            'organization_count' => 'join_category_organization.organization_count'
+            'status' => 'tbl_entity_category.status',
+            'parent' => 'tbl_entity_category.parent_id',
+            'sibling' => 'GROUP_CONCAT(DISTINCT tbl_sibling.id)',
+            'child' => 'GROUP_CONCAT(DISTINCT tbl_child.id)',
+            'organization_count' => 'COUNT(DISTINCT tbl_rel_category_to_organization.organization_id)',
         );
 
-        if (!isset($parameter['sync_type']))
-        {
-            $parameter['sync_type'] = 'differential_sync';
-        }
-
-        if ($GLOBALS['db']) $db = $GLOBALS['db'];
-        else $db = new db;
-        if ($db->db_table_exists($sync_parameter['sync_table'])) $parameter['sync_type'] = 'full_sync';
-
-        $category_id_condition = '';
-        switch ($parameter['sync_type'])
-        {
-            case 'update_current':
-            case 'delete_current':
-            case 'differential_sync':
-                if (count($this->id_group) > 0)
-                {
-                    $category_id_condition = ' WHERE category_id IN ('.implode(',',$this->id_group).')';
-                }
-                break;
-            case 'full_sync':
-            default:
-        }
 
         $sync_parameter['join'] = array(
-            'JOIN (SELECT category_id, COUNT(*) AS organization_count FROM tbl_rel_category_to_organization'.$category_id_condition.' GROUP BY category_id) join_category_organization ON join_category_organization.category_id = tbl_entity_category.id'
-        );
-
-        $sync_parameter['where'] = array(
-            'tbl_entity_category.status = "A"'
-        );
-
-        $sync_parameter['fulltext_key'] = array(
-            'fulltext_keywords' => ['name','alternate_name','description','keywords']
-        );
-
-        $sync_parameter = array_merge($sync_parameter, $parameter);
-
-        $result[] = parent::sync($sync_parameter);
-
-
-        $sync_parameter = array();
-
-        // set default sync parameters for view table
-        $sync_parameter['sync_table'] = 'tbl_view_category';
-        $sync_parameter['update_fields'] = array(
-            'id' => 'tbl_entity_category.id',
-            'friendly_url' => 'tbl_entity_category.friendly_url',
-            'name' => 'tbl_entity_category.name',
-            'alternate_name' => 'tbl_entity_category.alternate_name',
-            'description' => 'tbl_entity_category.description',
-            'enter_time' => 'tbl_entity_category.enter_time',
-            'update_time' => 'tbl_entity_category.update_time',
-            'keywords' => 'tbl_entity_category.keywords',
-            'category_id' => 'tbl_entity_category.category_id',
-            'organization_count' => 'join_category_organization.organization_count'
-            //'image_id' => 'join_image.id_concat',
-            //'image_src' => 'join_image.src_concat'
-        );
-
-
-        if (!isset($parameter['sync_type']))
-        {
-            $parameter['sync_type'] = 'differential_sync';
-        }
-
-        if ($GLOBALS['db']) $db = $GLOBALS['db'];
-        else $db = new db;
-        if ($db->db_table_exists($sync_parameter['sync_table'])) $parameter['sync_type'] = 'full_sync';
-
-        $category_id_condition = '';
-        switch ($parameter['sync_type'])
-        {
-            case 'update_current':
-            case 'delete_current':
-            case 'differential_sync':
-                if (count($this->id_group) > 0)
-                {
-                    $category_id_condition = ' WHERE category_id IN ('.implode(',',$this->id_group).')';
-                }
-                break;
-            case 'full_sync':
-            default:
-        }
-
-        $sync_parameter['join'] = array(
-            'JOIN (SELECT category_id, COUNT(*) AS organization_count FROM tbl_rel_category_to_organization'.$category_id_condition.' GROUP BY category_id) join_category_organization ON join_category_organization.category_id = tbl_entity_category.id'
+            'LEFT JOIN tbl_rel_category_to_organization ON tbl_entity_category.id = tbl_rel_category_to_organization.category_id',
+            'LEFT JOIN tbl_entity_category tbl_sibling ON tbl_entity_category.parent_id = tbl_sibling.parent_id',
+            'LEFT JOIN tbl_entity_category tbl_child ON tbl_entity_category.id = tbl_child.parent_id'
         );
 
         $sync_parameter['where'] = array(
@@ -137,6 +54,53 @@ class entity_category extends entity
         $sync_parameter = array_merge($sync_parameter, $parameter);
 
         $result[] = parent::sync($sync_parameter);
+
+        return $result;
+
+        // set default sync parameters for view table
+        $sync_parameter['sync_table'] = 'tbl_view_category';
+        $sync_parameter['update_fields'] = array(
+            'id' => 'tbl_entity_category.id',
+            'friendly_uri' => 'tbl_entity_category.friendly_uri',
+            'name' => 'tbl_entity_category.name',
+            'alternate_name' => 'tbl_entity_category.alternate_name',
+            'description' => 'tbl_entity_category.description',
+            'enter_time' => 'tbl_entity_category.enter_time',
+            'update_time' => 'tbl_entity_category.update_time',
+            'view_time' => '"'.date('Y-m-d H:i:s').'"',
+            'keywords' => 'tbl_entity_category.keywords',
+            'content' => 'tbl_entity_category.content',
+            'status' => 'tbl_entity_category.status',
+            'parent_id' => 'tbl_entity_category.parent_id',
+            'scoopit_uri' => 'tbl_entity_category.scoopit_uri',
+            'schema_itemtype' => 'tbl_entity_category.schema_itemtype',
+            'organization_count' => 'COUNT(DISTINCT tbl_rel_category_to_organization.organization_id)',
+            'image' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_image.image_id)'
+        );
+
+
+        $sync_parameter['join'] = array(
+            'LEFT JOIN tbl_rel_category_to_organization ON tbl_entity_category.id = tbl_rel_category_to_organization.category_id',
+            'LEFT JOIN tbl_rel_category_to_gallery ON tbl_entity_category.id = tbl_rel_category_to_gallery.category_id',
+            'LEFT JOIN tbl_rel_gallery_to_image ON tbl_rel_category_to_gallery.gallery_id = tbl_rel_gallery_to_image.gallery_id'
+        );
+
+        $sync_parameter['where'] = array(
+            'tbl_entity_category.status = "A"'
+        );
+
+        $sync_parameter['group'] = array(
+            'tbl_entity_category.id'
+        );
+
+        $sync_parameter['fulltext_key'] = array();
+
+        $sync_parameter = array_merge($sync_parameter, $parameter);
+
+        $result[] = parent::sync($sync_parameter);
+
+        return $result;
+
     }
 }
 
