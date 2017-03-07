@@ -7,7 +7,7 @@ class view_category_image extends view_image
 {
     function fetch_value($parameter = array())
     {
-        if (!isset($parameter['image_size'])) $parameter['image_size'] = 'm';
+        if (!isset($parameter['image_size'])) $parameter['image_size'] = 's';
         $result = parent::fetch_value($parameter);
         if ($result !== false AND is_array($this->row))
         {

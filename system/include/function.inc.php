@@ -383,6 +383,10 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                     {
                         $field_row_value = explode(',',$field_row_value);
                     }
+                    else
+                    {
+                        $field_row_value = array_values($field_row_value);
+                    }
                     if (isset($match_result_value['page_size']))
                     {
                         // If page_size is set in object variable, crop the id_group before initial the object to avoid too many advanced sync slow down site load (may causing php execution timeout break if too many image files need to be downloaded)
@@ -434,10 +438,15 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                     }
                     $GLOBALS['time_stack']['create object '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
 
-                    $fetch_parameter = array();
-
-                    $result = $object->fetch_value($fetch_parameter);
-
+                    $result = $object->fetch_value();
+//if ($match_result_value['object'] == 'view_category')
+//{
+//    echo "\ntest point 3\n";
+//    print_r($field_row[$match_result_value['name']]);
+//    print_r($field_row_value);
+//    print_r($match_result_value);
+//    print_r($object);
+//}
                     $GLOBALS['time_stack']['fetch value '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
                     unset($object);
                     if (empty($result)) $match_result_value['value'] = '';

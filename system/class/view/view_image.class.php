@@ -6,11 +6,9 @@
 class view_image extends view
 {
     var $parameter = array(
-        'namespace' => 'image/',
         'entity' => 'entity_image',
         'table' => 'tbl_view_image',
         'primary_key' => 'id',
-        'image_size' => 'm',
         'page_size' => 1
     );
 

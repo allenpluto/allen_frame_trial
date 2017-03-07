@@ -885,7 +885,8 @@ if ($this->request['source_type'] == 'data')
                                 $index_category_obj->filter_by_active();
                                 $index_category_obj->filter_by_listing_count();
                                 $this->content['field']['category'] = $index_category_obj->id_group;
-                                $this->content['field']['page_content'] = '[[category]]';
+                                $this->content['script']['category_ajax'] = ['content'=>'$(document).ready(function(){$(\'.ajax_loader_container\').ajax_loader({"object_type":"business_category","data_encode_type":"base64","id_group":'.json_encode(array_values($index_category_obj->id_group)).',"page_size":4,"page_number":0});});'];
+//                                $this->content['field']['page_content'] = '[[category:page_size=`4`:container_name=`container_view_category`]]';
                                 break;
                         }
                         break;
@@ -1437,9 +1438,12 @@ if ($this->request['source_type'] == 'data')
                         ];
                         if (isset($option['content']))  $tag['content'] = $option['content'];
                         $attribute = [
-                            'type'=>'text/javascript',
-                            'src'=>URI_JS.$name.$file_extension
+                            'type'=>'text/javascript'
                         ];
+                        if (!isset($option['content']))
+                        {
+                            $attribute['src'] = URI_JS.$name.$file_extension;
+                        }
 
                         if (isset($option['source']))
                         {

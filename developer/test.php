@@ -646,6 +646,8 @@ print_r($global_message->display());
 print_r('Executing time: '.(time() - $timestamp).'<br>');
 $format = format::get_obj();*/
 //print_r(json_decode('{"id":"home_featured_listing_container","title":"<h2>Featured</h2>","content":"<div class=\"listing_block_wrapper block_wrapper ajax_loader_container\"><div class="system_debug"></div><div class=\"clear\"></div></div>"}'));
+print_r(json_decode('{"content":"$(document).ready(function(){$(\'.ajax_loader_container\').ajax_loader({\"object_type\":\"business_category\",\"data_encode_type\":\"base64\",\"id_group\":[1,2,3,4,5,6],\"page_size\":4,\"page_number\":0});});"}',true));
+exit;
 $source = '`id`, `friendly_url`, `name`, `alternate_name`, `description`, `image_id`, `enter_time`, `update_time`, `abn`, `account_id`, `subpremise`, `street_address`, `street_address_alt`, `place_id`, `suburb_id`, `keywords`, `logo_id`, `banner_id`, `email`, `telephone`, `alternate_telephone`, `mobile`, `fax_number`, `website_url`, `content`, `status`, `hours_work`, `facebook_link`, `twitter_link`, `linkedin_link`, `youtube_link`, `blog_link`, `pinterest_link`, `googleplus_link`, `import_error`';
 $array = explode(',',$source);
 foreach ($array as $index=>&$item)

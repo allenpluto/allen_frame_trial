@@ -5,6 +5,13 @@
 
 class view_web_page extends view
 {
+    var $parameter = array(
+        'entity' => 'entity_web_page',
+        'table' => 'tbl_view_web_page',
+        'primary_key' => 'id',
+        'page_size' => 1
+    );
+
     function __construct($value = Null, $parameter = array())
     {
         if (!isset($parameter['template']) AND isset($parameter['namespace']))

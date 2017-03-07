@@ -1,6 +1,6 @@
 <div id="category_block_container_[[*id]]" class="block_container category_block_container[[*extra_classes]]">
     <div class="block_thumb_container">
-        <div class="block_thumb_image_container"></div>[[image:field=`{"category_id":"[[*id]]"]]
+        <div class="block_thumb_image_container"></div>[[image:object=`view_category_image`:field=`{"category_id":"[[*id]]"}`:page_size=`1`:page_number=`0`]]
         <div class="block_thumb_content_container">
             <div class="block_thumb_content"><h3 class="block_thumb_title">[[*name]]</h3></div>
         </div>

@@ -122,6 +122,28 @@ class view extends base
                         'where' => array('`friendly_uri` = :friendly_uri')
                     );
                     $this->get($parameter);
+                    if ($this->parameter['entity'] == 'entity_web_page')
+                    {
+                        $entity_obj = new $this->parameter['entity']();
+                        if (!empty($this->id_group))
+                        {
+                            $entity_obj->sync(['id_group'=>$this->id_group]);
+                        }
+                        else
+                        {
+                            $entity_obj->get($parameter);
+//echo "\ntest point 1\n";
+//print_r($parameter);
+//print_r($entity_obj);
+                            if (!empty($entity_obj->id_group))
+                            {
+                                $entity_obj->sync();
+                                $this->id_group = $entity_obj->id_group;
+                                $this->get();
+                            }
+                        }
+                        unset($entity_obj);
+                    }
                 }
                 else
                 {
@@ -131,13 +153,15 @@ class view extends base
             }
             else
             {
-                if ($this->parameter['entity'] == 'entity_web_page' OR $this->parameter['entity'] == 'entity_image' OR $this->parameter['entity'] == 'entity_organization')
+                if ($this->parameter['entity'] == 'entity_image' OR $this->parameter['entity'] == 'entity_organization')
                 {
                     if (!empty($id_group))
                     {
                         $entity_obj = new $this->parameter['entity']();
 //print_r("<pre>\n--------test point 1--------\n");
+//print_r($this->parameter['entity']);
 //print_r($id_group);
+//exit;
                         $entity_obj->sync(['id_group'=>$id_group]);
                         unset($entity_obj);
                     }
