@@ -13,7 +13,7 @@ $global_preference->view_category_page_size = 12;
 $global_preference->view_business_summary_page_size = 8;
 
 // Data Encode
-$global_preference->ajax_data_encode = 'base64';
+$global_preference->data_encode = 'base64';
 
 // Minify Text files, (remove unnecessary spaces, long variable name...)
 $global_preference->minify_html = false;

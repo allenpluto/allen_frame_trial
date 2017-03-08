@@ -21,8 +21,8 @@ $.fn.ajax_loader = function(user_option) {
         ajax_loader_container.data('option',option);
         $('<div class="ajax_loader_bottom"><div class="ajax_loader_bottom_text_container"><span class="ajax_loader_bottom_icon"></span><span class="ajax_loader_bottom_text">Loading...</span></div></div>').appendTo(ajax_loader_container);
 
-        $(window).scroll(function() {
-            if($(window).scrollTop() + $(window).height() - $(document).height() > - 100) {
+        $('#off_canvas_wrapper').scroll(function() {
+            if($('#off_canvas_wrapper').scrollTop() + $(window).height() - $('#off_canvas_container').height() > - 100) {
                 var ajax_loader_option = ajax_loader_container.data('option');
                 if (!ajax_loader_container.hasClass('ajax_loader_container_complete') && !ajax_loader_container.hasClass('ajax_loader_container_loading')) {
                     ajax_loader_container.addClass('ajax_loader_container_loading');
@@ -37,7 +37,6 @@ $.fn.ajax_loader = function(user_option) {
                     }
                     var post_value =
                     {
-                        'page_number': 0,
                         'id_group': next_page_id_group
                     };
                     if ($('.system_debug').length>0)
@@ -50,9 +49,11 @@ $.fn.ajax_loader = function(user_option) {
                             post_value[option_key] = option_value;
                         }
                     });
+console.log(ajax_loader_container.data('option'));
+console.log(post_value);
                     $.ajax({
                         'type': 'POST',
-                        'url': 'listing/ajax-load',
+                        'url': 'json/listing/',
                         'data': post_value,
                         'timeout': 10000
                     }).always(function (callback_obj, status, info_obj) {

@@ -146,6 +146,7 @@ if ($this->request['source_type'] == 'data')
                 $this->request['source_type'] = 'data';
                 $this->request['file_type'] = $request_path_part;
                 $this->request['file_uri'] = URI_ASSET.$this->request['file_type'].'/';
+                $request_path_part = array_shift($request_path);
             }
             else
             {
@@ -881,12 +882,35 @@ if ($this->request['source_type'] == 'data')
                         switch($this->request['method'])
                         {
                             case '':
-                                $index_category_obj = new index_category();
-                                $index_category_obj->filter_by_active();
-                                $index_category_obj->filter_by_listing_count();
-                                $this->content['field']['category'] = $index_category_obj->id_group;
-                                $this->content['script']['category_ajax'] = ['content'=>'$(document).ready(function(){$(\'.ajax_loader_container\').ajax_loader({"object_type":"business_category","data_encode_type":"base64","id_group":'.json_encode(array_values($index_category_obj->id_group)).',"page_size":4,"page_number":0});});'];
-//                                $this->content['field']['page_content'] = '[[category:page_size=`4`:container_name=`container_view_category`]]';
+                                $ajax_loading_data = array(
+                                    'data_encode'=>$this->preference->data_encode,
+                                    'id_group'=>array(),
+                                    'page_size'=>$this->preference->view_category_page_size,
+                                    'page_number'=>0
+                                );
+                                if (!isset($this->request['option']['id_group']))
+                                {
+                                    $index_category_obj = new index_category();
+                                    $index_category_obj->filter_by_active();
+                                    $index_category_obj->filter_by_listing_count();
+                                    $this->content['field']['category'] = $index_category_obj->id_group;
+                                    $ajax_loading_data['id_group'] = $index_category_obj->id_group;
+                                }
+                                else
+                                {
+                                    $this->content['field']['category'] = $this->request['option']['id_group'];
+                                    $ajax_loading_data['id_group'] = $this->request['option']['id_group'];
+                                }
+                                if (isset($this->request['option']['page_size'])) $ajax_loading_data['page_size'] = $this->request['option']['page_size'];
+                                if (isset($this->request['option']['page_number'])) $ajax_loading_data['page_number'] = $this->request['option']['page_number'];
+
+                                $ajax_loading_data_string = json_encode($ajax_loading_data);
+                                if ($this->preference->data_encode == 'base64')
+                                {
+                                    $ajax_loading_data_string = '$.parseJSON(atob(\'' . base64_encode($ajax_loading_data_string) . '\'))';
+                                }
+
+                                $this->content['script']['category_ajax'] = ['content'=>'$(document).ready(function(){$(\'.ajax_loader_container\').ajax_loader('.$ajax_loading_data_string.');});'];
                                 break;
                         }
                         break;
@@ -1352,7 +1376,21 @@ if ($this->request['source_type'] == 'data')
                 if (!isset($this->result['content'])) $this->result['file_path'] = $this->content['target_file']['path'];
                 break;
             case 'json':
-                $this->result['content'] = json_encode($this->content['api_result']);
+                switch($this->request['module'])
+                {
+                    case 'listing':
+                        switch($this->request['method'])
+                        {
+                            case '':
+                                $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[category]]']]);
+                                if (isset($GLOBALS['global_field']['style'])) $this->result['content']['style'] = $GLOBALS['global_field']['style'];
+                                if (isset($GLOBALS['global_field']['script'])) $this->result['content']['script'] = $GLOBALS['global_field']['script'];
+                                $this->result['content'] = json_encode($this->result['content']);
+                                break;
+                        }
+                        break;
+                }
+                //$this->result['content'] = json_encode($this->content['api_result']);
                 $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s').' GMT';
                 $this->result['header']['Content-Length'] = strlen($this->result['content']);
                 $this->result['header']['Content-Type'] = 'application/json';
