@@ -174,6 +174,8 @@ function render_html($field = array(), $template_name = '', $container_name = ''
             unset($field_row_parameter['parent_row']);
         }
 
+        if (!is_array($global_field)) print_r($global_field);
+        if (!is_array($field_row)) print_r($field_row);
         $field_row = array_merge($global_field,$field_row);
 
         $match_result = array();

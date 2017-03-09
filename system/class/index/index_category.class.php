@@ -5,10 +5,6 @@
 
 class index_category extends index
 {
-    var $parameter = array(
-        'table' => 'ListingCategory'
-    );
-
     function __construct($value = Null, $parameter = array())
     {
         parent::__construct($value, $parameter);
@@ -19,50 +15,50 @@ class index_category extends index
     function filter_by_active($parameter = array())
     {
         $filer_parameter = array(
-            'where' => 'featured = \'y\''
+            'where' => 'status = \'A\''
         );
 
         $filer_parameter = array_merge($filer_parameter, $parameter);
         return parent::get($filer_parameter);
     }
 
-    function filter_by_listing_count($parameter = array())
+    function filter_by_organization_count($parameter = array())
     {
         $filer_parameter = array(
             'get_field' => array(
-                'listing_count' => 'COUNT(*)'
+                'organization_count' => 'COUNT(*)'
             ),
             'primary_key' => 'category_id',
-            'table' => 'Listing_Category',
+            'table' => 'tbl_rel_category_to_organization',
             'group' => 'category_id',
-            'order' => 'listing_count DESC'
+            'order' => 'organization_count DESC'
         );
 
         $filer_parameter = array_merge($filer_parameter, $parameter);
         $result = parent::get($filer_parameter);
-        return $result['listing_count'];
+        return $result['organization_count'];
     }
 
     // Exact Match Search
-    function filter_by_listing($value, $parameter = array())
+    function filter_by_organization($value, $parameter = array())
     {
         $format = format::get_obj();
-        $listing_id_group = $format->id_group(array('value'=>$value,'key_prefix'=>':listing_id_'));
-        if ($listing_id_group === false)
+        $organization_id_group = $format->id_group(array('value'=>$value,'key_prefix'=>':organization_id_'));
+        if ($organization_id_group === false)
         {
-            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): '.get_class($this).' invalid listing id(s)';
+            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): '.get_class($this).' invalid organization id(s)';
             return false;
         }
 
         $filter_parameter = array(
             'primary_key' => 'category_id',
-            'table' => 'Listing_Category',
-            'where' => 'listing_id IN ('.implode(',',array_keys($listing_id_group)).')',
+            'table' => 'tbl_rel_category_to_organization',
+            'where' => 'organization_id IN ('.implode(',',array_keys($organization_id_group)).')',
         );
 
         $filter_parameter = array_merge($filter_parameter, $parameter);
         if (!isset($filter_parameter['bind_param'])) $filter_parameter['bind_param'] = array();
-        $filter_parameter['bind_param'] = array_merge($filter_parameter['bind_param'], $listing_id_group);
+        $filter_parameter['bind_param'] = array_merge($filter_parameter['bind_param'], $organization_id_group);
 
         return parent::get($filter_parameter);
     }

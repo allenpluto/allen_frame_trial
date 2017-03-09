@@ -73,21 +73,20 @@ console.log(post_value);
                                         data = atob(data);
                                 }
                             }
-                            data = $.parseJSON(data);
-
+//console.log(data);
+//                            //data = $.parseJSON(data);
+//console.log('parse json');
+//console.log(data);
                             ajax_loader_container.append(data.html);
-                            data.style.forEach(function(element, index){
-                                if (element.type == 'text_content')
-                                {
-                                    style_tag.append(element.content);
-                                }
-                            });
-                            data.script.forEach(function(element, index){
-                                if (element.type == 'text_content')
-                                {
-                                    $('body').append('<script type="text/javascript">'+element.content+'</script>>');
-                                }
-                            });
+                            if (data.style)
+                            {
+                                style_tag.append(data.style);
+                            }
+                            if (data.script)
+                            {
+                                $('body').append('<script type="text/javascript">'+data.script+'</script>>');
+
+                            }
                             if ($('.system_debug').length>0)
                             {
                                 if (typeof $('.system_debug').data('ajax_load_count') == 'undefined') $('.system_debug').data('ajax_load_count', 1);

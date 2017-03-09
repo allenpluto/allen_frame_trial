@@ -445,6 +445,11 @@ class entity extends base
         $rel_table_value = array();
         foreach ($parameter['table_fields'] as $field_index=>$field_name)
         {
+if (!isset($parameter['primary_key']))
+{
+    print_r($this);
+    print_r($parameter);
+}
             if ($field_name != $parameter['primary_key'])
             {
                 $field_bind[] = '`'.$field_name.'` = :'.$field_name;

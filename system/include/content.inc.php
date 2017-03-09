@@ -28,21 +28,6 @@ class content extends base {
             $this->message->error = 'Fail: Error during request_decoder';
         }
         $this->time_stack['request_decoder'] = microtime(1);
-//echo '<pre>';
-//print_r(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH).'<br>');
-//print_r(parse_url($this->request['file_uri'], PHP_URL_PATH).'<br>');
-//print_r('request_decoder: <br>');
-//print_r($this);
-if ($this->request['source_type'] == 'data')
-{
-    $api_access_log = PATH_ASSET.'log'.DIRECTORY_SEPARATOR.'api_access_log.txt';
-    if (!file_exists(dirname($api_access_log))) mkdir(dirname($api_access_log), 0755, true);
-    file_put_contents($api_access_log,'REQUEST: '.$this->request['remote_ip'].' ['.date('D, d M Y H:i:s').']'.$_SERVER['REQUEST_URI']."\n",FILE_APPEND);
-    if ($this->request['method'] == 'select_business_by_uri' AND !empty($this->request['option']['uri']))
-    {
-        file_put_contents($api_access_log,'REQUEST QUERY: uri = '.$this->request['option']['uri']."\n",FILE_APPEND);
-    }
-}
 
         // Generate the necessary components for the content, store separate component parts into $content
         // Read data from database (if applicable), only generate raw data from db
@@ -67,14 +52,6 @@ if ($this->request['source_type'] == 'data')
 //print_r('generate_rendering: <br>');
 //print_r(filesize($this->content['target_file']['path']));
 //print_r($this);
-if ($this->request['source_type'] == 'data')
-{
-    if (isset($this->content['account']))
-    {
-        file_put_contents($api_access_log,'REQUEST Account: '.$this->content['account']['name'].'['.$this->content['account']['id'].']'."\n",FILE_APPEND);
-    }
-    file_put_contents($api_access_log,'RESULT: '.print_r($this->result['content'],true)."\n\n",FILE_APPEND);
-}
 //exit();
     }
 
@@ -435,16 +412,16 @@ if ($this->request['source_type'] == 'data')
             unset($session);
         }
 
-        // If auth_key is set, try to get api account from auth_key
+        // If auth_key is set, try to get account from auth_key
         if (!empty($this->request['auth_key']))
         {
-            $entity_api_key_obj = new entity_api_key();
-            $method_variable = ['api_key'=>$this->request['auth_key'],'remote_ip'=>$this->request['remote_ip']];
-            $auth_id = $entity_api_key_obj->validate_api_key($method_variable);
+            $entity_account_key_obj = new entity_account_key();
+            $method_variable = ['account_key'=>$this->request['auth_key'],'remote_ip'=>$this->request['remote_ip']];
+            $auth_id = $entity_account_key_obj->validate_account_key($method_variable);
             if ($auth_id === false)
             {
-                // Error Handling, api key authentication failed
-                $this->message->notice = 'Building: Api Key Authentication Failed';
+                // Error Handling, Account key authentication failed
+                $this->message->notice = 'Building: Account Key Authentication Failed';
                 $this->content['api_result'] = [
                     'status'=>$method_variable['status'],
                     'message'=>$method_variable['message']
@@ -452,21 +429,21 @@ if ($this->request['source_type'] == 'data')
             }
             else
             {
-                $entity_api_obj = new entity_api($this->content['account']['id']);
-                if (empty($entity_api_obj->row))
+                $entity_account_obj = new entity_account($this->content['account']['id']);
+                if (empty($entity_account_obj->row))
                 {
-                    // Error Handling, session validation failed, api_key is valid, but cannot read corresponding account
-                    $this->message->error = 'Api Key Authentication Succeed, but cannot find related api account';
-                    $this->content['api_result'] = [
+                    // Error Handling, session validation failed, account_key is valid, but cannot read corresponding account
+                    $this->message->error = 'Account Key Authentication Succeed, but cannot find related account account';
+                    $this->content['account_result'] = [
                         'status'=>'REQUEST_DENIED',
                         'message'=>'Cannot get account info, it might be suspended or temporarily inaccessible'
                     ];
                 }
                 else
                 {
-                    $this->content['account'] = end($entity_api_obj->row);
+                    $this->content['account'] = end($entity_account_obj->row);
                 }
-                unset($entity_api_obj);
+                unset($entity_account_obj);
             }
             unset($auth_id);
         }
@@ -791,9 +768,9 @@ if ($this->request['source_type'] == 'data')
                             return false;
                         }
 
-                        $entity_api_session_obj = new entity_api_session();
-                        $method_variable = ['status'=>'OK','message'=>'','api_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
-                        $session = $entity_api_session_obj->validate_api_session_id($method_variable);
+                        $entity_account_session_obj = new entity_account_session();
+                        $method_variable = ['status'=>'OK','message'=>'','account_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
+                        $session = $entity_account_session_obj->validate_account_session_id($method_variable);
                         if ($session == false)
                         {
                             // Error Handling, session validation failed, session_id invalid
@@ -802,8 +779,8 @@ if ($this->request['source_type'] == 'data')
                             $this->result['header']['Location'] =  URI_SITE_BASE.'login';
                             return false;
                         }
-                        $entity_api_obj = new entity_api($session['account_id']);
-                        if (empty($entity_api_obj->row))
+                        $entity_account_obj = new entity_account($session['account_id']);
+                        if (empty($entity_account_obj->row))
                         {
                             // Error Handling, session validation failed, session_id is valid, but cannot read corresponding account
                             $this->message->error = 'Session Validation Succeed, but cannot find related account';
@@ -811,7 +788,7 @@ if ($this->request['source_type'] == 'data')
                             $this->result['header']['Location'] =  URI_SITE_BASE.'login';
                             return false;
                         }
-                        $this->content['account'] = end($entity_api_obj->row);
+                        $this->content['account'] = end($entity_account_obj->row);
 
                         $this->result['cookie'] = ['session_id'=>['value'=>$session['name'],'time'=>strtotime($session['expire_time'])]];
 
@@ -838,43 +815,8 @@ if ($this->request['source_type'] == 'data')
                                 break;
                             case 'listing':
                                 break;
-                            case 'credential':
-                                $content['remote_ip'] = $this->request['remote_ip'];
-                                $content['ajax_info'] = '';
-                                $content['api_key_wrapper_class_extra'] = '';
-                                $entity_api_key_obj = new entity_api_key();
-                                $get_parameter = array(
-                                    'bind_param' => array(':account_id'=>$this->content['account']['id']),
-                                    'where' => array('`account_id` = :account_id')
-                                );
-                                $content['api_key'] = $entity_api_key_obj->get_api_key($get_parameter);
-                                if (empty($content['api_key']))
-                                {
-                                    $content['ajax_info'] = 'No API Key Available, click "Create Credential" button to create one';
-                                    $content['api_key_wrapper_class_extra'] = ' api_key_wrapper_empty';
-                                }
-                                $this->content['field']['content'] = render_html($content,'element_console_credential_body_container');
-                                break;
-                            case 'profile':
-                                $content['account_name'] = $this->content['account']['name'];
-                                $content['alternate_name_extra_class'] = '';
-                                $content['alternate_name'] = $this->content['account']['alternate_name'];
-                                if (empty($content['alternate_name']))
-                                {
-                                    $content['alternate_name_extra_class'] = ' inline_editor_text_empty';
-                                }
-                                $this->content['field']['content'] = render_html($content,'element_console_profile_body_container');
-                                break;
                             case 'dashboard':
                             default:
-                                $entity_api_method_obj = new entity_api_method('',['api_id'=>$this->content['account']['id']]);
-                                $this->content['account']['api_method'] = $entity_api_method_obj->list_available_method();
-
-                                $content['account_name'] = $this->content['account']['name'];
-                                $content['api_method'] = $this->content['account']['api_method'];
-                                $content['api_site_base'] = URI_SITE_BASE;
-                                if (!empty($this->preference->api['force_ssl'])) $content['api_site_base'] = str_replace('http://','https://',$content['api_site_base']);
-                                $this->content['field']['content'] = render_html($content,'element_console_dashboard_body_container');
                         }
 
                         break;
@@ -886,13 +828,14 @@ if ($this->request['source_type'] == 'data')
                                     'data_encode'=>$this->preference->data_encode,
                                     'id_group'=>array(),
                                     'page_size'=>$this->preference->view_category_page_size,
-                                    'page_number'=>0
+                                    'page_number'=>0,
+                                    'page_count'=>0
                                 );
                                 if (!isset($this->request['option']['id_group']))
                                 {
                                     $index_category_obj = new index_category();
                                     $index_category_obj->filter_by_active();
-                                    $index_category_obj->filter_by_listing_count();
+                                    $index_category_obj->filter_by_organization_count();
                                     $this->content['field']['category'] = $index_category_obj->id_group;
                                     $ajax_loading_data['id_group'] = $index_category_obj->id_group;
                                 }
@@ -903,6 +846,7 @@ if ($this->request['source_type'] == 'data')
                                 }
                                 if (isset($this->request['option']['page_size'])) $ajax_loading_data['page_size'] = $this->request['option']['page_size'];
                                 if (isset($this->request['option']['page_number'])) $ajax_loading_data['page_number'] = $this->request['option']['page_number'];
+                                $ajax_loading_data['page_count'] = ceil(count($ajax_loading_data['id_group'])/$ajax_loading_data['page_size']);
 
                                 $ajax_loading_data_string = json_encode($ajax_loading_data);
                                 if ($this->preference->data_encode == 'base64')
@@ -922,9 +866,9 @@ if ($this->request['source_type'] == 'data')
                             if (isset($this->request['session_id']))
                             {
                                 // session_id is set, check if it is already logged in
-                                $entity_api_session_obj = new entity_api_session();
-                                $method_variable = ['status'=>'OK','message'=>'','api_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
-                                $session = $entity_api_session_obj->validate_api_session_id($method_variable);
+                                $entity_account_session_obj = new entity_account_session();
+                                $method_variable = ['status'=>'OK','message'=>'','account_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
+                                $session = $entity_account_session_obj->validate_account_session_id($method_variable);
 
                                 if ($session === false)
                                 {
@@ -933,11 +877,11 @@ if ($this->request['source_type'] == 'data')
                                 }
                                 else
                                 {
-                                    $entity_api_obj = new entity_api($session['account_id']);
-                                    if (empty($entity_api_obj->row))
+                                    $entity_account_obj = new entity_account($session['account_id']);
+                                    if (empty($entity_account_obj->row))
                                     {
                                         // Error Handling, session validation succeed, session_id is valid, but cannot read corresponding account
-                                        $this->message->error = 'Session Validation Succeed, but cannot find related api account';
+                                        $this->message->error = 'Session Validation Succeed, but cannot find related account';
                                         // If session_id is not valid, unset it and continue login process
                                         $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
                                     }
@@ -1008,9 +952,9 @@ if ($this->request['source_type'] == 'data')
 
                                     if ($this->content['post_result']['status'] == 'OK')
                                     {
-                                        $entity_api_obj = new entity_api();
-                                        $api_account = $entity_api_obj->authenticate($login_param);
-                                        if ($api_account === false)
+                                        $entity_account_obj = new entity_account();
+                                        $account = $entity_account_obj->authenticate($login_param);
+                                        if ($account === false)
                                         {
                                             // Error Handling, login failed
                                             $this->message->notice = 'Building: Login Failed';
@@ -1028,9 +972,9 @@ if ($this->request['source_type'] == 'data')
                                             {
                                                 $session_expire = $session_expire*30;
                                             }
-                                            $entity_api_session_obj = new entity_api_session();
-                                            $session_param = array_merge($session_param, ['account_id'=>$api_account['id'],'expire_time'=>gmdate('Y-m-d H:i:s',time()+$session_expire)]);
-                                            $session = $entity_api_session_obj->generate_api_session_id($session_param);
+                                            $entity_account_session_obj = new entity_account_session();
+                                            $session_param = array_merge($session_param, ['account_id'=>$account['id'],'expire_time'=>gmdate('Y-m-d H:i:s',time()+$session_expire)]);
+                                            $session = $entity_account_session_obj->generate_account_session_id($session_param);
 
                                             if (empty($session))
                                             {
@@ -1057,20 +1001,20 @@ if ($this->request['source_type'] == 'data')
                                 }
 
                                 // Record login event
-                                $entity_api_log_obj = new entity_api_log();
+                                $entity_account_log_obj = new entity_account_log();
                                 $log_record = ['name'=>'Login','remote_ip'=>$this->request['remote_ip'],'request_uri'=>$_SERVER['REQUEST_URI']];
                                 $log_record = array_merge($log_record,$this->content['post_result']);
-                                if (isset($api_account['id']))
+                                if (isset($account['id']))
                                 {
-                                    $log_record['account_id'] = $api_account['id'];
-                                    $log_record['description'] =  $api_account['name'];
+                                    $log_record['account_id'] = $account['id'];
+                                    $log_record['description'] =  $account['name'];
                                 }
                                 else
                                 {
                                     $log_record['description'] =  $this->request['option']['username'];
                                 }
                                 if (isset($session['name'])) $log_record['content'] = $session['name'];
-                                $entity_api_log_obj->set_log($log_record);
+                                $entity_account_log_obj->set_log($log_record);
                             }
                         }
                         if ($this->request['document'] == 'logout')
@@ -1085,36 +1029,36 @@ if ($this->request['source_type'] == 'data')
                             }
                             $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
 
-                            $entity_api_session_obj = new entity_api_session();
+                            $entity_account_session_obj = new entity_account_session();
                             $get_parameter = array(
                                 'bind_param' => array(':name'=>$this->request['session_id']),
                                 'where' => array('`name` = :name')
                             );
-                            $entity_api_session_obj->get($get_parameter);
-                            /*$method_variable = ['status' => 'OK', 'message' => '', 'api_session_id' => $this->request['session_id']];
-                            $session = $entity_api_session_obj->validate_api_session_id($method_variable);
+                            $entity_account_session_obj->get($get_parameter);
+                            /*$method_variable = ['status' => 'OK', 'message' => '', 'account_session_id' => $this->request['session_id']];
+                            $session = $entity_account_session_obj->validate_account_session_id($method_variable);
                             if ($session === false)
                             {
                                 // If session_id is not valid, redirect to login page
                                 return true;
                             }*/
-                            if (count($entity_api_session_obj->row) > 0)
+                            if (count($entity_account_session_obj->row) > 0)
                             {
                                 // Record logout event
-                                $session_record = end($entity_api_session_obj->row);
+                                $session_record = end($entity_account_session_obj->row);
 
-                                $entity_api_log_obj = new entity_api_log();
+                                $entity_account_log_obj = new entity_account_log();
                                 $log_record = ['name'=>'Logout','account_id'=>$session_record['account_id'],'status'=>'OK','message'=>'Session close by user','content'=>$session_record['name'],'remote_ip'=>$this->request['remote_ip'],'request_uri'=>$_SERVER['REQUEST_URI']];
-                                $entity_api_obj = new entity_api($session_record['account_id']);
-                                if (count($entity_api_obj->row) > 0)
+                                $entity_account_obj = new entity_account($session_record['account_id']);
+                                if (count($entity_account_obj->row) > 0)
                                 {
-                                    $log_record['description'] = end($entity_api_obj->row)['name'];
+                                    $log_record['description'] = end($entity_account_obj->row)['name'];
                                 }
-                                $entity_api_log_obj->set_log($log_record);
+                                $entity_account_log_obj->set_log($log_record);
                             }
 
                             // If session is valid, delete the session then redirect to login
-                            $entity_api_session_obj->delete();
+                            $entity_account_session_obj->delete();
                             return true;
                         }
                         if (isset($this->request['option']['field']))
@@ -1382,9 +1326,28 @@ if ($this->request['source_type'] == 'data')
                         switch($this->request['method'])
                         {
                             case '':
+                                if (!isset($GLOBALS['global_field'])) $GLOBALS['global_field'] = array();
                                 $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[category]]']]);
-                                if (isset($GLOBALS['global_field']['style'])) $this->result['content']['style'] = $GLOBALS['global_field']['style'];
-                                if (isset($GLOBALS['global_field']['script'])) $this->result['content']['script'] = $GLOBALS['global_field']['script'];
+                                if (isset($GLOBALS['global_field']['style']))
+                                {
+                                    $combined_content = '';
+                                    foreach($GLOBALS['global_field']['style'] as $index=>$item)
+                                    {
+                                        $combined_content .= $item['content'];
+                                    }
+                                    $this->result['content']['style'] = $combined_content;
+                                    unset($combined_content);
+                                }
+                                if (isset($GLOBALS['global_field']['script']))
+                                {
+                                    $combined_content = '';
+                                    foreach($GLOBALS['global_field']['script'] as $index=>$item)
+                                    {
+                                        $combined_content .= $item['content'];
+                                    }
+                                    $this->result['content']['script'] = $combined_content;
+                                    unset($combined_content);
+                                }
                                 $this->result['content'] = json_encode($this->result['content']);
                                 break;
                         }
