@@ -308,24 +308,18 @@ class content extends base {
 
                         break;
                     case 'members':
-                        $method = ['account','listing','dashboard'];
+                        $method = ['account','listing',''];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
-                            $this->request['file_path'] .= $this->request['module'].DIRECTORY_SEPARATOR.$this->request['method'].DIRECTORY_SEPARATOR.'index.html';
-                            $this->request['file_uri'] .= $this->request['module'].'/'.$this->request['method'];
                         }
                         else
                         {
-                            // Error Handling, trying to access members without module specified or unrecognized module
-                            $this->result['status'] = 301;
-                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['module'].'/'.end($method);
+                            $this->request['method'] = end($method);
                         }
-                        $this->request['remote_ip'] = get_remote_ip();
                         break;
                     default:
                         $this->request['document'] = $request_path_part;
-                        $this->request['remote_ip'] = get_remote_ip();
                 }
                 if (!isset($this->request['method']))
                 {
@@ -817,6 +811,7 @@ class content extends base {
                                 break;
                             case 'dashboard':
                             default:
+                                $this->content['field']['page_content'] = print_r($this->content['account'],true);
                         }
 
                         break;

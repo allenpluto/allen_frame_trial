@@ -13,7 +13,7 @@ class entity_account extends entity
             {
                 if (isset($record['password']))
                 {
-                    $record['password'] = hash('sha256',hash('crc32b',$record['password']));
+                    $record['password'] = hash('sha256',hash('md5',$record['password']));
                 }
             }
         }
@@ -24,7 +24,7 @@ class entity_account extends entity
     {
         if (isset($value['password']))
         {
-            $value['password'] = hash('sha256',hash('crc32b',$value['password']));
+            $value['password'] = hash('sha256',hash('md5',$value['password']));
         }
         return parent::update($value, $parameter);
     }
@@ -38,7 +38,7 @@ class entity_account extends entity
             return false;
         }
         $param = array(
-            'bind_param' => array(':name'=>$parameter['username'],':password'=>hash('sha256',hash('crc32b',$parameter['password']))),
+            'bind_param' => array(':name'=>$parameter['username'],':password'=>hash('sha256',hash('md5',$parameter['password']))),
             'where' => array('(`name` = :name OR `alternate_name` = :name)','`password` = :password')
         );
         $row = $this->get($param);
