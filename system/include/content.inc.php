@@ -808,6 +808,15 @@ class content extends base {
 
                                 break;
                             case 'listing':
+                                $index_organization_obj = new index_organization();
+                                if ($index_organization_obj->filter_by_account($this->content['account']['id']) == false)
+                                {
+                                    $this->content['field']['page_content'] = '[[$chunk_empty]]';
+                                    return true;
+                                }
+                                $this->content['field']['organization'] = $index_organization_obj->id_group;
+                                $this->content['field']['page_content'] = '[[organization:template_name=`view_business_edit`]]';
+
                                 break;
                             case 'dashboard':
                             default:

@@ -12,6 +12,18 @@ class index_organization extends index
         return $this;
     }
 
+    function filter_by_account($parameter = array())
+    {
+        if (empty($parameter['account_id'])) return false;
+        $filter_parameter = array(
+            'where' => 'account_id = :account_id',
+            'bind_value' => [':account_id'=>$parameter['account_id']]
+        );
+
+        $filter_parameter = array_merge($filter_parameter, $parameter);
+        return parent::get($filter_parameter);
+    }
+
     function filter_by_active($parameter = array())
     {
         $filter_parameter = array(
