@@ -395,7 +395,7 @@ class content extends base {
                 if (empty($entity_account_obj->row))
                 {
                     // Error Handling, session validation failed, session_id is valid, but cannot read corresponding account
-                    $this->message->notice = 'Session Validation Succeed, but cannot find related account account';
+                    $this->message->notice = 'Session Validation Succeed, but cannot find related account';
                 }
                 else
                 {
@@ -427,7 +427,7 @@ class content extends base {
                 if (empty($entity_account_obj->row))
                 {
                     // Error Handling, session validation failed, account_key is valid, but cannot read corresponding account
-                    $this->message->error = 'Account Key Authentication Succeed, but cannot find related account account';
+                    $this->message->error = 'Account Key Authentication Succeed, but cannot find related account';
                     $this->content['account_result'] = [
                         'status'=>'REQUEST_DENIED',
                         'message'=>'Cannot get account info, it might be suspended or temporarily inaccessible'
@@ -809,20 +809,25 @@ class content extends base {
                                 break;
                             case 'listing':
                                 $index_organization_obj = new index_organization();
-                                if ($index_organization_obj->filter_by_account($this->content['account']['id']) == false)
+//echo '<pre>';print_r($index_organization_obj);
+                                if ($index_organization_obj->filter_by_account(['account_id'=>$this->content['account']['id']]) == false)
                                 {
+//echo "\ntest point 1\n";
                                     $this->content['field']['page_content'] = '[[$chunk_empty]]';
-                                    return true;
                                 }
-                                $this->content['field']['organization'] = $index_organization_obj->id_group;
-                                $this->content['field']['page_content'] = '[[organization:template_name=`view_business_edit`]]';
+                                else
+                                {
+//echo "\ntest point 2\n";
+                                    $this->content['field']['organization'] = $index_organization_obj->id_group;
+                                    $this->content['field']['page_content'] = '[[organization:template_name=`view_edit_business_summary`:page_size=`10`]]';
+                                }
 
                                 break;
                             case 'dashboard':
+                                break;
                             default:
                                 $this->content['field']['page_content'] = print_r($this->content['account'],true);
                         }
-
                         break;
                     case 'listing':
                         switch($this->request['method'])
@@ -1114,9 +1119,9 @@ class content extends base {
                         }
                 }
 
-                if (isset($this->request['option']['template']))
+                if (isset($this->request['option']['template_name']))
                 {
-                    $this->content['template'] = $this->request['option']['template'];
+                    $this->content['template_name'] = $this->request['option']['template_name'];
                 }
                 else
                 {
@@ -1139,21 +1144,21 @@ class content extends base {
                         {
                             $default_js = array_merge([implode('_',$template_name_part)=>[]],$default_js);
                         }
-                        if (!isset($this->content['template']) AND file_exists(PATH_TEMPLATE.'page_'.implode('_',$template_name_part).FILE_EXTENSION_TEMPLATE))
+                        if (!isset($this->content['template_name']) AND file_exists(PATH_TEMPLATE.'page_'.implode('_',$template_name_part).FILE_EXTENSION_TEMPLATE))
                         {
-                            $this->content['template'] = 'page_'.implode('_',$template_name_part);
+                            $this->content['template_name'] = 'page_'.implode('_',$template_name_part);
                         }
                         array_pop($template_name_part);
                     }
 
                     $this->content['style'] = array_merge($this->content['style'],$default_css);
                     $this->content['script'] = array_merge($this->content['script'],$default_js);
-                    if (!isset($this->content['template'])) $this->content['template'] = 'page_default';
+                    if (!isset($this->content['template_name'])) $this->content['template_name'] = 'page_default';
                 }
             //print_r($this->content['script']);exit();
 
 
-                //$this->result['content'] = render_html($this->content['field'],$this->content['template']);
+                //$this->result['content'] = render_html($this->content['field'],$this->content['template_name']);
 
 
                 return true;
@@ -1331,7 +1336,7 @@ class content extends base {
                         {
                             case '':
                                 if (!isset($GLOBALS['global_field'])) $GLOBALS['global_field'] = array();
-                                $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[category]]']]);
+                                $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template_name'=>'[[category]]']]);
                                 if (isset($GLOBALS['global_field']['style']))
                                 {
                                     $combined_content = '';
@@ -1373,9 +1378,9 @@ class content extends base {
                 break;
             case 'html':
                 if (!isset($this->content['field'])) $this->content['field'] = array();
-                if (!isset($this->content['template'])) $this->content['template'] = '';
+                if (!isset($this->content['template_name'])) $this->content['template_name'] = '';
                 $GLOBALS['global_field'] = array();
-                $this->result['content'] = render_html(['_value'=>$this->content['field'],'_parameter'=>[]],$this->content['template']);
+                $this->result['content'] = render_html(['_value'=>$this->content['field'],'_parameter'=>[]],$this->content['template_name']);
 //echo 'test point 3'."\n";
 //print_r($GLOBALS['global_field']);
                 if (isset($GLOBALS['global_field']['style'])) $this->content['style'] = array_merge($this->content['style'],$GLOBALS['global_field']['style']);

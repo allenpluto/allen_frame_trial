@@ -19,6 +19,57 @@ class entity_organization extends entity
 
     function sync($parameter = array())
     {
+        $sync_parameter['sync_table'] = 'tbl_index_organization';
+        $sync_parameter['update_fields'] = array(
+            'id' => 'tbl_entity_organization.id',
+            'friendly_uri' => 'tbl_entity_organization.friendly_uri',
+            'name' => 'tbl_entity_organization.name',
+            'alternate_name' => 'tbl_entity_organization.alternate_name',
+            'description' => 'tbl_entity_organization.description',
+            'enter_time' => 'tbl_entity_organization.enter_time',
+            'update_time' => 'tbl_entity_organization.update_time',
+            'latitude' => 'tbl_locality.geometry_location_lat',
+            'longitude' => 'tbl_locality.geometry_location_lng',
+            'fulltext_keywords' => 'CONCAT(tbl_entity_organization.name,", ",tbl_entity_organization.alternate_name,", ",tbl_entity_organization.description,", ",tbl_entity_organization.keywords)',
+            'fulltext_address' => 'CONCAT(tbl_entity_organization.subpremise,", ",tbl_entity_organization.street_address,", ",tbl_locality.formatted_address)',
+            'locality' => 'tbl_entity_organization.locality',
+            'administrative_area_level_2' => 'tbl_entity_organization.administrative_area_level_2',
+            'administrative_area_level_1' => 'tbl_entity_organization.administrative_area_level_1',
+            'postal_code' => 'tbl_locality.postal_code',
+            'telephone' => 'tbl_entity_organization.telephone',
+            'telephone_alt' => 'tbl_entity_organization.alternate_telephone',
+            'mobile' => 'tbl_entity_organization.mobile',
+            'fax' => 'tbl_entity_organization.fax_number',
+            'website' => 'tbl_entity_organization.website_url',
+            'keywords' => 'tbl_entity_organization.keywords',
+            'account' => 'tbl_entity_organization.account_id',
+            'category' => 'GROUP_CONCAT(DISTINCT tbl_rel_category_to_organization.category_id)',
+            'status' => 'tbl_entity_organization.status',
+            'featured' => 'IF((CURDATE()<=ListingFeatured.date_end AND CURDATE()>=ListingFeatured.date_start), 1, 0)'
+        );
+
+        $sync_parameter['join'] = array(
+            'LEFT JOIN tbl_entity_google_place tbl_locality ON tbl_entity_organization.place_id = tbl_locality.id',
+            'LEFT JOIN ListingFeatured ON tbl_entity_organization.id = ListingFeatured.id',
+            'LEFT JOIN tbl_rel_category_to_organization ON tbl_entity_organization.id = tbl_rel_category_to_organization.organization_id'
+        );
+
+        $sync_parameter['where'] = array(
+            'tbl_entity_organization.status = "A" AND tbl_entity_organization.import_error != 1'
+        );
+
+        $sync_parameter['group'] = array(
+            'tbl_entity_organization.id'
+        );
+
+        $sync_parameter['fulltext_key'] = array(
+            'fulltext_keywords' => ['name','alternate_name','description','keywords']
+        );
+
+        $sync_parameter = array_merge($sync_parameter, $parameter);
+
+        $result[] = parent::sync($sync_parameter);
+
 //        $sync_parameter = array();
 //
 //        // set default sync parameters for index table

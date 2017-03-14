@@ -16,11 +16,12 @@ class index_organization extends index
     {
         if (empty($parameter['account_id'])) return false;
         $filter_parameter = array(
-            'where' => 'account_id = :account_id',
-            'bind_value' => [':account_id'=>$parameter['account_id']]
+            'where' => 'account = :account',
+            'bind_param' => [':account'=>$parameter['account_id']]
         );
 
         $filter_parameter = array_merge($filter_parameter, $parameter);
+//print_r($filter_parameter);
         return parent::get($filter_parameter);
     }
 
