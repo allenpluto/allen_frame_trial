@@ -1,0 +1,1 @@
+[[organization:template_name=`view_members_organization_detail`:container_name=`container_members_view_organization`:page_size=`1`]]

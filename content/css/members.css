@@ -1,0 +1,10 @@
+#banner_wrapper {background-image:url(../image/bg_top4_api_login.m.jpg);}
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+    #banner_wrapper {background-image:url(../image/bg_top4_api_login.l.jpg);}
+}
+@media only screen and (min-width: 768px) and (max-width: 1199px) {
+    #banner_wrapper {background-image:url(../image/bg_top4_api_login.xl.jpg);}
+}
+@media only screen and (min-width: 1200px) {
+    #banner_wrapper {background-image:url(../image/bg_top4_api_login.xxl.jpg);}
+}

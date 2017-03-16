@@ -89,13 +89,22 @@ class content extends base {
             unset($_POST);
         }
 
-        $option_preset = ['data_type','document','file_type','file_extension','file_extra_extension','module','template','render'];
+        $option_preset = ['file_type','document','file_type','file_extension','file_extra_extension','module','template','render'];
         foreach($option as $key=>$item)
         {
             // Options from GET, POST overwrite ones decoded from uri
             if (in_array($key,$option_preset))
             {
                 $this->request[$key] = $item;
+                unset($option[$key]);
+            }
+        }
+        $option_unset = ['asset_redirect','request_uri','rewrite_base','final_request'];
+        foreach($option as $key=>$item)
+        {
+            // Options from GET, POST overwrite ones decoded from uri
+            if (in_array($key,$option_unset))
+            {
                 unset($option[$key]);
             }
         }
@@ -122,14 +131,20 @@ class content extends base {
             {
                 $this->request['source_type'] = 'data';
                 $this->request['file_type'] = $request_path_part;
-                $this->request['file_uri'] = URI_ASSET.$this->request['file_type'].'/';
                 $request_path_part = array_shift($request_path);
             }
             else
             {
                 $this->request['source_type'] = 'data';
-                $this->request['file_type'] = 'html';
+                if(!isset($this->request['file_type'])) $this->request['file_type'] = 'html';
+            }
+            if ($this->request['file_type'] == 'html')
+            {
                 $this->request['file_uri'] = URI_SITE_BASE;
+            }
+            else
+            {
+                $this->request['file_uri'] = URI_ASSET.$this->request['file_type'].'/';
             }
             $this->request['file_extension'] = $this->request['file_type'];
         }
@@ -312,10 +327,34 @@ class content extends base {
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
+                            $request_path_part = array_shift($request_path);
                         }
                         else
                         {
                             $this->request['method'] = end($method);
+                        }
+                        switch($this->request['method'])
+                        {
+                            case 'listing':
+                                $action = ['preview','edit','statistics',''];
+                                if (in_array($request_path_part,$action))
+                                {
+                                    $this->request['action'] = $request_path_part;
+                                }
+                                else
+                                {
+                                    $this->request['action'] = end($method);
+                                }
+                                if ($this->request['action'] != '')
+                                {
+                                    if (!isset($this->request['option']['id']))
+                                    {
+                                        $this->message->notice = 'Redirect - operating listing id not set';
+                                        $this->result['status'] = 301;
+                                        $this->result['header']['Location'] =  $this->request['file_uri'].(!empty($this->request['option'])?('?'.http_build_query($this->request['option'])):'');
+                                    }
+                                }
+                                break;
                         }
                         break;
                     default:
@@ -336,6 +375,12 @@ class content extends base {
                 {
                     $this->request['file_path'] .= $this->request['method'].DIRECTORY_SEPARATOR;
                     $this->request['file_uri'] .= $this->request['method'].'/';
+                }
+
+                if (!empty($this->request['action']))
+                {
+                    $this->request['file_path'] .= $this->request['action'].DIRECTORY_SEPARATOR;
+                    $this->request['file_uri'] .= $this->request['action'];
                 }
 
                 if (!empty($this->request['document']))
@@ -808,20 +853,80 @@ class content extends base {
 
                                 break;
                             case 'listing':
-                                $index_organization_obj = new index_organization();
-//echo '<pre>';print_r($index_organization_obj);
-                                if ($index_organization_obj->filter_by_account(['account_id'=>$this->content['account']['id']]) == false)
+                                switch($this->request['action'])
                                 {
-//echo "\ntest point 1\n";
-                                    $this->content['field']['page_content'] = '[[$chunk_empty]]';
-                                }
-                                else
-                                {
-//echo "\ntest point 2\n";
-                                    $this->content['field']['organization'] = $index_organization_obj->id_group;
-                                    $this->content['field']['page_content'] = '[[organization:template_name=`view_edit_business_summary`:page_size=`10`]]';
-                                }
+                                    case 'edit':
+                                        if (!isset($this->request['option']['id']))
+                                        {
+                                            $this->message->notice = 'Redirect - operating listing id not set';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  $this->request['file_uri'].(!empty($this->request['option'])?('?'.http_build_query($this->request['option'])):'');
+                                            return false;
+                                        }
+                                        $entity_organization_obj = new entity_organization($this->request['option']['id']);
+                                        if (empty($entity_organization_obj->id_group))
+                                        {
+                                            $this->message->notice = 'Invalid request id';
+                                            $this->result['status'] = 404;
+                                            return false;
+                                        }
+                                        $entity_organization_data = $entity_organization_obj->fetch_value();
+                                        if ($entity_organization_data === false)
+                                        {
+                                            $this->message->error = 'Fail to get entity data';
+                                            return false;
+                                        }
+                                        $entity_organization_data = end($entity_organization_data);
+                                        echo '<pre>';
+                                        print_r($entity_organization_data);
 
+                                        break;
+                                    case '':
+                                    default:
+                                        $ajax_loading_data = array(
+                                            'data_encode'=>$this->preference->data_encode,
+                                            'id_group'=>array(),
+                                            'page_size'=>$this->preference->view_organization_page_size,
+                                            'page_number'=>0,
+                                            'page_count'=>0
+                                        );
+                                        if (!isset($this->request['option']['id_group']))
+                                        {
+                                            $index_organization_obj = new index_organization();
+                                            if ($index_organization_obj->filter_by_account(['account_id'=>$this->content['account']['id']]) == false)
+                                            {
+                                                $this->content['field']['organization_empty'] = true;
+                                            }
+                                            else
+                                            {
+                                                $this->content['field']['organization_empty'] = false;
+                                                $this->content['field']['organization'] = $index_organization_obj->id_group;
+                                                $ajax_loading_data['id_group'] = $index_organization_obj->id_group;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            $this->content['field']['organization_empty'] = false;
+                                            $this->content['field']['organization'] = $this->request['option']['id_group'];
+                                            $ajax_loading_data['id_group'] = $this->request['option']['id_group'];
+                                        }
+
+                                        $index_organization_obj = new index_organization();
+                                        if ($this->content['field']['organization_empty'] == false)
+                                        {
+                                            if (isset($this->request['option']['page_size'])) $ajax_loading_data['page_size'] = $this->request['option']['page_size'];
+                                            if (isset($this->request['option']['page_number'])) $ajax_loading_data['page_number'] = $this->request['option']['page_number'];
+                                            $ajax_loading_data['page_count'] = ceil(count($ajax_loading_data['id_group'])/$ajax_loading_data['page_size']);
+                                            $ajax_loading_data_string = json_encode($ajax_loading_data);
+
+                                            if ($this->preference->data_encode == 'base64')
+                                            {
+                                                $ajax_loading_data_string = '$.parseJSON(atob(\'' . base64_encode($ajax_loading_data_string) . '\'))';
+                                            }
+
+                                            $this->content['script']['organization_ajax'] = ['content'=>'$(document).ready(function(){$(\'.ajax_loader_container\').ajax_loader('.$ajax_loading_data_string.');});'];
+                                        }
+                                }
                                 break;
                             case 'dashboard':
                                 break;
@@ -1130,6 +1235,7 @@ class content extends base {
                     if (!empty($this->request['module'])) $template_name_part[] = $this->request['module'];
                     else $template_name_part[] = 'default';
                     if (!empty($this->request['method'])) $template_name_part[] = $this->request['method'];
+                    if (!empty($this->request['action'])) $template_name_part[] = $this->request['action'];
                     if (isset($this->request['document'])) $template_name_part[] = $this->request['document'];
 //print_r($template_name_part);
                     $default_css = array();
@@ -1331,12 +1437,42 @@ class content extends base {
             case 'json':
                 switch($this->request['module'])
                 {
+                    case 'members':
+                        switch($this->request['method'])
+                        {
+                            case 'listing':
+                                if (!isset($GLOBALS['global_field'])) $GLOBALS['global_field'] = array();
+                                $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[organization:template_name=`view_members_organization_summary`]]']]);
+                                if (isset($GLOBALS['global_field']['style']))
+                                {
+                                    $combined_content = '';
+                                    foreach($GLOBALS['global_field']['style'] as $index=>$item)
+                                    {
+                                        $combined_content .= $item['content'];
+                                    }
+                                    $this->result['content']['style'] = $combined_content;
+                                    unset($combined_content);
+                                }
+                                if (isset($GLOBALS['global_field']['script']))
+                                {
+                                    $combined_content = '';
+                                    foreach($GLOBALS['global_field']['script'] as $index=>$item)
+                                    {
+                                        $combined_content .= $item['content'];
+                                    }
+                                    $this->result['content']['script'] = $combined_content;
+                                    unset($combined_content);
+                                }
+                                $this->result['content'] = json_encode($this->result['content']);
+                                break;
+                        }
+                        break;
                     case 'listing':
                         switch($this->request['method'])
                         {
                             case '':
                                 if (!isset($GLOBALS['global_field'])) $GLOBALS['global_field'] = array();
-                                $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template_name'=>'[[category]]']]);
+                                $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[category]]']]);
                                 if (isset($GLOBALS['global_field']['style']))
                                 {
                                     $combined_content = '';

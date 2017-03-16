@@ -13,7 +13,7 @@ class view_category extends view
 
     function __construct($value = Null, $parameter = array())
     {
-        $this->parameter['page_size'] = $GLOBALS['global_preference']->view_category_page_size;
+        if (!isset($parameter['page_size'])) $this->parameter['page_size'] = $GLOBALS['global_preference']->view_category_page_size;
 
         parent::__construct($value, $parameter);
 

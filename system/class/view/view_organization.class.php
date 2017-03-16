@@ -10,6 +10,15 @@ class view_organization extends view
         'table' => 'tbl_view_organization',
         'primary_key' => 'id'
     );
+
+    function __construct($value = Null, $parameter = array())
+    {
+        if (!isset($parameter['page_size'])) $this->parameter['page_size'] = $GLOBALS['global_preference']->view_organization_page_size;
+
+        parent::__construct($value, $parameter);
+
+        return $this;
+    }
 }
     
 ?>

@@ -6,7 +6,5 @@
         <div id="body_wrapper" class="wrapper">
             [[*_placeholder]]
         </div><!-- #body_wrapper -->
-        <div id="footer_wrapper" class="wrapper">
-        </div><!-- #footer_wrapper -->
     </div>
 </div>[[-~style:field=`{"name":"off_canvas"}`]]

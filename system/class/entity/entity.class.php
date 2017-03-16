@@ -69,6 +69,8 @@ class entity extends base
             $this->parameter['relational_fields'] = array();
         }
 
+        $this->parameter['relational_fields'] = $this->construct_relational_fields($this->parameter['relational_fields']);
+
         if (!is_null($value))
         {
             $format = format::get_obj();
@@ -98,7 +100,6 @@ class entity extends base
         }
 
 
-        $this->parameter['relational_fields'] = $this->construct_relational_fields($this->parameter['relational_fields']);
 
         return true;
     }
@@ -623,6 +624,47 @@ if (!isset($parameter['primary_key']))
         $this->row = $new_row;
         $this->_initialized = true;
         return $this->id_group;
+    }
+
+    function fetch_value($parameter = array())
+    {
+        if (isset($this->row))
+        {
+            return $this->row;
+        }
+        // unset rendered html when corresponding row value changes
+        $this->rendered_html = null;
+        if (!$this->_initialized)
+        {
+            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): '.get_class($this).' cannot fetch value before it is initialized with get() function';
+            return false;
+        }
+        if (empty($this->id_group))
+        {
+            $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): '.get_class($this).' fetch value from empty array';
+            return array();
+        }
+        $parameter = array_merge($this->parameter,$parameter);
+        $page_number = intval($parameter['page_number']);
+        if ($page_number > $parameter['page_count']-1) $page_number =  $parameter['page_count']-1;
+        if ($page_number < 0) $page_number = 0;
+        $page_size = intval($parameter['page_size']);
+        if ($page_size < 1) $page_size = 1;
+        $sql = 'SELECT `'.implode('`,`',$parameter['table_fields']).'` FROM '.$this->parameter['table'];
+        $where = $parameter['primary_key'].' IN ('.implode(',',array_keys($this->id_group)).')';
+        $order = 'FIELD('.$this->parameter['primary_key'].','.implode(',',array_keys($this->id_group)).')';
+        $bind_param = $this->id_group;
+        $sql .= ' WHERE '.$where.' ORDER BY '.$order.' LIMIT '.$page_size.' OFFSET '.$page_number*$page_size;
+        $result = $this->query($sql,$bind_param);
+        if ($result !== false)
+        {
+            $this->row = $result->fetchAll(PDO::FETCH_ASSOC);
+        }
+        else
+        {
+            $this->row = array();
+        }
+        return $this->row;
     }
 
     function delete($parameter = array())

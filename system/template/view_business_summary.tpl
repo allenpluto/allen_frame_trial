@@ -1,4 +1,4 @@
-<div id="listing_block_container_[[*id]]" class="block_container listing_block_container[[*extra_classes]]" itemscope="" itemtype="[[*schema_itemtype]]">
+<div id="organization_block_container_[[*id]]" class="block_container organization_block_container[[*extra_classes]]" itemscope="" itemtype="[[*schema_itemtype]]">
     <div class="block_thumb_container">
         [[image:object=`view_business_summary_image`:field=`{"organization_id":"[[*id]]"}`:page_size=`1`:page_number=`0`]]
         [[logo:object=`view_business_summary_logo`]]

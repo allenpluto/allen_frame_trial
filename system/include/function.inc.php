@@ -246,6 +246,20 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                     }
                 }
             }
+            if (isset($match_result_value['field_name']))
+            {
+                if (preg_match_all('/{{(?:.*?)}}/',$match_result_value['field_name'],$field_decoded_matches))
+                {
+                    $sub_translate_array = array();
+                    foreach ($field_decoded_matches[0] as $sub_match_result_key_index=>$sub_match_result_key)
+                    {
+                        $sub_translate_array[$sub_match_result_key] = $match_result[$sub_match_result_key]['raw_code'];
+                    }
+                    $match_result_value['field_name'] = strtr($match_result_value['field_name'],$sub_translate_array);
+                    $match_result_value['field_name'] = render_html(['_value'=>$field_row,'_parameter'=>['template'=>$match_result_value['field_name']]]);
+                }
+            }
+
             if (isset($match_result_value['field']))
             {
                 $field_decoded = $match_result_value['field'];
@@ -500,7 +514,14 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                 else
                 {
                     if (!isset($global_field[$match_result_value['output']])) $global_field[$match_result_value['output']] = array();
-                    $global_field[$match_result_value['output']][] = $match_result_value['value'];
+                    if (isset($match_result_value['field_name']))
+                    {
+                        $global_field[$match_result_value['output']][$match_result_value['field_name']] = $match_result_value['value'];
+                    }
+                    else
+                    {
+                        $global_field[$match_result_value['output']][sha1(json_encode($match_result_value['value']))] = $match_result_value['value'];
+                    }
                     $translate_array[$match_result_key] = '';
                 }
             }
