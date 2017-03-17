@@ -877,8 +877,9 @@ class content extends base {
                                             return false;
                                         }
                                         $entity_organization_data = end($entity_organization_data);
-                                        echo '<pre>';
-                                        print_r($entity_organization_data);
+                                        $this->content['field']['organization'] = $entity_organization_data;
+//                                        echo '<pre>';
+//                                        print_r($entity_organization_data);
 
                                         break;
                                     case '':

@@ -16,6 +16,11 @@
     font-size: 1.6em;
     text-align: center;
 
+    z-index: 500;
+}
+
+.members_organization_block_container .footer_action_wrapper
+{
     opacity: 0;
     pointer-events: none;
 
@@ -24,9 +29,8 @@
     -ms-transition:opacity 500ms ease;
     -o-transition:opacity 500ms ease;
     transition:opacity 500ms ease;
-
-    z-index: 500;
 }
+
 
 .members_organization_block_container_active .footer_action_wrapper
 {
@@ -38,7 +42,7 @@
 {
     display:inline-block;
     width: 33.333333333%;
-    padding:10px 0;
+    padding: 0.5em 0;
 
     background: rgba(0,0,0,0.6);
 
@@ -54,3 +58,46 @@
 {
     background: rgba(0,0,0,0.5);
 }
+
+.form_row_container
+{
+    margin-bottom: 0.5em;
+}
+
+.form_row_container > label
+{
+    display: block;
+    height: 0;
+    padding: 0 0.5em;
+
+    font-size: 1.4em;
+    font-weight: bold;
+
+    -webkit-transition:height 500ms ease;
+    -moz-transition:height 500ms ease;
+    -ms-transition:height 500ms ease;
+    -o-transition:height 500ms ease;
+    transition:height 500ms ease;
+
+    overflow: hidden;
+}
+
+.form_row_container:hover > label
+{
+    height: 2em;
+}
+
+.form_row_container > input[type="text"]
+{
+    width: 100%;
+    padding: 0.5em 1em;
+
+    border-radius:3px;
+}
+
+.form_bottom_row_container
+{
+    height: 2.4em;
+    font-size: 1.6em;
+}
+.form_row_container > input[type="text"]:focus ~ label {height: 2em;}

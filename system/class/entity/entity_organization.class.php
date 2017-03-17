@@ -40,7 +40,7 @@ class entity_organization extends entity
             'telephone_alt' => 'tbl_entity_organization.alternate_telephone',
             'mobile' => 'tbl_entity_organization.mobile',
             'fax' => 'tbl_entity_organization.fax_number',
-            'website' => 'tbl_entity_organization.website_url',
+            'website' => 'tbl_entity_organization.website_uri',
             'keywords' => 'tbl_entity_organization.keywords',
             'account' => 'tbl_entity_organization.account_id',
             'category' => 'GROUP_CONCAT(DISTINCT tbl_rel_category_to_organization.category_id)',
@@ -55,7 +55,7 @@ class entity_organization extends entity
         );
 
         $sync_parameter['where'] = array(
-            'tbl_entity_organization.status = "A" AND tbl_entity_organization.import_error != 1'
+            'tbl_entity_organization.import_error != 1'
         );
 
         $sync_parameter['group'] = array(
@@ -144,7 +144,7 @@ class entity_organization extends entity
             'telephone_alt' => 'tbl_entity_organization.alternate_telephone',
             'mobile' => 'tbl_entity_organization.mobile',
             'fax' => 'tbl_entity_organization.fax_number',
-            'website' => 'tbl_entity_organization.website_url',
+            'website' => 'tbl_entity_organization.website_uri',
             'hours_work' => 'tbl_entity_organization.hours_work',
             'facebook' => 'tbl_entity_organization.facebook_link',
             'twitter' => 'tbl_entity_organization.twitter_link',
@@ -171,7 +171,7 @@ class entity_organization extends entity
         );
 
         $sync_parameter['where'] = array(
-            'tbl_entity_organization.status = "A" AND tbl_entity_organization.import_error != 1'
+            'tbl_entity_organization.import_error != 1'
         );
 
         $sync_parameter['group'] = array(
