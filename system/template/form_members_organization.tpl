@@ -5,6 +5,18 @@
             <label for="form_members_organization_name">Business Name</label>
             <input id="form_members_organization_name" name="name" type="text" placeholder="Business Name" value="[[*name]]">
         </div>
+        <div class="form_row_container form_row_organization_logo_container">
+            <label for="form_members_organization_logo">Logo</label>
+            <input id="form_members_organization_logo" class="form_image_uploader_result" type="hidden" name="logo">
+            <a href="javascript:void(0);" class="form_image_uploader_trigger"><img src="./image/upload_logo.jpg"></a>
+            <a href="javascript:void(0);" class="form_image_uploader_delete_trigger"></a>
+        </div>
+        <div class="form_row_container form_row_organization_banner_container">
+            <label for="form_members_organization_banner">Banner</label>
+            <input id="form_members_organization_banner" class="form_image_uploader_result" type="hidden" name="banner">
+            <a href="javascript:void(0);" class="form_image_uploader_trigger"><img src="./image/upload_banner.jpg"></a>
+            <a href="javascript:void(0);" class="form_image_uploader_delete_trigger"></a>
+        </div>
         <div class="form_row_container">
             <label for="form_members_organization_street_address">Street Address</label>
             <input id="form_members_organization_street_address" type="text">
@@ -59,12 +71,6 @@
             <label for="form_members_organization_twitter">Twitter</label>
             <input id="form_members_organization_twitter" name="twitter" type="text" placeholder="Twitter" value="[[*twitter]]">
         </div>
-        <div class="form_row_container">
-            <label for="form_members_organization_logo">Logo</label>
-            <input id="form_members_organization_logo" type="hidden" name="logo">
-            <a href="" class="form_image_uploader_trigger"><img src="/images/no_image_found_banner.jpg"></a>
-            <a href="javascript:void(0);" class="form_image_uploader_delete_trigger"></a>
-        </div>
         <div class="form_bottom_row_container"></div>
         <div class="footer_action_wrapper"><!--
             --><a href="javascript:void(0)" class="footer_action_button">Reset</a><!--
@@ -73,3 +79,4 @@
         --></div>
     </div>
 </div>
+[[~script:field_name=`google_map`:field=`{"source":"https://maps.googleapis.com/maps/api/js?key=AIzaSyAtw-geY0B0clS4SRzPsYfvT0ROsSl3JVA&libraries=places&callback=initialize_autocomplete"}`]]

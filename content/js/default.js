@@ -324,7 +324,7 @@ $.fn.form_image_uploader = function(user_option){
         'result': '.form_image_uploader_result',
         'allow_delete': false,
         'delete_trigger': '.form_image_uploader_delete_trigger',
-        'default_image': '/images/no_image_found.jpg',
+        'default_image': './image/upload_image.jpg',
         'shrink_large': false,
         'width': 200,
         'height': 200,
@@ -376,8 +376,7 @@ $.fn.form_image_uploader = function(user_option){
                         source_image_width = source_image_ratio * source_image_height;
                     }                    
                 }
-
-                if (source_image_ratio <= result_image_ratio)
+                else
                 {
                     if (source_image_width < option['width'] || option['shrink_large'])
                     {

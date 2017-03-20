@@ -67,7 +67,7 @@
 .form_row_container > label
 {
     display: block;
-    height: 0;
+    height: 2em;
     padding: 0 0.5em;
 
     font-size: 1.4em;
@@ -82,16 +82,18 @@
     overflow: hidden;
 }
 
-.form_row_container:hover > label
-{
-    height: 2em;
-}
+.form_container:hover .form_row_container > label {height: 0;}
+.form_container .form_row_container:hover > label {height: 2em;}
 
 .form_row_container > input[type="text"]
 {
     width: 100%;
     padding: 0.5em 1em;
 
+    color: #333333;
+    font-size: 1.4em;
+
+    border:2px solid #cccccc;
     border-radius:3px;
 }
 
@@ -100,4 +102,12 @@
     height: 2.4em;
     font-size: 1.6em;
 }
-.form_row_container > input[type="text"]:focus ~ label {height: 2em;}
+
+.form_image_uploader_trigger
+{
+    display: inline-block;
+    background: #ffffff;
+
+    border:2px solid #cccccc;
+    border-radius: 3px;
+}

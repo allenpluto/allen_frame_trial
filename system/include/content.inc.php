@@ -878,6 +878,25 @@ class content extends base {
                                         }
                                         $entity_organization_data = end($entity_organization_data);
                                         $this->content['field']['organization'] = $entity_organization_data;
+
+                                        $image_uploader_data = array(
+                                            'width'=>200,
+                                            'height'=>200,
+                                            'allow_delete'=>true,
+                                            'shrink_large'=>true,
+                                            'default_image'=>'./image/upload_logo.jpg'
+                                        );
+                                        $image_uploader_data_string = json_encode($image_uploader_data);
+                                        $this->content['script']['logo_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_logo_container\').form_image_uploader('.$image_uploader_data_string.');});'];
+
+                                        $image_uploader_data = array(
+                                            'width'=>1200,
+                                            'height'=>200,
+                                            'allow_delete'=>true,
+                                            'default_image'=>'./image/upload_banner.jpg'
+                                        );
+                                        $image_uploader_data_string = json_encode($image_uploader_data);
+                                        $this->content['script']['banner_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_banner_container\').form_image_uploader('.$image_uploader_data_string.');});'];
 //                                        echo '<pre>';
 //                                        print_r($entity_organization_data);
 
