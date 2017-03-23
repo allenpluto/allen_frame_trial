@@ -111,3 +111,10 @@
     border:2px solid #cccccc;
     border-radius: 3px;
 }
+
+.form_row_street_address_map
+{
+    display: none;
+    height: 0;
+    padding-bottom: 75%;
+}

@@ -22,6 +22,7 @@
             <input id="form_members_organization_street_address" type="text">
             <input name="place_id" type="hidden" value="[[*place_id]]">
             <div class="form_row_street_address_display_container"></div>
+            <div id="map-canvas" class="form_row_street_address_map"></div>
         </div>
         <div class="form_row_container">
             <label for="form_members_organization_telephone">Main Phone</label>
@@ -79,4 +80,4 @@
         --></div>
     </div>
 </div>
-[[~script:field_name=`google_map`:field=`{"source":"https://maps.googleapis.com/maps/api/js?key=AIzaSyAtw-geY0B0clS4SRzPsYfvT0ROsSl3JVA&libraries=places&callback=initialize_autocomplete"}`]]
+[[-script:field_name=`google_map`:field=`{"source":"https://maps.googleapis.com/maps/api/js?key=AIzaSyAtw-geY0B0clS4SRzPsYfvT0ROsSl3JVA&libraries=places&callback=initialize_autocomplete"}`]]
