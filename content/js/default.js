@@ -22,9 +22,8 @@ $.fn.ajax_loader = function(user_option) {
         $('<div class="ajax_loader_bottom"><div class="ajax_loader_bottom_text_container"><span class="ajax_loader_bottom_icon"></span><span class="ajax_loader_bottom_text">Loading...</span></div></div>').appendTo(ajax_loader_container);
 
         $('#off_canvas_wrapper').scroll(function() {
-console.log([$('#off_canvas_wrapper').scrollTop(),$(window).height(),$('#off_canvas_container').height()]);
+//console.log([$('#off_canvas_wrapper').scrollTop(),$(window).height(),$('#off_canvas_container').height()]);
             if($('#off_canvas_wrapper').scrollTop() + $(window).height() - $('#off_canvas_container').height() > - 100) {
-console.log('test point 1');
                 var ajax_loader_option = ajax_loader_container.data('option');
                 if (!ajax_loader_container.hasClass('ajax_loader_container_complete') && !ajax_loader_container.hasClass('ajax_loader_container_loading')) {
                     ajax_loader_container.addClass('ajax_loader_container_loading');
@@ -61,17 +60,15 @@ console.log('test point 1');
                     {
                         post_value['file_type'] = 'json';
                     }
-console.log('test point 2');
-console.log(ajax_uri);
-console.log(ajax_loader_container.data('option'));
-console.log(post_value);
+//console.log(ajax_uri);
+//console.log(post_value);
                     $.ajax({
                         'type': 'POST',
                         'url': ajax_uri,
                         'data': post_value,
                         'timeout': 10000
                     }).always(function (callback_obj, status, info_obj) {
-console.log(callback_obj);
+//console.log(callback_obj);
                         ajax_loader_container.removeClass('ajax_loader_container_loading');
                         if (status == 'success') {
                             var data = callback_obj;
@@ -88,10 +85,6 @@ console.log(callback_obj);
                                         data = atob(data);
                                 }
                             }
-//console.log(data);
-//                            //data = $.parseJSON(data);
-//console.log('parse json');
-//console.log(data);
                             ajax_loader_container.append(data.html);
                             if (data.style)
                             {
@@ -120,8 +113,8 @@ console.log(callback_obj);
                             }
                         }
                         else {
-console.log(info_obj);
-console.log(callback_obj);
+//console.log(info_obj);
+//console.log(callback_obj);
                             var xhr = callback_obj;
                             var error = info_obj;
 
