@@ -125,8 +125,9 @@ $('.footer_action_button_save').click(function(event){
     event.preventDefault();
 
     var ajax_editor_container = $(this).closest('.ajax_editor_container');
+    var ajax_editor_info = ajax_editor_container.find('.ajax_editor_info');
     var ajax_uri = window.location.pathname;
-    var post_value = $(this).closest('form').serialize();
+    var post_value = $(this).closest('form').serializeArray();
 console.log(post_value);
     $.ajax({
         'type': 'POST',
@@ -138,6 +139,7 @@ console.log(option_obj);
         },
         'timeout': 10000
     }).always(function (callback_obj, status, info_obj) {
+        console.log(status);
         console.log(callback_obj);
         ajax_editor_container.removeClass('ajax_editor_container_loading');
         if (status == 'success') {
@@ -152,10 +154,10 @@ console.log(option_obj);
             var error = info_obj;
 
             if (status == 'timeout') {
-                overlay_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Get Rating Page Failed, Try again later</p>');
+                overlay_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Add/Update Listing Timeout, Try again later</p>');
             }
             else {
-                overlay_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Get Rating Page Failed, Error Unknown, Try again later</p>');
+                overlay_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Add/Update Listing Failed, Error Unknown, Try again later</p>');
             }
         }
     });

@@ -6,6 +6,7 @@
                 <label for="form_members_organization_name">Business Name</label>
                 <input id="form_members_organization_name" name="name" type="text" placeholder="Business Name" value="[[*name]]">
             </div>
+            [[logo_id:object=`entity_image`:template_name=`entity_organization_logo`:field=`{"file_uri":"./image/upload_logo.jpg"}`]]
             <div class="form_row_container form_row_organization_logo_container">
                 <label for="form_members_organization_logo">Logo</label>
                 <input id="form_members_organization_logo" class="form_image_uploader_result" type="hidden" name="logo">
@@ -73,11 +74,12 @@
                 <label for="form_members_organization_twitter">Twitter</label>
                 <input id="form_members_organization_twitter" name="twitter_link" type="text" placeholder="Twitter" value="[[*twitter_link]]">
             </div>
+            <div class="ajax_editor_info"></div>
             <div class="form_bottom_row_container"></div>
             <div class="footer_action_wrapper"><!--
-            --><a href="./members/listing/" class="footer_action_button footer_action_button_back">Back</a><!--
-            --><a href="javascript:void(0)" class="footer_action_button footer_action_button_reset">Reset</a><!--
-            --><a href="javascript:void(0)" class="footer_action_button footer_action_button_save">Save</a><!--
+            --><a href="[[*base]]members/listing/" class="footer_action_button footer_action_button_back">Back</a><!--
+            --><a href="[[*base]]members/listing/reset" class="footer_action_button footer_action_button_reset">Reset</a><!--
+            --><a href="[[*base]]members/listing/save" class="footer_action_button footer_action_button_save">Save</a><!--
         --></div>
         </form>
         <div class="ajax_editor_mask"></div>

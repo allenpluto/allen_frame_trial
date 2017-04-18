@@ -878,7 +878,6 @@ class content extends base {
                                         }
                                         $entity_organization_data = end($entity_organization_data);
                                         $this->content['field']['organization'] = $entity_organization_data;
-
                                         $image_uploader_data = array(
                                             'width'=>200,
                                             'height'=>200,
