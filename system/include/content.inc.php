@@ -89,7 +89,7 @@ class content extends base {
             unset($_POST);
         }
 
-        $option_preset = ['file_type','document','file_type','file_extension','file_extra_extension','module','template','render'];
+        $option_preset = ['document','file_type','file_extension','file_extra_extension','module','template','action'];
         foreach($option as $key=>$item)
         {
             // Options from GET, POST overwrite ones decoded from uri
@@ -244,8 +244,19 @@ class content extends base {
                 break;
             case 'data':
             default:
+                $control_panel = ['members','sitemgr'];
+                if (in_array($request_path_part,$control_panel))
+                {
+                    $this->request['control_panel'] = $request_path_part;
+                    $request_path_part = array_shift($request_path);
+                }
+                else
+                {
+                    $this->request['control_panel'] = '';
+                }
+
                 //$request_path_part = array_shift($request_path);
-                $module = ['profile','listing','business','business-amp','members'];
+                $module = ['profile','listing','business','business-amp'];
                 if (in_array($request_path_part,$module))
                 {
                     $this->request['module'] = $request_path_part;
@@ -259,7 +270,7 @@ class content extends base {
                 switch ($this->request['module'])
                 {
                     case 'listing':
-                        $method = ['search','find',''];
+                        $method = ['search','find','edit','preview','reset','save',''];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
@@ -318,51 +329,61 @@ class content extends base {
                                 }
                                 break;
                             default:
+                                //TODO: control panel methods validation, most methods would need $this->request['option']['id']
                                 //$this->request['document'] = $request_path_part;
                         }
 
                         break;
-                    case 'members':
-                        $method = ['account','listing',''];
-                        if (in_array($request_path_part,$method))
-                        {
-                            $this->request['method'] = $request_path_part;
-                            $request_path_part = array_shift($request_path);
-                        }
-                        else
-                        {
-                            $this->request['method'] = end($method);
-                        }
-                        switch($this->request['method'])
-                        {
-                            case 'listing':
-                                $action = ['preview','edit','statistics',''];
-                                if (in_array($request_path_part,$action))
-                                {
-                                    $this->request['action'] = $request_path_part;
-                                }
-                                else
-                                {
-                                    $this->request['action'] = end($method);
-                                }
-                                if ($this->request['action'] != '')
-                                {
-                                    if (!isset($this->request['option']['id']))
-                                    {
-                                        $this->message->notice = 'Redirect - operating listing id not set';
-                                        $this->result['status'] = 301;
-                                        $this->result['header']['Location'] =  $this->request['file_uri'].(!empty($this->request['option'])?('?'.http_build_query($this->request['option'])):'');
-                                    }
-                                }
-                                break;
-                        }
-                        break;
+//                    case 'members':
+//                        $method = ['account','listing',''];
+//                        if (in_array($request_path_part,$method))
+//                        {
+//                            $this->request['method'] = $request_path_part;
+//                            $request_path_part = array_shift($request_path);
+//                        }
+//                        else
+//                        {
+//                            $this->request['method'] = end($method);
+//                        }
+//                        switch($this->request['method'])
+//                        {
+//                            case 'listing':
+//                                $action = ['edit','preview','reset','save',''];
+//                                if (in_array($request_path_part,$action))
+//                                {
+//                                    $this->request['action'] = $request_path_part;
+//                                }
+//                                else
+//                                {
+//                                    $this->request['action'] = end($method);
+//                                }
+//                                if ($this->request['action'] != '')
+//                                {
+//                                    if (!isset($this->request['option']['id']))
+//                                    {
+//                                        $this->message->notice = 'Redirect - operating listing id not set';
+//                                        $this->result['status'] = 301;
+//                                        $this->result['header']['Location'] =  $this->request['file_uri'].(!empty($this->request['option'])?('?'.http_build_query($this->request['option'])):'');
+//                                    }
+//                                }
+//                                break;
+//                        }
+//                        break;
                     default:
                         $this->request['document'] = $request_path_part;
                 }
                 if (!isset($this->request['method']))
                 {
                     $this->request['method'] = '';
+                }
+                if (!isset($this->request['action']))
+                {
+                    $this->request['action'] = '';
+                }
+
+                if (!empty($this->request['control_panel']))
+                {
+                    $this->request['file_uri'] .= $this->request['control_panel'].'/';
                 }
 
                 if (!empty($this->request['module']))
@@ -414,9 +435,12 @@ class content extends base {
 
         if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) != parse_url($this->request['file_uri'],PHP_URL_PATH))
         {
-            $this->message->notice = 'Redirect - request uri ['.parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH).'] is different from decoded uri ['.parse_url($this->request['file_uri'],PHP_URL_PATH).']';
-            $this->result['status'] = 301;
-            $this->result['header']['Location'] =  $this->request['file_uri'].'?'.http_build_query($this->request['option']);
+            if ($this->request['file_type'] == 'html')
+            {
+                $this->message->notice = 'Redirect - request uri ['.parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH).'] is different from decoded uri ['.parse_url($this->request['file_uri'],PHP_URL_PATH).']';
+                $this->result['status'] = 301;
+                $this->result['header']['Location'] =  $this->request['file_uri'].(!empty($this->request['option'])?('?'.http_build_query($this->request['option'])):'');
+            }
         }
     }
 
@@ -445,6 +469,7 @@ class content extends base {
                 else
                 {
                     $this->content['account'] = end($entity_account_obj->row);
+                    $this->content['session'] = $session;
                 }
                 unset($entity_account_obj);
             }
@@ -795,72 +820,46 @@ class content extends base {
 
                 $this->content['field']['base'] = URI_SITE_BASE;
 
-                switch($this->request['module'])
+                switch($this->request['control_panel'])
                 {
                     case 'members':
-                        if (!isset($this->request['session_id']))
+                        // Any request on members page need login account information, if not found, redirect to login page
+                        if (empty($this->content['account']))
                         {
-                            // Error Handling, session validation failed, session_id not set
-                            $this->message->notice = 'Session ID Not Set, Redirect to Login Page';
+                            $this->message->error = 'Account not logged in or does not exist any more';
                             $this->result['status'] = 301;
                             $this->result['header']['Location'] =  URI_SITE_BASE.'login';
                             return false;
                         }
 
-                        $entity_account_session_obj = new entity_account_session();
-                        $method_variable = ['status'=>'OK','message'=>'','account_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
-                        $session = $entity_account_session_obj->validate_account_session_id($method_variable);
-                        if ($session == false)
+                        if (!empty($this->content['session']))
                         {
-                            // Error Handling, session validation failed, session_id invalid
-                            $this->message->notice = 'Session Validation Failed, Redirect to Login Page';
-                            $this->result['status'] = 301;
-                            $this->result['header']['Location'] =  URI_SITE_BASE.'login';
-                            return false;
+                            $this->result['cookie'] = ['session_id'=>['value'=>$this->content['session']['name'],'time'=>strtotime($this->content['session']['expire_time'])]];
                         }
-                        $entity_account_obj = new entity_account($session['account_id']);
-                        if (empty($entity_account_obj->row))
-                        {
-                            // Error Handling, session validation failed, session_id is valid, but cannot read corresponding account
-                            $this->message->error = 'Session Validation Succeed, but cannot find related account';
-                            $this->result['status'] = 301;
-                            $this->result['header']['Location'] =  URI_SITE_BASE.'login';
-                            return false;
-                        }
-                        $this->content['account'] = end($entity_account_obj->row);
-
-                        $this->result['cookie'] = ['session_id'=>['value'=>$session['name'],'time'=>strtotime($session['expire_time'])]];
 
                         $this->content['field']['robots'] = 'noindex, nofollow';
-
-                        //$this->content['field']['style'] = [
-                        //    ['value'=>'/css/default.min.css','option'=>['format'=>'html_tag']]
-                        //];
-
-                        //$this->content['field']['script'] = [
-                        //    ['value'=>'/js/jquery.min.js','option'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js','format'=>'html_tag']],
-                        //    ['value'=>'/js/default.min.js','option'=>['format'=>'html_tag']],
-                        //];
-
-                        $this->content['field']['name'] = ucwords($this->request['method']).' - '.$this->content['account']['name'];
-                        $content = ['page_title'=>ucwords($this->request['method'])];
-                        switch($this->request['method'])
+                        $this->content['field']['name'] = ucwords($this->request['control_panel']);
+                        if (!empty($this->request['method']))
                         {
-                            case 'account':
-                                $entity_account_obj = new entity_account($this->content['account']['id']);
-                                $entity_contact_obj = new entity_contact($this->content['account']['id']);
-                                $entity_profile_obj = new entity_profile($this->content['account']['id']);
+                            $this->content['field']['name'] .= ' - '.ucwords($this->request['method']);
+                        }
+                        $this->content['field']['name'] .= ' - '.$this->content['account']['name'];
+                }
 
-                                break;
-                            case 'listing':
-                                switch($this->request['action'])
+                switch($this->request['module'])
+                {
+                    case 'listing':
+                        switch($this->request['control_panel'])
+                        {
+                            case 'members':
+                                switch($this->request['method'])
                                 {
                                     case 'edit':
                                         if (!isset($this->request['option']['id']))
                                         {
                                             $this->message->notice = 'Redirect - operating listing id not set';
                                             $this->result['status'] = 301;
-                                            $this->result['header']['Location'] =  $this->request['file_uri'].(!empty($this->request['option'])?('?'.http_build_query($this->request['option'])):'');
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/'.$this->request['method'].'/';
                                             return false;
                                         }
                                         $entity_organization_obj = new entity_organization($this->request['option']['id']);
@@ -877,30 +876,43 @@ class content extends base {
                                             return false;
                                         }
                                         $entity_organization_data = end($entity_organization_data);
-                                        $this->content['field']['organization'] = $entity_organization_data;
-                                        $image_uploader_data = array(
-                                            'width'=>200,
-                                            'height'=>200,
-                                            'allow_delete'=>true,
-                                            'shrink_large'=>true,
-                                            'default_image'=>'./image/upload_logo.jpg'
-                                        );
-                                        $image_uploader_data_string = json_encode($image_uploader_data);
-                                        $this->content['script']['logo_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_logo_container\').form_image_uploader('.$image_uploader_data_string.');});'];
+                                        if ($this->content['account']['id'] != $entity_organization_data['account_id'])
+                                        {
+                                            $this->message->notice = 'Unauthorised access';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/'.$this->request['method'].'/';
+                                            return false;
+                                        }
+                                        switch($this->request['action'])
+                                        {
+                                            case 'save':
+                                                $this->result['content']['option'] = $this->request['option'];
 
-                                        $image_uploader_data = array(
-                                            'width'=>1200,
-                                            'height'=>200,
-                                            'allow_delete'=>true,
-                                            'default_image'=>'./image/upload_banner.jpg'
-                                        );
-                                        $image_uploader_data_string = json_encode($image_uploader_data);
-                                        $this->content['script']['banner_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_banner_container\').form_image_uploader('.$image_uploader_data_string.');});'];
-//                                        echo '<pre>';
-//                                        print_r($entity_organization_data);
+                                                break;
+                                            case 'reset':
+                                                break;
+                                            default:
+                                                $this->content['field']['organization'] = $entity_organization_data;
+                                                $image_uploader_data = array(
+                                                    'width'=>200,
+                                                    'height'=>200,
+                                                    'allow_delete'=>true,
+                                                    'shrink_large'=>true,
+                                                    'default_image'=>'./image/upload_logo.jpg'
+                                                );
+                                                $image_uploader_data_string = json_encode($image_uploader_data);
+                                                $this->content['script']['logo_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_logo_container\').form_image_uploader('.$image_uploader_data_string.');});'];
 
+                                                $image_uploader_data = array(
+                                                    'width'=>1200,
+                                                    'height'=>200,
+                                                    'allow_delete'=>true,
+                                                    'default_image'=>'./image/upload_banner.jpg'
+                                                );
+                                                $image_uploader_data_string = json_encode($image_uploader_data);
+                                                $this->content['script']['banner_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_banner_container\').form_image_uploader('.$image_uploader_data_string.');});'];
+                                        }
                                         break;
-                                    case '':
                                     default:
                                         $ajax_loading_data = array(
                                             'data_encode'=>$this->preference->data_encode,
@@ -930,7 +942,6 @@ class content extends base {
                                             $ajax_loading_data['id_group'] = $this->request['option']['id_group'];
                                         }
 
-                                        $index_organization_obj = new index_organization();
                                         if ($this->content['field']['organization_empty'] == false)
                                         {
                                             if (isset($this->request['option']['page_size'])) $ajax_loading_data['page_size'] = $this->request['option']['page_size'];
@@ -947,48 +958,43 @@ class content extends base {
                                         }
                                 }
                                 break;
-                            case 'dashboard':
-                                break;
                             default:
-                                $this->content['field']['page_content'] = print_r($this->content['account'],true);
-                        }
-                        break;
-                    case 'listing':
-                        switch($this->request['method'])
-                        {
-                            case '':
-                                $ajax_loading_data = array(
-                                    'data_encode'=>$this->preference->data_encode,
-                                    'id_group'=>array(),
-                                    'page_size'=>$this->preference->view_category_page_size,
-                                    'page_number'=>0,
-                                    'page_count'=>0
-                                );
-                                if (!isset($this->request['option']['id_group']))
+                                switch($this->request['method'])
                                 {
-                                    $index_category_obj = new index_category();
-                                    $index_category_obj->filter_by_active();
-                                    $index_category_obj->filter_by_organization_count();
-                                    $this->content['field']['category'] = $index_category_obj->id_group;
-                                    $ajax_loading_data['id_group'] = $index_category_obj->id_group;
-                                }
-                                else
-                                {
-                                    $this->content['field']['category'] = $this->request['option']['id_group'];
-                                    $ajax_loading_data['id_group'] = $this->request['option']['id_group'];
-                                }
-                                if (isset($this->request['option']['page_size'])) $ajax_loading_data['page_size'] = $this->request['option']['page_size'];
-                                if (isset($this->request['option']['page_number'])) $ajax_loading_data['page_number'] = $this->request['option']['page_number'];
-                                $ajax_loading_data['page_count'] = ceil(count($ajax_loading_data['id_group'])/$ajax_loading_data['page_size']);
+                                    case '':
+                                        $ajax_loading_data = array(
+                                            'data_encode'=>$this->preference->data_encode,
+                                            'id_group'=>array(),
+                                            'page_size'=>$this->preference->view_category_page_size,
+                                            'page_number'=>0,
+                                            'page_count'=>0
+                                        );
+                                        if (!isset($this->request['option']['id_group']))
+                                        {
+                                            $index_category_obj = new index_category();
+                                            $index_category_obj->filter_by_active();
+                                            $index_category_obj->filter_by_organization_count();
+                                            $this->content['field']['category'] = $index_category_obj->id_group;
+                                            $ajax_loading_data['id_group'] = $index_category_obj->id_group;
+                                        }
+                                        else
+                                        {
+                                            $this->content['field']['category'] = $this->request['option']['id_group'];
+                                            $ajax_loading_data['id_group'] = $this->request['option']['id_group'];
+                                        }
+                                        if (isset($this->request['option']['page_size'])) $ajax_loading_data['page_size'] = $this->request['option']['page_size'];
+                                        if (isset($this->request['option']['page_number'])) $ajax_loading_data['page_number'] = $this->request['option']['page_number'];
+                                        $ajax_loading_data['page_count'] = ceil(count($ajax_loading_data['id_group'])/$ajax_loading_data['page_size']);
 
-                                $ajax_loading_data_string = json_encode($ajax_loading_data);
-                                if ($this->preference->data_encode == 'base64')
-                                {
-                                    $ajax_loading_data_string = '$.parseJSON(atob(\'' . base64_encode($ajax_loading_data_string) . '\'))';
-                                }
+                                        $ajax_loading_data_string = json_encode($ajax_loading_data);
+                                        if ($this->preference->data_encode == 'base64')
+                                        {
+                                            $ajax_loading_data_string = '$.parseJSON(atob(\'' . base64_encode($ajax_loading_data_string) . '\'))';
+                                        }
 
-                                $this->content['script']['category_ajax'] = ['content'=>'$(document).ready(function(){$(\'.ajax_loader_container\').ajax_loader('.$ajax_loading_data_string.');});'];
-                                break;
+                                        $this->content['script']['category_ajax'] = ['content'=>'$(document).ready(function(){$(\'.ajax_loader_container\').ajax_loader('.$ajax_loading_data_string.');});'];
+                                        break;
+                                }
                         }
                         break;
                     case 'default':
@@ -1251,10 +1257,10 @@ class content extends base {
                 {
                     // Looking for default template
                     $template_name_part = [];
+                    if (!empty($this->request['control_panel'])) $template_name_part[] = $this->request['control_panel'];
                     if (!empty($this->request['module'])) $template_name_part[] = $this->request['module'];
                     else $template_name_part[] = 'default';
                     if (!empty($this->request['method'])) $template_name_part[] = $this->request['method'];
-                    if (!empty($this->request['action'])) $template_name_part[] = $this->request['action'];
                     if (isset($this->request['document'])) $template_name_part[] = $this->request['document'];
 //print_r($template_name_part);
                     $default_css = array();
@@ -1454,35 +1460,22 @@ class content extends base {
                 if (!isset($this->result['content'])) $this->result['file_path'] = $this->content['target_file']['path'];
                 break;
             case 'json':
+                if (!isset($GLOBALS['global_field'])) $GLOBALS['global_field'] = array();
                 switch($this->request['module'])
                 {
                     case 'members':
                         switch($this->request['method'])
                         {
                             case 'listing':
-                                if (!isset($GLOBALS['global_field'])) $GLOBALS['global_field'] = array();
-                                $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[organization:template_name=`view_members_organization_summary`]]']]);
-                                if (isset($GLOBALS['global_field']['style']))
+                                switch($this->request['action'])
                                 {
-                                    $combined_content = '';
-                                    foreach($GLOBALS['global_field']['style'] as $index=>$item)
-                                    {
-                                        $combined_content .= $item['content'];
-                                    }
-                                    $this->result['content']['style'] = $combined_content;
-                                    unset($combined_content);
+                                    case 'save':
+                                        $this->result['content']['form'] = $this->request['option'];
+                                        break;
+                                    case '':
+                                        $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[organization:template_name=`view_members_organization_summary`]]']]);
+                                        break;
                                 }
-                                if (isset($GLOBALS['global_field']['script']))
-                                {
-                                    $combined_content = '';
-                                    foreach($GLOBALS['global_field']['script'] as $index=>$item)
-                                    {
-                                        $combined_content .= $item['content'];
-                                    }
-                                    $this->result['content']['script'] = $combined_content;
-                                    unset($combined_content);
-                                }
-                                $this->result['content'] = json_encode($this->result['content']);
                                 break;
                         }
                         break;
@@ -1490,33 +1483,32 @@ class content extends base {
                         switch($this->request['method'])
                         {
                             case '':
-                                if (!isset($GLOBALS['global_field'])) $GLOBALS['global_field'] = array();
                                 $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[category]]']]);
-                                if (isset($GLOBALS['global_field']['style']))
-                                {
-                                    $combined_content = '';
-                                    foreach($GLOBALS['global_field']['style'] as $index=>$item)
-                                    {
-                                        $combined_content .= $item['content'];
-                                    }
-                                    $this->result['content']['style'] = $combined_content;
-                                    unset($combined_content);
-                                }
-                                if (isset($GLOBALS['global_field']['script']))
-                                {
-                                    $combined_content = '';
-                                    foreach($GLOBALS['global_field']['script'] as $index=>$item)
-                                    {
-                                        $combined_content .= $item['content'];
-                                    }
-                                    $this->result['content']['script'] = $combined_content;
-                                    unset($combined_content);
-                                }
-                                $this->result['content'] = json_encode($this->result['content']);
                                 break;
                         }
                         break;
                 }
+                if (isset($GLOBALS['global_field']['style']))
+                {
+                    $combined_content = '';
+                    foreach($GLOBALS['global_field']['style'] as $index=>$item)
+                    {
+                        $combined_content .= $item['content'];
+                    }
+                    $this->result['content']['style'] = $combined_content;
+                    unset($combined_content);
+                }
+                if (isset($GLOBALS['global_field']['script']))
+                {
+                    $combined_content = '';
+                    foreach($GLOBALS['global_field']['script'] as $index=>$item)
+                    {
+                        $combined_content .= $item['content'];
+                    }
+                    $this->result['content']['script'] = $combined_content;
+                    unset($combined_content);
+                }
+                $this->result['content'] = json_encode($this->result['content']);
                 //$this->result['content'] = json_encode($this->content['api_result']);
                 $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s').' GMT';
                 $this->result['header']['Content-Length'] = strlen($this->result['content']);

@@ -127,12 +127,18 @@ $('.footer_action_button_save').click(function(event){
     var ajax_editor_container = $(this).closest('.ajax_editor_container');
     var ajax_editor_info = ajax_editor_container.find('.ajax_editor_info');
     var ajax_uri = window.location.pathname;
-    var post_value = $(this).closest('form').serializeArray();
+    var post_value = {
+        'id':$(this).closest('form').data('id'),
+        'form':$(this).closest('form').serializeArray(),
+        'file_type':'json',
+        'action':'save'
+    };
 console.log(post_value);
     $.ajax({
         'type': 'POST',
         'url': ajax_uri,
         'data': post_value,
+        'dataType': 'json',
         'beforeSend': function (ajax_obj,option_obj) {
 console.log(option_obj);
             ajax_editor_container.addClass('ajax_editor_container_loading');
@@ -141,6 +147,7 @@ console.log(option_obj);
     }).always(function (callback_obj, status, info_obj) {
         console.log(status);
         console.log(callback_obj);
+        console.log(info_obj);
         ajax_editor_container.removeClass('ajax_editor_container_loading');
         if (status == 'success') {
             var data = callback_obj;
@@ -148,8 +155,6 @@ console.log(option_obj);
 
         }
         else {
-            console.log(info_obj);
-            console.log(callback_obj);
             var xhr = callback_obj;
             var error = info_obj;
 
