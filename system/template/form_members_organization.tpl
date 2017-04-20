@@ -6,9 +6,9 @@
                 <label for="form_members_organization_name">Business Name</label>
                 <input id="form_members_organization_name" name="name" type="text" placeholder="Business Name" value="[[*name]]">
             </div>
-            [[logo_id:object=`entity_image`:template_name=`entity_organization_logo`:field=`{"file_uri":"./image/upload_logo.jpg"}`]]
             <div class="form_row_container form_row_organization_logo_container">
                 <label for="form_members_organization_logo">Logo</label>
+                [[logo_id:object=`entity_image`:template_name=`form_input_image_uploader`:field=`{"file_uri":"./image/upload_logo.jpg"}`]]
                 <input id="form_members_organization_logo" class="form_image_uploader_result" type="hidden" name="logo">
                 <a href="javascript:void(0);" class="form_image_uploader_trigger"><img src="./image/upload_logo.jpg"></a>
                 <a href="javascript:void(0);" class="form_image_uploader_delete_trigger"></a>

@@ -997,255 +997,266 @@ class content extends base {
                                 }
                         }
                         break;
-                    case 'default':
                     default:
-                        // If page is login, check for user login session
-                        if ($this->request['document'] == 'login')
+                        // Default module, front end static pages, control panel home pages...
+                        switch($this->request['control_panel'])
                         {
-                            if (isset($this->request['session_id']))
-                            {
-                                // session_id is set, check if it is already logged in
-                                $entity_account_session_obj = new entity_account_session();
-                                $method_variable = ['status'=>'OK','message'=>'','account_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
-                                $session = $entity_account_session_obj->validate_account_session_id($method_variable);
-
-                                if ($session === false)
+                            case 'members':
+                                // Members home page
+                                $this->content['field']['page_content'] = '<a href="account" class="general_style_input_button general_style_input_button_gray">Edit Profile</a>
+<a href="listing" class="general_style_input_button general_style_input_button_gray">Manage My Businesses</a>';
+                                break;
+                            default:
+                                // Front end home page and other statistic pages
+                                // If page is login, check for user login session
+                                if ($this->request['document'] == 'login')
                                 {
-                                    // If session_id is not valid, unset it and continue login process
-                                    $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
-                                }
-                                else
-                                {
-                                    $entity_account_obj = new entity_account($session['account_id']);
-                                    if (empty($entity_account_obj->row))
+                                    if (isset($this->request['session_id']))
                                     {
-                                        // Error Handling, session validation succeed, session_id is valid, but cannot read corresponding account
-                                        $this->message->error = 'Session Validation Succeed, but cannot find related account';
-                                        // If session_id is not valid, unset it and continue login process
-                                        $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
-                                    }
-                                    else
-                                    {
-                                        // If session is valid, redirect to console
-                                        $this->result['cookie'] = ['session_id'=>['value'=>$session['name'],'time'=>strtotime($session['expire_time'])]];
-                                        $this->result['status'] = 301;
-                                        $this->result['header']['Location'] =  URI_SITE_BASE.'members/';
+                                        // session_id is set, check if it is already logged in
+                                        $entity_account_session_obj = new entity_account_session();
+                                        $method_variable = ['status'=>'OK','message'=>'','account_session_id'=>$this->request['session_id'],'remote_ip'=>$this->request['remote_ip']];
+                                        $session = $entity_account_session_obj->validate_account_session_id($method_variable);
 
-                                        return true;
-                                    }
-                                }
-                            }
-                            if ($_SERVER['REQUEST_METHOD'] == 'POST')
-                            {
-                                if (isset($this->request['option']['username']))
-                                {
-                                    $this->content['post_result'] = [
-                                        'status'=>'OK',
-                                        'message'=>''
-                                    ];
-
-                                    $login_param = [];
-                                    $session_param = [];
-                                    $login_param_keys = ['username','password','remember_me'];
-                                    foreach($this->request['option'] as  $option_key=>&$option_value)
-                                    {
-                                        if (in_array($option_key,$login_param_keys))
+                                        if ($session === false)
                                         {
-                                            $login_param[$option_key] = $option_value;
-                                            //unset($option_value);
+                                            // If session_id is not valid, unset it and continue login process
+                                            $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
                                         }
-                                        elseif ($option_key == 'complementary')
+                                        else
                                         {
-                                            $complementary = base64_decode($option_value);
-                                            if ($complementary === false OR $complementary == $option_value)
+                                            $entity_account_obj = new entity_account($session['account_id']);
+                                            if (empty($entity_account_obj->row))
                                             {
-                                                // Error Handling, complementary info error, complementary is not base64 encoded text
-                                                $this->message->notice = 'Building: Login Failed';
-                                                $this->content['post_result'] = [
-                                                    'status'=>'REQUEST_DENIED',
-                                                    'message'=>'Login Failed, please try again'
-                                                ];
+                                                // Error Handling, session validation succeed, session_id is valid, but cannot read corresponding account
+                                                $this->message->error = 'Session Validation Succeed, but cannot find related account';
+                                                // If session_id is not valid, unset it and continue login process
                                                 $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
                                             }
                                             else
                                             {
-                                                $complementary_info = json_decode($complementary,true);
-                                                if (empty($complementary_info))
+                                                // If session is valid, redirect to console
+                                                $this->result['cookie'] = ['session_id'=>['value'=>$session['name'],'time'=>strtotime($session['expire_time'])]];
+                                                $this->result['status'] = 301;
+                                                $this->result['header']['Location'] =  URI_SITE_BASE.'members/';
+
+                                                return true;
+                                            }
+                                        }
+                                    }
+                                    if ($_SERVER['REQUEST_METHOD'] == 'POST')
+                                    {
+                                        if (isset($this->request['option']['username']))
+                                        {
+                                            $this->content['post_result'] = [
+                                                'status'=>'OK',
+                                                'message'=>''
+                                            ];
+
+                                            $login_param = [];
+                                            $session_param = [];
+                                            $login_param_keys = ['username','password','remember_me'];
+                                            foreach($this->request['option'] as  $option_key=>&$option_value)
+                                            {
+                                                if (in_array($option_key,$login_param_keys))
                                                 {
-                                                    // Error Handling, complementary info not in json format
+                                                    $login_param[$option_key] = $option_value;
+                                                    //unset($option_value);
+                                                }
+                                                elseif ($option_key == 'complementary')
+                                                {
+                                                    $complementary = base64_decode($option_value);
+                                                    if ($complementary === false OR $complementary == $option_value)
+                                                    {
+                                                        // Error Handling, complementary info error, complementary is not base64 encoded text
+                                                        $this->message->notice = 'Building: Login Failed';
+                                                        $this->content['post_result'] = [
+                                                            'status'=>'REQUEST_DENIED',
+                                                            'message'=>'Login Failed, please try again'
+                                                        ];
+                                                        $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
+                                                    }
+                                                    else
+                                                    {
+                                                        $complementary_info = json_decode($complementary,true);
+                                                        if (empty($complementary_info))
+                                                        {
+                                                            // Error Handling, complementary info not in json format
+                                                            $this->message->notice = 'Building: Login Failed';
+                                                            $this->content['post_result'] = [
+                                                                'status'=>'REQUEST_DENIED',
+                                                                'message'=>'Login Failed, please try again'
+                                                            ];
+                                                            $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
+                                                        }
+                                                        else
+                                                        {
+                                                            $session_param['remote_addr'] = $complementary_info['remote_addr'];
+                                                            $session_param['http_user_agent'] = $complementary_info['http_user_agent'];
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            if ($this->content['post_result']['status'] == 'OK')
+                                            {
+                                                $entity_account_obj = new entity_account();
+                                                $account = $entity_account_obj->authenticate($login_param);
+                                                if ($account === false)
+                                                {
+                                                    // Error Handling, login failed
                                                     $this->message->notice = 'Building: Login Failed';
                                                     $this->content['post_result'] = [
                                                         'status'=>'REQUEST_DENIED',
-                                                        'message'=>'Login Failed, please try again'
+                                                        'message'=>'Login Failed, invalid username or password'
                                                     ];
                                                     $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
                                                 }
                                                 else
                                                 {
-                                                    $session_param['remote_addr'] = $complementary_info['remote_addr'];
-                                                    $session_param['http_user_agent'] = $complementary_info['http_user_agent'];
+
+                                                    $session_expire = 86400;
+                                                    if (!empty($login_param['remember_me']))
+                                                    {
+                                                        $session_expire = $session_expire*30;
+                                                    }
+                                                    $entity_account_session_obj = new entity_account_session();
+                                                    $session_param = array_merge($session_param, ['account_id'=>$account['id'],'expire_time'=>gmdate('Y-m-d H:i:s',time()+$session_expire)]);
+                                                    $session = $entity_account_session_obj->generate_account_session_id($session_param);
+
+                                                    if (empty($session))
+                                                    {
+                                                        // Error Handling, create session id failed
+                                                        $this->message->error = 'Building: Fail to create session id';
+                                                        $this->content['post_result'] = [
+                                                            'status'=>'REQUEST_DENIED',
+                                                            'message'=>'Login Failed, fail to create new session'
+                                                        ];
+                                                    }
+                                                    else
+                                                    {
+                                                        $this->result['cookie'] = ['session_id'=>['value'=>$session['name'],'time'=>time()+$session_expire]];
+                                                        $this->result['status'] = 301;
+                                                        $this->result['header']['Location'] =  URI_SITE_BASE.'members';
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-
-                                    if ($this->content['post_result']['status'] == 'OK')
-                                    {
-                                        $entity_account_obj = new entity_account();
-                                        $account = $entity_account_obj->authenticate($login_param);
-                                        if ($account === false)
+                                        if ($this->content['post_result']['status'] != 'OK')
                                         {
-                                            // Error Handling, login failed
-                                            $this->message->notice = 'Building: Login Failed';
-                                            $this->content['post_result'] = [
-                                                'status'=>'REQUEST_DENIED',
-                                                'message'=>'Login Failed, invalid username or password'
-                                            ];
-                                            $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
+                                            // If login failed, show error message
+                                            $this->content['field']['post_result_message'] = '<div class="ajax_info ajax_info_error">'.$this->content['post_result']['message']."</div>";
+                                        }
+
+                                        // Record login event
+                                        $entity_account_log_obj = new entity_account_log();
+                                        $log_record = ['name'=>'Login','remote_ip'=>$this->request['remote_ip'],'request_uri'=>$_SERVER['REQUEST_URI']];
+                                        $log_record = array_merge($log_record,$this->content['post_result']);
+                                        if (isset($account['id']))
+                                        {
+                                            $log_record['account_id'] = $account['id'];
+                                            $log_record['description'] =  $account['name'];
                                         }
                                         else
                                         {
-
-                                            $session_expire = 86400;
-                                            if (!empty($login_param['remember_me']))
-                                            {
-                                                $session_expire = $session_expire*30;
-                                            }
-                                            $entity_account_session_obj = new entity_account_session();
-                                            $session_param = array_merge($session_param, ['account_id'=>$account['id'],'expire_time'=>gmdate('Y-m-d H:i:s',time()+$session_expire)]);
-                                            $session = $entity_account_session_obj->generate_account_session_id($session_param);
-
-                                            if (empty($session))
-                                            {
-                                                // Error Handling, create session id failed
-                                                $this->message->error = 'Building: Fail to create session id';
-                                                $this->content['post_result'] = [
-                                                    'status'=>'REQUEST_DENIED',
-                                                    'message'=>'Login Failed, fail to create new session'
-                                                ];
-                                            }
-                                            else
-                                            {
-                                                $this->result['cookie'] = ['session_id'=>['value'=>$session['name'],'time'=>time()+$session_expire]];
-                                                $this->result['status'] = 301;
-                                                $this->result['header']['Location'] =  URI_SITE_BASE.'members';
-                                            }
+                                            $log_record['description'] =  $this->request['option']['username'];
                                         }
+                                        if (isset($session['name'])) $log_record['content'] = $session['name'];
+                                        $entity_account_log_obj->set_log($log_record);
                                     }
                                 }
-                                if ($this->content['post_result']['status'] != 'OK')
+                                if ($this->request['document'] == 'logout')
                                 {
-                                    // If login failed, show error message
-                                    $this->content['field']['post_result_message'] = '<div class="ajax_info ajax_info_error">'.$this->content['post_result']['message']."</div>";
-                                }
+                                    // success or fail, logout page always redirect to login page after process complete
+                                    $this->result['status'] = 301;
+                                    $this->result['header']['Location'] =  URI_SITE_BASE.'login';
+                                    if (!isset($this->request['session_id']))
+                                    {
+                                        // session_id is not set, redirect to login page
+                                        return true;
+                                    }
+                                    $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
 
-                                // Record login event
-                                $entity_account_log_obj = new entity_account_log();
-                                $log_record = ['name'=>'Login','remote_ip'=>$this->request['remote_ip'],'request_uri'=>$_SERVER['REQUEST_URI']];
-                                $log_record = array_merge($log_record,$this->content['post_result']);
-                                if (isset($account['id']))
+                                    $entity_account_session_obj = new entity_account_session();
+                                    $get_parameter = array(
+                                        'bind_param' => array(':name'=>$this->request['session_id']),
+                                        'where' => array('`name` = :name')
+                                    );
+                                    $entity_account_session_obj->get($get_parameter);
+                                    /*$method_variable = ['status' => 'OK', 'message' => '', 'account_session_id' => $this->request['session_id']];
+                                    $session = $entity_account_session_obj->validate_account_session_id($method_variable);
+                                    if ($session === false)
+                                    {
+                                        // If session_id is not valid, redirect to login page
+                                        return true;
+                                    }*/
+                                    if (count($entity_account_session_obj->row) > 0)
+                                    {
+                                        // Record logout event
+                                        $session_record = end($entity_account_session_obj->row);
+
+                                        $entity_account_log_obj = new entity_account_log();
+                                        $log_record = ['name'=>'Logout','account_id'=>$session_record['account_id'],'status'=>'OK','message'=>'Session close by user','content'=>$session_record['name'],'remote_ip'=>$this->request['remote_ip'],'request_uri'=>$_SERVER['REQUEST_URI']];
+                                        $entity_account_obj = new entity_account($session_record['account_id']);
+                                        if (count($entity_account_obj->row) > 0)
+                                        {
+                                            $log_record['description'] = end($entity_account_obj->row)['name'];
+                                        }
+                                        $entity_account_log_obj->set_log($log_record);
+                                    }
+
+                                    // If session is valid, delete the session then redirect to login
+                                    $entity_account_session_obj->delete();
+                                    return true;
+                                }
+                                if (isset($this->request['option']['field']))
                                 {
-                                    $log_record['account_id'] = $account['id'];
-                                    $log_record['description'] =  $account['name'];
+                                    $this->content['field'] = array_merge($this->content['field'],$this->request['option']['field']);
                                 }
                                 else
                                 {
-                                    $log_record['description'] =  $this->request['option']['username'];
-                                }
-                                if (isset($session['name'])) $log_record['content'] = $session['name'];
-                                $entity_account_log_obj->set_log($log_record);
-                            }
-                        }
-                        if ($this->request['document'] == 'logout')
-                        {
-                            // success or fail, logout page always redirect to login page after process complete
-                            $this->result['status'] = 301;
-                            $this->result['header']['Location'] =  URI_SITE_BASE.'login';
-                            if (!isset($this->request['session_id']))
-                            {
-                                // session_id is not set, redirect to login page
-                                return true;
-                            }
-                            $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
+                                    // Set field value from database
+                                    if (!isset($this->request['document']))
+                                    {
+                                        $this->result['status'] = 404;
+                                        return false;
+                                    }
+                                    $page_obj = new view_web_page($this->request['document']);
+                                    if (empty($page_obj->id_group))
+                                    {
+                                        $this->result['status'] = 404;
+                                        //$this->result['status'] = 301;
+                                        //$this->result['header']['Location'] =  URI_SITE_BASE.'login';
+                                        return false;
+                                    }
+                                    if (count($page_obj->id_group) > 1)
+                                    {
+                                        // Error Handling, ambiguous reference, multiple page found, database data error
+                                        $GLOBALS['global_message']->warning = __FILE__.'(line '.__LINE__.'): Multiple web page resources loaded '.implode(',',$page_obj->id_group);
+                                    }
+                                    $page_fetched_value = $page_obj->fetch_value(['page_size'=>1]);
+                                    if (empty($page_fetched_value))
+                                    {
+                                        // Error Handling, fetch record row failed, database data error
+                                        $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): Fetch row failed '.implode(',',$page_obj->id_group);
+                                        $this->result['status'] = 404;
+                                        return false;
+                                    }
+                                    $this->content['field'] = array_merge($this->content['field'],end($page_fetched_value));
 
-                            $entity_account_session_obj = new entity_account_session();
-                            $get_parameter = array(
-                                'bind_param' => array(':name'=>$this->request['session_id']),
-                                'where' => array('`name` = :name')
-                            );
-                            $entity_account_session_obj->get($get_parameter);
-                            /*$method_variable = ['status' => 'OK', 'message' => '', 'account_session_id' => $this->request['session_id']];
-                            $session = $entity_account_session_obj->validate_account_session_id($method_variable);
-                            if ($session === false)
-                            {
-                                // If session_id is not valid, redirect to login page
-                                return true;
-                            }*/
-                            if (count($entity_account_session_obj->row) > 0)
-                            {
-                                // Record logout event
-                                $session_record = end($entity_account_session_obj->row);
-
-                                $entity_account_log_obj = new entity_account_log();
-                                $log_record = ['name'=>'Logout','account_id'=>$session_record['account_id'],'status'=>'OK','message'=>'Session close by user','content'=>$session_record['name'],'remote_ip'=>$this->request['remote_ip'],'request_uri'=>$_SERVER['REQUEST_URI']];
-                                $entity_account_obj = new entity_account($session_record['account_id']);
-                                if (count($entity_account_obj->row) > 0)
-                                {
-                                    $log_record['description'] = end($entity_account_obj->row)['name'];
-                                }
-                                $entity_account_log_obj->set_log($log_record);
-                            }
-
-                            // If session is valid, delete the session then redirect to login
-                            $entity_account_session_obj->delete();
-                            return true;
-                        }
-                        if (isset($this->request['option']['field']))
-                        {
-                            $this->content['field'] = array_merge($this->content['field'],$this->request['option']['field']);
-                        }
-                        else
-                        {
-                            // Set field value from database
-                            if (!isset($this->request['document']))
-                            {
-                                $this->result['status'] = 404;
-                                return false;
-                            }
-                            $page_obj = new view_web_page($this->request['document']);
-                            if (empty($page_obj->id_group))
-                            {
-                                $this->result['status'] = 404;
-                                //$this->result['status'] = 301;
-                                //$this->result['header']['Location'] =  URI_SITE_BASE.'login';
-                                return false;
-                            }
-                            if (count($page_obj->id_group) > 1)
-                            {
-                                // Error Handling, ambiguous reference, multiple page found, database data error
-                                $GLOBALS['global_message']->warning = __FILE__.'(line '.__LINE__.'): Multiple web page resources loaded '.implode(',',$page_obj->id_group);
-                            }
-                            $page_fetched_value = $page_obj->fetch_value(['page_size'=>1]);
-                            if (empty($page_fetched_value))
-                            {
-                                // Error Handling, fetch record row failed, database data error
-                                $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): Fetch row failed '.implode(',',$page_obj->id_group);
-                                $this->result['status'] = 404;
-                                return false;
-                            }
-                            $this->content['field'] = array_merge($this->content['field'],end($page_fetched_value));
-
-                            if ($this->request['document'] == 'login' OR $this->request['document'] == 'signup' )
-                            {
-                                $this->content['field']['complementary'] = base64_encode(json_encode(['remote_addr'=>get_remote_ip(), 'http_user_agent'=>$_SERVER['HTTP_USER_AGENT'], 'submission_id'=>sha1(openssl_random_pseudo_bytes(5))]));
-                            }
-                            if ($this->request['document'] == '')
-                            {
-                                $index_organization_obj = new index_organization();
-                                $this->content['field']['featured_business'] = $index_organization_obj->filter_by_featured();
+                                    if ($this->request['document'] == 'login' OR $this->request['document'] == 'signup' )
+                                    {
+                                        $this->content['field']['complementary'] = base64_encode(json_encode(['remote_addr'=>get_remote_ip(), 'http_user_agent'=>$_SERVER['HTTP_USER_AGENT'], 'submission_id'=>sha1(openssl_random_pseudo_bytes(5))]));
+                                    }
+                                    if ($this->request['document'] == '')
+                                    {
+                                        $index_organization_obj = new index_organization();
+                                        $this->content['field']['featured_business'] = $index_organization_obj->filter_by_featured();
 //print_r($this->content['field']);
-                                //,array('page_size'=>4,'order'=>'RAND()')
-                            }
+                                        //,array('page_size'=>4,'order'=>'RAND()')
+                                    }
+                                }
+
                         }
                 }
 
@@ -1461,13 +1472,13 @@ class content extends base {
                 break;
             case 'json':
                 if (!isset($GLOBALS['global_field'])) $GLOBALS['global_field'] = array();
-                switch($this->request['module'])
+                switch($this->request['control_panel'])
                 {
                     case 'members':
-                        switch($this->request['method'])
+                        switch($this->request['module'])
                         {
                             case 'listing':
-                                switch($this->request['action'])
+                                switch($this->request['method'])
                                 {
                                     case 'save':
                                         $this->result['content']['form'] = $this->request['option'];
@@ -1479,14 +1490,19 @@ class content extends base {
                                 break;
                         }
                         break;
-                    case 'listing':
-                        switch($this->request['method'])
+                    default:
+                        switch($this->request['module'])
                         {
-                            case '':
-                                $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[category]]']]);
+                            case 'listing':
+                                switch($this->request['method'])
+                                {
+                                    case '':
+                                        $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[category]]']]);
+                                        break;
+                                }
                                 break;
                         }
-                        break;
+
                 }
                 if (isset($GLOBALS['global_field']['style']))
                 {

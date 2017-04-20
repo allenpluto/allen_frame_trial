@@ -166,7 +166,8 @@ img {display:block;max-width:100%;}
     border-color:#888888;
 }
 
-.general_style_input_button_gray:hover
+.general_style_input_button_gray:hover,
+.general_style_input_button_gray:visited
 {
     color:#ffffff;
 }
@@ -192,7 +193,8 @@ img {display:block;max-width:100%;}
     border-color:#ffbb02;
 }
 
-.general_style_input_button_orange:hover
+.general_style_input_button_orange:hover,
+.general_style_input_button_orange:visited
 {
     color:#ffffff;
 }

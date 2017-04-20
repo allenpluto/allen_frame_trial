@@ -60,6 +60,7 @@ $.fn.ajax_loader = function(user_option) {
                     {
                         post_value['file_type'] = 'json';
                     }
+                    post_value['action'] = 'ajax_load';
 //console.log(ajax_uri);
 //console.log(post_value);
                     $.ajax({
@@ -68,7 +69,8 @@ $.fn.ajax_loader = function(user_option) {
                         'data': post_value,
                         'timeout': 10000
                     }).always(function (callback_obj, status, info_obj) {
-//console.log(callback_obj);
+console.log(callback_obj);
+console.log(info_obj);
                         ajax_loader_container.removeClass('ajax_loader_container_loading');
                         if (status == 'success') {
                             var data = callback_obj;
