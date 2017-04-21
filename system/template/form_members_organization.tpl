@@ -7,17 +7,12 @@
                 <input id="form_members_organization_name" name="name" type="text" placeholder="Business Name" value="[[*name]]">
             </div>
             <div class="form_row_container form_row_organization_logo_container">
-                <label for="form_members_organization_logo">Logo</label>
-                [[logo_id:object=`entity_image`:template_name=`form_input_image_uploader`:field=`{"file_uri":"./image/upload_logo.jpg"}`]]
-                <input id="form_members_organization_logo" class="form_image_uploader_result" type="hidden" name="logo">
-                <a href="javascript:void(0);" class="form_image_uploader_trigger"><img src="./image/upload_logo.jpg"></a>
-                <a href="javascript:void(0);" class="form_image_uploader_delete_trigger"></a>
+                <label>Logo</label>
+                [[logo_id:object=`view_image`:template_name=`form_image_uploader`:field=`{"file_uri":"./image/upload_logo.jpg","field_name":"logo","dom_id":"form_members_organization_logo"}`]]
             </div>
             <div class="form_row_container form_row_organization_banner_container">
-                <label for="form_members_organization_banner">Banner</label>
-                <input id="form_members_organization_banner" class="form_image_uploader_result" type="hidden" name="banner">
-                <a href="javascript:void(0);" class="form_image_uploader_trigger"><img src="./image/upload_banner.jpg"></a>
-                <a href="javascript:void(0);" class="form_image_uploader_delete_trigger"></a>
+                <label>Banner</label>
+                [[banner_id:object=`view_image`:template_name=`form_image_uploader`:field=`{"file_uri":"./image/upload_banner.jpg","field_name":"banner","dom_id":"form_members_organization_banner"}`]]
             </div>
             <div class="form_row_container form_row_organization_street_address_container">
                 <input id="form_members_organization_street_address_place_id" name="place_id" type="hidden" value="[[*place_id]]">
