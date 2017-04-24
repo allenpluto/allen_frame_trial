@@ -516,37 +516,6 @@ class content extends base {
         if (!isset($this->request['option']['format'])) $this->content['format'] = $this->request['file_type'];
         else $this->content['format'] = $this->request['option']['format'];
 
-        if($this->content['format'] == 'html_tag')
-        {
-            $this->content['html_tag'] = array();
-            if (isset($this->request['option']['html_tag']))
-            {
-                $this->content['html_tag'] = array_merge($this->content['html_tag'],$this->request['option']['html_tag']);
-            }
-            if (!isset($this->content['html_tag']['attribute'])) $this->content['html_tag']['attribute'] = array();
-            switch($this->request['file_type']) {
-                case 'css':
-                    if (!isset($this->content['html_tag']['name'])) $this->content['html_tag']['name'] = 'link';
-                    $this->content['html_tag']['attribute']['href'] = $this->request['file_uri'];
-                    if (!isset($this->content['html_tag']['attribute']['type'])) $this->content['html_tag']['attribute']['type'] = 'text/css';
-                    if (!isset($this->content['html_tag']['attribute']['rel'])) $this->content['html_tag']['attribute']['rel'] = 'stylesheet';
-                    if (!isset($this->content['html_tag']['attribute']['media'])) $this->content['html_tag']['attribute']['media'] = 'all';
-                    break;
-                case 'image':
-                    if (!isset($this->content['html_tag']['name'])) $this->content['html_tag']['name'] = 'img';
-                    $this->content['html_tag']['attribute']['src'] = $this->request['file_uri'];
-                    if (!isset($this->content['html_tag']['attribute']['alt'])) $this->content['html_tag']['attribute']['alt'] = trim(ucwords($this->format->caption($this->request['document'])));
-                    break;
-                case 'js':
-                    if (!isset($this->content['html_tag']['name'])) $this->content['html_tag']['name'] = 'script';
-                    $this->content['html_tag']['attribute']['src'] = $this->request['file_uri'];
-                    if (!isset($this->content['html_tag']['attribute']['type'])) $this->content['html_tag']['attribute']['type'] = 'text/javascript';
-                default:
-                    // Error Handling, tag name not given
-                    if (!isset($this->content['html_tag']['name'])) $this->content['html_tag']['name'] = 'div';
-            }
-        }
-
         switch($this->request['source_type'])
         {
             case 'static_file':
@@ -1530,9 +1499,6 @@ class content extends base {
                 $this->result['header']['Content-Length'] = strlen($this->result['content']);
                 $this->result['header']['Content-Type'] = 'application/json';
                 break;
-            case 'html_tag':
-                $this->result['content'] = render_html($this->content['html_tag'],'chunk_html_tag');
-                break;
             case 'xml':
                 $this->result['content'] = render_xml($this->content['api_result'])->asXML();
                 $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s').' GMT';
@@ -1543,7 +1509,7 @@ class content extends base {
                 if (!isset($this->content['field'])) $this->content['field'] = array();
                 if (!isset($this->content['template_name'])) $this->content['template_name'] = '';
                 $GLOBALS['global_field'] = array();
-                $this->result['content'] = render_html(['_value'=>$this->content['field'],'_parameter'=>[]],$this->content['template_name']);
+                $this->result['content'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template_name'=>$this->content['template_name']]]);
 //echo 'test point 3'."\n";
 //print_r($GLOBALS['global_field']);
                 if (isset($GLOBALS['global_field']['style'])) $this->content['style'] = array_merge($this->content['style'],$GLOBALS['global_field']['style']);

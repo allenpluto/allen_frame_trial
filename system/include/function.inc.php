@@ -80,7 +80,7 @@ function render_html($field = array(), $template_name = '', $container_name = ''
     }
     if (!empty($empty_template_name))
     {
-        $field_parameter['empty_template_name'] = $container_name;
+        $field_parameter['empty_template_name'] = $empty_template_name;
     }
     if (isset($field_parameter['empty_template_name']))
     {
@@ -114,7 +114,7 @@ function render_html($field = array(), $template_name = '', $container_name = ''
     {
         if (!empty($field_parameter['empty_template']) AND !empty($field_parameter['parent_row']))
         {
-            $field_rendered_content = render_html($field_parameter['parent_row'],$field_parameter['empty_template']);
+            $field_rendered_content = render_html(['_value'=>$field_parameter['parent_row'],'_parameter'=>['template_name'=>$field_parameter['empty_template']]]);
         }
         else
         {
@@ -152,19 +152,19 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                 {
                     if (empty($field_row_parameter['template'])) continue;
                     $template_counter = 0;
-                    while (isset($template_match['template_'.$template_counter]))
+                    $field_row_parameter['template_name'] = hash('crc32b',$template_counter.$field_row_parameter['template']);
+                    while (isset($template_match[$field_row_parameter['template_name']]))
                     {
-                        if ($template_match['template_'.$template_counter]['template'] == $field_row_parameter['template'])
+                        if ($template_match[$field_row_parameter['template_name']]['template'] == $field_row_parameter['template'])
                         {
-                            $field_row_parameter['template_name'] = 'template_'.$template_counter;
                             break;
                         }
                         $template_counter++;
+                        $field_row_parameter['template_name'] = hash('crc32b',$template_counter.$field_row_parameter['template']);
                     }
-                    if (!isset($field_row_parameter['template_name']))
+                    if (!isset($template_match[$field_row_parameter['template_name']]))
                     {
-                        $field_row_parameter['template_name'] = 'template_'.$template_counter;
-                        $template_match['template_'.$template_counter]['template'] = $field_row_parameter['template'];
+                        $template_match[$field_row_parameter['template_name']] = ['template'=>$field_row_parameter['template']];
                     }
                 }
                 else
@@ -194,7 +194,18 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                         $field_row_parameter['container'] = '[[*_placeholder]]';
                     }
                 }
-
+                if (isset($field_row_parameter['empty_template_name']) AND (!isset($field_parameter['empty_template_name']) OR $field_row_parameter['empty_template_name'] != $field_parameter['empty_template_name']))
+                {
+                    if (file_exists(PATH_TEMPLATE.$field_parameter['empty_template_name'].FILE_EXTENSION_TEMPLATE))
+                    {
+                        $field_row_parameter['empty_template'] = file_get_contents(PATH_TEMPLATE.$field_row_parameter['empty_template_name'].FILE_EXTENSION_TEMPLATE);
+                    }
+                    else
+                    {
+                        $GLOBALS['global_message']->warning = 'render_html error: empty_template ['.PATH_TEMPLATE.$field_row_parameter['empty_template_name'].FILE_EXTENSION_TEMPLATE.'] file does not exist';
+                        $field_row_parameter['empty_template'] = '';
+                    }
+                }
             }
 
             if (isset($field_parameter['parent_row']))
@@ -326,7 +337,18 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                         {
                             if (empty($field_row[$match_result_value['name']]))
                             {
-                                $match_result_value['value'] = '';
+                                if (!empty($field_row_parameter['empty_template']))
+                                {
+                                    $empty_field_parent_row = [];
+                                    if (isset($field_parameter['parent_row'])) $empty_field_parent_row = $field_parameter['parent_row'];
+                                    if (isset($match_result_value['field_decoded'])) $empty_field_parent_row = array_merge($empty_field_parent_row,$match_result_value['field_decoded']);
+                                    $match_result_value['value'] = render_html(['_value'=>$empty_field_parent_row,'_parameter'=>['template_name'=>'empty_template_name','template'=>'empty_template']]);
+                                    unset($empty_field_parent_row);
+                                }
+                                else
+                                {
+                                    $match_result_value['value'] = '';
+                                }
                             }
                             else
                             {
@@ -391,8 +413,8 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                         else $match_result_value['condition'] = !empty($field_row[$match_result_value['condition']]);
                         if (!isset($match_result_value['alternative_chunk'])) $match_result_value['alternative_chunk'] = '';
                         if (isset($match_result_value['field_decoded'])) $field_row = array_merge($field_row, $match_result_value['field_decoded']);
-                        if ($match_result_value['condition']) $match_result_value['value'] = render_html($field_row,$match_result_value['name']);
-                        else $match_result_value['value'] = render_html($field_row,$match_result_value['alternative_chunk']);
+                        if ($match_result_value['condition']) $match_result_value['value'] = render_html(['_value'=>$field_row,'_parameter'=>['template_name'=>$match_result_value['name']]]);
+                        else $match_result_value['value'] = render_html(['_value'=>$field_row,'_parameter'=>['template_name'=>$match_result_value['alternative_chunk']]]);
                         break;
                     case '~':
                         $match_result_value['output'] = $match_result_value['name'];
@@ -508,7 +530,21 @@ function render_html($field = array(), $template_name = '', $container_name = ''
 //}
                         $GLOBALS['time_stack']['fetch value '.$match_result_value['object']] = microtime(1) - $GLOBALS['start_time'];
                         unset($object);
-                        if (empty($result)) $match_result_value['value'] = '';
+                        if (empty($result))
+                        {
+                            if (!empty($field_row_parameter['empty_template']))
+                            {
+                                $empty_field_parent_row = [];
+                                if (isset($field_parameter['parent_row'])) $empty_field_parent_row = $field_parameter['parent_row'];
+                                if (isset($match_result_value['field_decoded'])) $empty_field_parent_row = array_merge($empty_field_parent_row,$match_result_value['field_decoded']);
+                                $match_result_value['value'] = render_html(['_value'=>$empty_field_parent_row,'_parameter'=>['template_name'=>'empty_template_name','template'=>'empty_template']]);
+                                unset($empty_field_parent_row);
+                            }
+                            else
+                            {
+                                $match_result_value['value'] = '';
+                            }
+                        }
                         else
                         {
                             $sub_field = array_values($result);
@@ -518,10 +554,9 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                             {
                                 $sub_field_parent_row = array_merge($sub_field_parent_row, $match_result_value['field_decoded']);
                             }
-                            $match_result_value['value'] = render_html(['_value'=>$sub_field,'_parameter'=>['parent_row'=>$sub_field_parent_row]],$match_result_value['template_name']);
+                            $match_result_value['value'] = render_html(['_value'=>$sub_field,'_parameter'=>['parent_row'=>$sub_field_parent_row,'template_name'=>$match_result_value['template_name']]]);
                             unset($sub_field_parent_row);
                         }
-
                         break;
                     case '-':
                         $match_result_value['value'] = '';

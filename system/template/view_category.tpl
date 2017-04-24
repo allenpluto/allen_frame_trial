@@ -7,6 +7,6 @@
     </div>
     <div class="clear"></div>
     <div class="block_cover_over_link_container">
-        <a href="[[*base]]listing/[[*friendly_uri]]" title="[[*name]]" class="block_thumb_cover_over_link"></a>
+        <a href="[[*base]]listing/find/[[*friendly_uri]]" title="[[*name]]" class="block_thumb_cover_over_link"></a>
     </div>
 </div>
