@@ -337,15 +337,7 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                         {
                             if (empty($field_row[$match_result_value['name']]))
                             {
-                                if (!empty($field_row_parameter['empty_template']))
-                                {
-                                    $empty_field_parent_row = [];
-                                    if (isset($field_parameter['parent_row'])) $empty_field_parent_row = $field_parameter['parent_row'];
-                                    if (isset($match_result_value['field_decoded'])) $empty_field_parent_row = array_merge($empty_field_parent_row,$match_result_value['field_decoded']);
-                                    $match_result_value['value'] = render_html(['_value'=>$empty_field_parent_row,'_parameter'=>['template_name'=>'empty_template_name','template'=>'empty_template']]);
-                                    unset($empty_field_parent_row);
-                                }
-                                else
+                                if (empty($match_result_value['empty_template']) AND empty($match_result_value['empty_template_name']))
                                 {
                                     $match_result_value['value'] = '';
                                 }
@@ -431,7 +423,25 @@ function render_html($field = array(), $template_name = '', $container_name = ''
                         // Object, fetch value and render for each row
                         if (empty($field_row[$match_result_value['name']]))
                         {
-                            $match_result_value['value'] = '';
+                            if ($match_result_value['name'] == 'banner_id')
+                            {
+                                print_r($match_result_value);
+                                print_r($field_row);
+                                print_r($field_row_parameter);
+                                echo 'test point 2';exit;
+                            }
+                            if (!empty($field_row_parameter['empty_template']))
+                            {
+                                $empty_field_parent_row = [];
+                                if (isset($field_parameter['parent_row'])) $empty_field_parent_row = $field_parameter['parent_row'];
+                                if (isset($match_result_value['field_decoded'])) $empty_field_parent_row = array_merge($empty_field_parent_row,$match_result_value['field_decoded']);
+                                $match_result_value['value'] = render_html(['_value'=>$empty_field_parent_row,'_parameter'=>['template_name'=>$field_parameter['empty_template_name'],'template'=>$field_parameter['empty_template']]]);
+                                unset($empty_field_parent_row);
+                            }
+                            else
+                            {
+                                $match_result_value['value'] = '';
+                            }
                             break;
                         }
 
