@@ -138,7 +138,7 @@ class content extends base {
                 $this->request['source_type'] = 'data';
                 if(!isset($this->request['file_type'])) $this->request['file_type'] = 'html';
             }
-            if ($this->request['file_type'] == 'html')
+            if ($this->request['source_type'] == 'data')
             {
                 $this->request['file_uri'] = URI_SITE_BASE;
             }
@@ -398,11 +398,11 @@ class content extends base {
                     $this->request['file_uri'] .= $this->request['method'].'/';
                 }
 
-                if (!empty($this->request['action']))
-                {
-                    $this->request['file_path'] .= $this->request['action'].DIRECTORY_SEPARATOR;
-                    $this->request['file_uri'] .= $this->request['action'];
-                }
+//                if (!empty($this->request['action']))
+//                {
+//                    $this->request['file_path'] .= $this->request['action'].DIRECTORY_SEPARATOR;
+//                    $this->request['file_uri'] .= $this->request['action'];
+//                }
 
                 if (!empty($this->request['document']))
                 {
@@ -855,7 +855,7 @@ class content extends base {
                                         switch($this->request['action'])
                                         {
                                             case 'save':
-                                                $this->result['content']['option'] = $this->request['option'];
+                                                 parse_str($this->request['option']['form'],$this->result['content']);
 
                                                 break;
                                             case 'reset':
@@ -880,6 +880,12 @@ class content extends base {
                                                 );
                                                 $image_uploader_data_string = json_encode($image_uploader_data);
                                                 $this->content['script']['banner_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_banner_container\').form_image_uploader('.$image_uploader_data_string.');});'];
+
+                                                $form_ajax_data = array(
+                                                    'id'=>$this->request['option']['id']
+                                                );
+                                                $form_ajax_data_string = json_encode($form_ajax_data);
+                                                $this->content['script']['form_data'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form\').data('.$form_ajax_data_string.');});'];
                                         }
                                         break;
                                     default:

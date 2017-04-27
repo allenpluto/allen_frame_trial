@@ -129,7 +129,7 @@ $('.footer_action_button_save').click(function(event){
     var ajax_uri = window.location.pathname;
     var post_value = {
         'id':$(this).closest('form').data('id'),
-        'form':$(this).closest('form').serializeArray(),
+        'form':$(this).closest('form').serialize(),
         'file_type':'json',
         'action':'save'
     };
@@ -145,6 +145,7 @@ console.log(option_obj);
         },
         'timeout': 10000
     }).always(function (callback_obj, status, info_obj) {
+//$('.form_bottom_row_container').html(status+': '+callback_obj.responseText);
         console.log(status);
         console.log(callback_obj);
         console.log(info_obj);
@@ -159,10 +160,10 @@ console.log(option_obj);
             var error = info_obj;
 
             if (status == 'timeout') {
-                overlay_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Add/Update Listing Timeout, Try again later</p>');
+                ajax_editor_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Add/Update Listing Timeout, Try again later</p>');
             }
             else {
-                overlay_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Add/Update Listing Failed, Error Unknown, Try again later</p>');
+                ajax_editor_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Add/Update Listing Failed, Error Unknown, Try again later</p>');
             }
         }
     });

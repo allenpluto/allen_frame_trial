@@ -1,7 +1,7 @@
 <div class="section_container container form_container">
     <div class="section_title"><h1>Edit My Business</h1></div>
     <div class="section_content ajax_editor_container">
-        <form id="form_members_organization">
+        <form id="form_members_organization" class="ajax_form">
             <div class="form_row_container">
                 <label for="form_members_organization_name">Business Name</label>
                 <input id="form_members_organization_name" name="name" type="text" placeholder="Business Name" value="[[*name]]">
