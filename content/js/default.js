@@ -143,34 +143,30 @@ $.fn.ajax_form = function(user_option) {
 
     return this.each(function() {
         var form = $(this);
-        var form_data = {};
         if (option['form_data'])
         {
-            form_data = option['form_data'];
+            form.data('form_data', option['form_data']);
         }
 
-        form.find('input, select, textarea').each(function(){
-            if ($(this).attr('name'))
-            {
-                form_data[$(this).attr('name')] = $(this).val();
-            }
-        });
-        form.data('form_data',form_data);
-
         form.on('store_form_data',function(){
+            var form_data = {};
+            form_data = form.data('form_data');
             form.find('input, select, textarea').each(function(){
                 if ($(this).attr('name'))
                 {
-                    form.data($(this).attr('name'),$(this).val());
+                    form_data[$(this).attr('name')] = $(this).val();
                 }
             });
+            form.data('form_data', form_data);
         });
 
         form.on('retrieve_form_data',function(){
+            var form_data = {};
+            form_data = form.data('form_data');
             form.find('input, select, textarea').each(function(){
-                if ($(this).attr('name') && form.data($(this).attr('name')))
+                if ($(this).attr('name') && form_data[$(this).attr('name')])
                 {
-                    $(this).val(form.data($(this).attr('name')));
+                    $(this).val(form_data[$(this).attr('name')]);
                 }
             });
         });

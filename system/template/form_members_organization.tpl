@@ -8,11 +8,11 @@
             </div>
             <div class="form_row_container form_row_organization_logo_container">
                 <label>Logo</label>
-                [[logo_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader`:field=`{"file_uri":"./image/upload_logo.jpg","field_name":"logo","dom_id":"form_members_organization_logo"}`]]
+                [[logo_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader`:field=`{"file_uri":"./image/upload_logo.jpg","field_name":"logo","attribute":{"id":"form_members_organization_logo"}`]]
             </div>
             <div class="form_row_container form_row_organization_banner_container">
                 <label>Banner</label>
-                [[banner_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader`:field=`{"file_uri":"./image/upload_banner.jpg","field_name":"banner","dom_id":"form_members_organization_banner"}`]]
+                [[banner_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader`:field=`{"file_uri":"./image/upload_banner.jpg","field_name":"banner","attribute":{"id":"form_members_organization_banner"}`]]
             </div>
             <div class="form_row_container form_row_organization_street_address_container">
                 <input id="form_members_organization_street_address_place_id" name="place_id" type="hidden" value="[[*place_id]]">

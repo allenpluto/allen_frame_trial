@@ -54,8 +54,11 @@ function render_html($field = array())
         else
         {
             $GLOBALS['global_message']->notice = 'rendering error: template ['.PATH_TEMPLATE.$field_parameter['template_name'].FILE_EXTENSION_TEMPLATE.'] file does not exist';
-            $field_parameter['template'] = '[[*_placeholder]]';
         }
+    }
+    if (!isset($field_parameter['template']))
+    {
+        $field_parameter['template'] = '[[*_placeholder]]';
     }
     if (isset($field_parameter['container_name']))
     {
@@ -93,7 +96,6 @@ function render_html($field = array())
     {
         $field = ['_placeholder'=>$field];
     }
-
     if (empty($field))
     {
         if (!empty($field_parameter['empty_template']) AND !empty($field_parameter['parent_row']))
@@ -333,41 +335,85 @@ function render_html($field = array())
                                 // either array or string may apply to container
                                 if (is_array($field_row[$match_result_value['name']]))
                                 {
-                                    if (!isset($field_row[$match_result_value['name']]['_parameter']))
+                                    $sub_field = [
+                                        '_value'=>$field_row[$match_result_value['name']],
+                                        '_parameter'=>$match_result_value['parameter']
+                                    ];
+                                    if (isset($sub_field['_value']['_parameter']))
                                     {
-                                        $field_row[$match_result_value['name']]['_parameter'] = array();
+                                        $sub_field['_parameter'] = array_merge_recursive($sub_field['_value']['_parameter'],$sub_field['_parameter']);
+                                        unset($sub_field['_value']['_parameter']);
                                     }
-                                    if (!isset($field_row[$match_result_value['name']]['_parameter']['parent_row']))
+                                    if (isset($sub_field['_value']['_value']))
                                     {
-                                        $field_row[$match_result_value['name']]['_parameter']['parent_row'] = $field_row;
+                                        $sub_field['_value'] = $sub_field['_value']['_value'];
                                     }
-                                    $field_row[$match_result_value['name']]['_parameter'] = array_merge_recursive($match_result_value['parameter'],$field_row[$match_result_value['name']]['_parameter']);
-
-                                    if (!isset($field_row[$match_result_value['name']]['_parameter']['template']) AND !isset($field_row[$match_result_value['name']]['_parameter']['template_name']))
+                                    if (!isset($sub_field['_parameter']['parent_row'])) $sub_field['_parameter']['parent_row'] = $field_row;
+                                    else $sub_field['_parameter']['parent_row'] = array_merge($field_row,$sub_field['_parameter']['parent_row']);
+                                    if (!isset($sub_field['_parameter']['template']) AND !isset($sub_field['_parameter']['template_name']))
                                     {
                                         // If template not provided, try to guess template name from parent template name
-                                        $field_row[$match_result_value['name']]['_parameter']['template_name'] = $field_row_parameter['template_name'].'_'.$match_result_value['name'];
+                                        $sub_field['_parameter']['template_name'] = $field_row_parameter['template_name'].'_'.$match_result_value['name'];
                                     }
-                                    unset($field_row[$match_result_value['name']]['_parameter']['parent_row'][$match_result_value['name']]);
-
-                                    $match_result_value['value'] = render_html($field_row[$match_result_value['name']]);
+                                    $match_result_value['value'] = render_html($sub_field);
+//
+//
+//                                    if (!isset($field_row[$match_result_value['name']]['_parameter']))
+//                                    {
+//                                        $field_row[$match_result_value['name']]['_parameter'] = array();
+//                                    }
+//                                    if (!isset($field_row[$match_result_value['name']]['_parameter']['parent_row']))
+//                                    {
+//                                        $field_row[$match_result_value['name']]['_parameter']['parent_row'] = $field_row;
+//                                    }
+//                                    $field_row[$match_result_value['name']]['_parameter'] = array_merge_recursive($match_result_value['parameter'],$field_row[$match_result_value['name']]['_parameter']);
+//
+//                                    if (!isset($field_row[$match_result_value['name']]['_parameter']['template']) AND !isset($field_row[$match_result_value['name']]['_parameter']['template_name']))
+//                                    {
+//                                        // If template not provided, try to guess template name from parent template name
+//                                        $field_row[$match_result_value['name']]['_parameter']['template_name'] = $field_row_parameter['template_name'].'_'.$match_result_value['name'];
+//                                    }
+//                                    unset($field_row[$match_result_value['name']]['_parameter']['parent_row'][$match_result_value['name']]);
+//
+//                                    $match_result_value['value'] = render_html($field_row[$match_result_value['name']]);
                                 }
                                 else
                                 {
-                                    $match_result_value['value'] = $field_row[$match_result_value['name']];
+//                                    $match_result_value['value'] = $field_row[$match_result_value['name']];
+                                    if (empty($match_result_value['parameter']))
+                                    {
+                                        $match_result_value['value'] = $field_row[$match_result_value['name']];
+                                    }
+                                    else
+                                    {
+                                        $sub_field = [
+                                            '_value'=>$field_row[$match_result_value['name']],
+                                            '_parameter'=>$match_result_value['parameter']
+                                        ];
+                                        if (!isset($sub_field['_parameter']['parent_row'])) $sub_field['_parameter']['parent_row'] = $field_row;
+                                        else $sub_field['_parameter']['parent_row'] = array_merge($field_row,$sub_field['_parameter']['parent_row']);
+                                        $match_result_value['value'] = render_html($sub_field);
+                                    }
                                 }
+
                             }
                         }
                         else $match_result_value['value'] = '';
                         break;
                     case '$':
                         // Chunk, load sub-template
-                        if (!isset($match_result_value['parameter']['condition'])) $match_result_value['parameter']['condition'] = true;
-                        else $match_result_value['parameter']['condition'] = !empty($field_row[$match_result_value['parameter']['condition']]);
-                        if (!isset($match_result_value['parameter']['alternative_chunk'])) $match_result_value['parameter']['alternative_chunk'] = '';
-                        if (isset($match_result_value['parameter']['parent_row'])) $field_row = array_merge($field_row, $match_result_value['parameter']['parent_row']);
-                        if ($match_result_value['parameter']['condition']) $match_result_value['value'] = render_html(['_value'=>$field_row,'_parameter'=>['template_name'=>$match_result_value['name']]]);
-                        else $match_result_value['value'] = render_html(['_value'=>$field_row,'_parameter'=>['template_name'=>$match_result_value['parameter']['alternative_chunk']]]);
+//                        if (!isset($match_result_value['parameter']['condition'])) $match_result_value['parameter']['condition'] = true;
+//                        else $match_result_value['parameter']['condition'] = !empty($field_row[$match_result_value['parameter']['condition']]);
+//                        if (!isset($match_result_value['parameter']['alternative_chunk'])) $match_result_value['parameter']['alternative_chunk'] = '';
+//                        if (isset($match_result_value['parameter']['parent_row'])) $field_row = array_merge($field_row, $match_result_value['parameter']['parent_row']);
+//                        if ($match_result_value['parameter']['condition']) $match_result_value['value'] = render_html(['_value'=>$field_row,'_parameter'=>['template_name'=>$match_result_value['name']]]);
+//                        else $match_result_value['value'] = render_html(['_value'=>$field_row,'_parameter'=>['template_name'=>$match_result_value['parameter']['alternative_chunk']]]);
+                        $sub_field = [
+                            '_value'=>$field_row,
+                            '_parameter'=>$match_result_value['parameter']
+                        ];
+                        $sub_field['_parameter']['template_name'] = $match_result_value['name'];
+                        $match_result_value['value'] = render_html($sub_field);
                         break;
                     case '~':
                         $match_result_value['parameter']['output'] = $match_result_value['name'];
@@ -499,15 +545,26 @@ function render_html($field = array())
                         }
                         else
                         {
-                            $sub_field = array_values($result);
-                            unset($result);
-                            $sub_field_parent_row = $field_row;
-                            if (isset($match_result_value['parameter']['parent_row']))
-                            {
-                                $sub_field_parent_row = array_merge($sub_field_parent_row, $match_result_value['parameter']['parent_row']);
-                            }
-                            $match_result_value['value'] = render_html(['_value'=>$sub_field,'_parameter'=>['parent_row'=>$sub_field_parent_row,'template_name'=>$match_result_value['parameter']['template_name']]]);
-                            unset($sub_field_parent_row);
+                            //$field_row[$match_result_value['name']]['_parameter'] = array_merge_recursive($match_result_value['parameter'],$field_row[$match_result_value['name']]['_parameter']);
+
+                            $sub_field = [
+                                '_value'=>array_values($result),
+                                '_parameter'=>$match_result_value['parameter']
+                            ];
+                            if (!isset( $sub_field['_parameter']['parent_row'])) $sub_field['_parameter']['parent_row'] = array();
+                            $sub_field['_parameter']['parent_row'] = array_merge($field_row, $sub_field['_parameter']['parent_row']);
+                            $match_result_value['value'] = render_html($sub_field);
+
+//                            $sub_field = array_values($result);
+//                            unset($result);
+//
+//                            $sub_field_parent_row = $field_row;
+//                            if (isset($match_result_value['parameter']['parent_row']))
+//                            {
+//                                $sub_field_parent_row = array_merge($sub_field_parent_row, $match_result_value['parameter']['parent_row']);
+//                            }
+//                            $match_result_value['value'] = render_html(['_value'=>$sub_field,'_parameter'=>['parent_row'=>$sub_field_parent_row,'template_name'=>$match_result_value['parameter']['template_name']]]);
+//                            unset($sub_field_parent_row);
                         }
                         break;
                     case '-':
@@ -522,21 +579,21 @@ function render_html($field = array())
                 }
                 if (isset($match_result_value['value']))
                 {
-                    if (isset($match_result_value['parameter']['container_name']))
-                    {
-                        if (file_exists(PATH_TEMPLATE.$match_result_value['parameter']['container_name'].FILE_EXTENSION_TEMPLATE))
-                        {
-                            $match_result_value['parameter']['container'] = file_get_contents(PATH_TEMPLATE.$match_result_value['parameter']['container_name'].FILE_EXTENSION_TEMPLATE);
-                        }
-                        else {
-                            $GLOBALS['global_message']->warning = 'render_html error: container ['.PATH_TEMPLATE.$match_result_value['parameter']['container_name'].FILE_EXTENSION_TEMPLATE.'] file does not exist';
-                            $match_result_value['parameter']['container'] = '[[*_placeholder]]';
-                        }
-                    }
-                    if (isset($match_result_value['parameter']['container']))
-                    {
-                        $match_result_value['value'] = str_replace('[[*_placeholder]]',$match_result_value['value'],$match_result_value['parameter']['container']);
-                    }
+//                    if (isset($match_result_value['parameter']['container_name']))
+//                    {
+//                        if (file_exists(PATH_TEMPLATE.$match_result_value['parameter']['container_name'].FILE_EXTENSION_TEMPLATE))
+//                        {
+//                            $match_result_value['parameter']['container'] = file_get_contents(PATH_TEMPLATE.$match_result_value['parameter']['container_name'].FILE_EXTENSION_TEMPLATE);
+//                        }
+//                        else {
+//                            $GLOBALS['global_message']->warning = 'render_html error: container ['.PATH_TEMPLATE.$match_result_value['parameter']['container_name'].FILE_EXTENSION_TEMPLATE.'] file does not exist';
+//                            $match_result_value['parameter']['container'] = '[[*_placeholder]]';
+//                        }
+//                    }
+//                    if (isset($match_result_value['parameter']['container']))
+//                    {
+//                        $match_result_value['value'] = str_replace('[[*_placeholder]]',$match_result_value['value'],$match_result_value['parameter']['container']);
+//                    }
                     if (empty($match_result_value['parameter']['output']))
                     {
                         $translate_array[$match_result_key] = $match_result_value['value'];
@@ -582,10 +639,10 @@ function render_html($field = array())
                 $field_row_rendered_content = render_html(['_value'=>$field_row,'_parameter'=>['template'=>$field_row_rendered_content,'debug'=>true]]);
             }
 
-            if (!empty($field_row_parameter['container']) AND !empty($field_row_rendered_content))
-            {
-                $field_row_rendered_content = str_replace('[[*_placeholder]]',$field_row_rendered_content,$field_row_parameter['container']);
-            }
+//            if (!empty($field_row_parameter['container']) AND !empty($field_row_rendered_content))
+//            {
+//                $field_row_rendered_content = str_replace('[[*_placeholder]]',$field_row_rendered_content,$field_row_parameter['container']);
+//            }
 
             $rendered_content[] = $field_row_rendered_content;
         }

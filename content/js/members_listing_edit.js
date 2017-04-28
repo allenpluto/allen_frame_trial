@@ -115,6 +115,7 @@ console.log(place_id);
     }
 }
 
+
 $('.footer_action_button_reset').click(function(event){
     event.preventDefault();
 

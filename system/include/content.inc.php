@@ -885,7 +885,7 @@ class content extends base {
                                                     'id'=>$this->request['option']['id']
                                                 );
                                                 $form_ajax_data_string = json_encode($form_ajax_data);
-                                                $this->content['script']['form_data'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form\').data('.$form_ajax_data_string.');});'];
+                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
                                         }
                                         break;
                                     default:
