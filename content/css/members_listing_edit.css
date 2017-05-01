@@ -42,6 +42,12 @@
     font-size: 1.6em;
 }
 
+.form_image_uploader_container
+{
+    display: inline-block;
+    position: relative;
+}
+
 .form_image_uploader_trigger
 {
     display: inline-block;
@@ -49,6 +55,34 @@
 
     border:2px solid #cccccc;
     border-radius: 3px;
+}
+
+.form_image_uploader_delete_trigger
+{
+    display: block;
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    top:-10px;
+    right:-10px;
+
+    background: #666666;
+
+    border-radius: 50%;
+
+    color: #ffffff;
+    line-height: 30px;
+    text-align: center;
+
+    z-index: 100;
+}
+
+.form_image_uploader_delete_trigger:before
+{
+    display: inline-block;
+    font-family: 'FontAwesome';
+    font-size: 18px;
+    content: '\f00d';
 }
 
 .form_row_street_address_map

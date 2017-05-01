@@ -203,7 +203,13 @@ function render_html($field = array())
             if (!is_array($global_field)) print_r($global_field);
             if (!is_array($field_row)) print_r($field_row);
             $field_row = array_merge($global_field,$field_row);
-
+//if ($field_parameter['template_name'] == 'chunk_html_tag_attribute')
+//{
+//    unset($field[0]['organization']);
+//    print_r($field);
+//    unset($field_parameter['parent_row']);
+//    print_r($field_parameter);
+//}
             $match_result = array();
             if (!isset($template_match[$field_row_parameter['template_name']]['match_result']))
             {

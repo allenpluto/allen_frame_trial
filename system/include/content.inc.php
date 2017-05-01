@@ -855,8 +855,64 @@ class content extends base {
                                         switch($this->request['action'])
                                         {
                                             case 'save':
-                                                 parse_str($this->request['option']['form'],$this->result['content']);
+                                                if (!is_array($this->request['option']['form_data']))
+                                                {
+                                                    parse_str($this->request['option']['form_data'],$this->content['form_data']);
+                                                }
+                                                else
+                                                {
+                                                    $this->content['form_data'] = $this->request['option']['form_data'];
+                                                }
+                                                if (isset($this->content['form_data']['logo_image']))
+                                                {
+                                                    if (empty($this->content['form_data']['logo_image']))
+                                                    {
+                                                        $image_obj = new entity_image($entity_organization_data['logo_id']);
+                                                        $image_obj->delete();
+                                                        $image_obj->sync();
+                                                        $this->content['form_data']['logo_id'] = 0;
+                                                        unset($image_obj);
+                                                    }
+                                                    elseif (preg_match('/^data:/', $this->content['form_data']['logo_image']))
+                                                    {
+                                                        $image_obj = new entity_image($entity_organization_data['logo_id']);
+                                                        $image_obj->delete();
+                                                        $image_obj->sync();
+                                                        $image_obj = new entity_image();
+                                                        $image_obj->set(['row'=>['name'=>$entity_organization_data['name'].' Logo','source_file'=>$this->content['form_data']['logo_image']]]);
+                                                        $image_obj->sync();
+                                                        $this->content['form_data']['logo_id'] =  implode(',',$image_obj->id_group);
+                                                        unset($image_obj);
+                                                    }
+                                                    unset($this->content['form_data']['logo_image']);
+                                                }
 
+                                                $entity_organization_obj->update($this->content['form_data']);
+
+                                                $entity_organization_data = $entity_organization_obj->fetch_value();
+                                                if ($entity_organization_data === false)
+                                                {
+                                                    $this->result['content']['status'] = 'SERVER_ERROR';
+                                                    $this->result['content']['message'] = 'Database update request failed, try again later';
+                                                    return true;
+                                                }
+                                                $entity_organization_data = end($entity_organization_data);
+
+                                                if (!empty($this->content['form_data']['logo_id']))
+                                                {
+                                                    $view_image_obj = new view_image($this->content['form_data']['logo_id']);
+                                                    if (!empty($view_image_obj->row))
+                                                    {
+                                                        $image_data = end($view_image_obj->row);
+                                                    }
+                                                    $entity_organization_data['logo_image'] = $image_data['file_uri'];
+                                                    unset($image_data);
+                                                    unset($image_obj);
+                                                }
+
+                                                $this->result['content']['status'] = 'OK';
+                                                $this->result['content']['message'] = 'Business updated successfully';
+                                                $this->result['content']['form_data'] = $entity_organization_data;
                                                 break;
                                             case 'reset':
                                                 break;
@@ -1455,8 +1511,13 @@ class content extends base {
                             case 'listing':
                                 switch($this->request['method'])
                                 {
-                                    case 'save':
-                                        $this->result['content']['form'] = $this->request['option'];
+                                    case 'edit':
+//                                        switch($this->request['action'])
+//                                        {
+//                                            case 'save':
+//                                                $this->result['content']['form'] = $this->request['option'];
+//                                                break;
+//                                        }
                                         break;
                                     case '':
                                         $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[organization:template_name=`view_members_organization_summary`]]']]);

@@ -128,9 +128,19 @@ $('.footer_action_button_save').click(function(event){
     var ajax_editor_container = $(this).closest('.ajax_editor_container');
     var ajax_editor_info = ajax_editor_container.find('.ajax_editor_info');
     var ajax_uri = window.location.pathname;
+    $(this).closest('.ajax_form').trigger('get_update_data');
+    var update_data = $(this).closest('.ajax_form').data('update_data');
+    if ($.isEmptyObject(update_data))
+    {
+        ajax_editor_info.removeClass('overlay_info_error').addClass('overlay_info_success').html('<p>Everything is up to date</p>');
+        return true;
+    }
+
+console.log('update data: ');
+console.log(update_data);
     var post_value = {
-        'id':$(this).closest('form').data('id'),
-        'form':$(this).closest('form').serialize(),
+        'id':$(this).closest('.ajax_form').data('form_data').id,
+        'form_data':update_data,
         'file_type':'json',
         'action':'save'
     };
@@ -154,6 +164,11 @@ console.log(option_obj);
         if (status == 'success') {
             var data = callback_obj;
             var xhr = info_obj;
+
+            if (callback_obj.status == 'OK')
+            {
+                callback_obj.form_data
+            }
 
         }
         else {

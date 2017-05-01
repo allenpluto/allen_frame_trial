@@ -171,6 +171,18 @@ $.fn.ajax_form = function(user_option) {
             });
         });
 
+        form.on('get_update_data',function(){
+            var form_data = {};
+            var update_data = {};
+            form_data = form.data('form_data');
+            form.find('input, select, textarea').each(function(){
+                if ($(this).attr('name') && form_data[$(this).attr('name')] != $(this).val())
+                {
+                    update_data[$(this).attr('name')] = $(this).val();
+                }
+            });
+            form.data('update_data', update_data);
+        });
     });
 }
 
@@ -531,7 +543,7 @@ $.fn.form_image_uploader = function(user_option){
             image_uploader_delete_trigger.click(function(event)
             {
                 result_image.attr('src',option['default_image']);
-                image_uploader_result.val('_DELETE');
+                image_uploader_result.val('');
                 image_uploader.addClass('form_image_uploader_container_empty');
             });    
         }
