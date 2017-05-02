@@ -306,11 +306,29 @@ class entity_image extends entity
 
     function advanced_sync_delete($delete_id_group = array())
     {
-        $view_image_obj = new view_image($delete_id_group);
-        $image_array = $view_image_obj->fetch_value();
-        foreach ($image_array as $image_row_index=>$image_row)
+        $row = $this->get();
+
+        if ($row == false)
         {
-            $current_image_folder = dirname($image_row['file_path']);
+            $this->message->warning = 'Invalid delete id(s) ['.implode(',',$delete_id_group).']. id provided might have been deleted already.';
+            return false;
+        }
+
+        foreach ($row as $index=>$record)
+        {
+            $sub_path = '';
+            $sub_path_index = $record['id'];
+            do
+            {
+                $sub_path_remain = $sub_path_index % 1000;
+                $sub_path_index = floor($sub_path_index / 1000);
+                if ($sub_path_index != 0)
+                {
+                    $sub_path_remain = str_repeat('0', 3-strlen($sub_path_remain)).$sub_path_remain;
+                }
+                $sub_path = $sub_path_remain.DIRECTORY_SEPARATOR.$sub_path;
+            } while($sub_path_index > 0);
+            $current_image_folder = PATH_IMAGE.$sub_path;
             if (file_exists($current_image_folder))
             {
                 $current_image_files = scandir($current_image_folder);
@@ -324,6 +342,6 @@ class entity_image extends entity
                 }
             }
         }
-        return true;
+       return true;
     }
 }

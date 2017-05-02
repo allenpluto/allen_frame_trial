@@ -171,6 +171,21 @@ $.fn.ajax_form = function(user_option) {
             });
         });
 
+        form.on('set_update_data',function(){
+console.log('set_update_data');
+            var form_data = {};
+            var update_data = {};
+            form_data = form.data('form_data');
+            update_data = form.data('update_data');
+            $.each(update_data, function(index, value){
+                form_data['index'] = value;
+                form.find('input[name="'+index+'"], select[name="'+index+'"], textarea[name="'+index+'"]').val(value).trigger('change');
+console.log(form.find('input[name="'+index+'"], select[name="'+index+'"], textarea[name="'+index+'"]').val());
+            });
+            form.removeData('update_data');
+            form.data('form_data', form_data);
+        });
+
         form.on('get_update_data',function(){
             var form_data = {};
             var update_data = {};
@@ -441,8 +456,9 @@ $.fn.form_image_uploader = function(user_option){
                 temp_ctx.drawImage(source_image[0],(option['width']-source_image_width)/2,(option['height']-source_image_height)/2,source_image_width,source_image_height);
 
                 // Apply Image
-                result_image.attr('src',temp_canvas.toDataURL('image/jpeg',option['quality']));
-                image_uploader_result.val(result_image.attr('src'));
+                //result_image.attr('src',temp_canvas.toDataURL('image/jpeg',option['quality']));
+                //image_uploader_result.val(result_image.attr('src'));
+                image_uploader_result.val(temp_canvas.toDataURL('image/jpeg',option['quality'])).change();
                 image_uploader.removeClass('form_image_uploader_container_empty');
             }
         };
@@ -538,12 +554,23 @@ $.fn.form_image_uploader = function(user_option){
 
         });
 
+        image_uploader_result.change(function(){
+            if ($(this).val() == '')
+            {
+                result_image.attr('src',option['default_image']);
+            }
+            else
+            {
+                result_image.attr('src',$(this).val());
+            }
+        });
+
         if (option['allow_delete'])
         {
             image_uploader_delete_trigger.click(function(event)
             {
-                result_image.attr('src',option['default_image']);
-                image_uploader_result.val('');
+                //result_image.attr('src',option['default_image']);
+                image_uploader_result.val('').change();
                 image_uploader.addClass('form_image_uploader_container_empty');
             });    
         }

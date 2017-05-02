@@ -21,6 +21,7 @@ console.log(status);
     }
 
     $('.form_row_street_address_display_container').html('<span class="form_row_street_address_display_row form_row_street_address_display_row_name">'+place['name']+'</span><span class="form_row_street_address_display_row form_row_street_address_display_row_suburb">'+google_place_row['locality']+', '+google_place_row['administrative_area_level_1_short']+' '+google_place_row['postal_code']+'</span><span class="form_row_street_address_display_row form_row_street_address_display_row_country">'+google_place_row['country']+'</span><a href="javascript:void(0);" class="reset_map font_icon">&#xf040;</a> ');
+    $('input[name="place_id"]').val(place['place_id']);
     console.log(google_place_row);
     initialMap(place['geometry'].location);
 }
@@ -119,7 +120,7 @@ console.log(place_id);
 $('.footer_action_button_reset').click(function(event){
     event.preventDefault();
 
-
+    $(this).closest('.ajax_editor_container').trigger('retrieve_form_data');
 });
 
 $('.footer_action_button_save').click(function(event){
@@ -128,8 +129,8 @@ $('.footer_action_button_save').click(function(event){
     var ajax_editor_container = $(this).closest('.ajax_editor_container');
     var ajax_editor_info = ajax_editor_container.find('.ajax_editor_info');
     var ajax_uri = window.location.pathname;
-    $(this).closest('.ajax_form').trigger('get_update_data');
-    var update_data = $(this).closest('.ajax_form').data('update_data');
+    ajax_editor_container.trigger('get_update_data');
+    var update_data = ajax_editor_container.data('update_data');
     if ($.isEmptyObject(update_data))
     {
         ajax_editor_info.removeClass('overlay_info_error').addClass('overlay_info_success').html('<p>Everything is up to date</p>');
@@ -139,7 +140,7 @@ $('.footer_action_button_save').click(function(event){
 console.log('update data: ');
 console.log(update_data);
     var post_value = {
-        'id':$(this).closest('.ajax_form').data('form_data').id,
+        'id':ajax_editor_container.data('form_data').id,
         'form_data':update_data,
         'file_type':'json',
         'action':'save'
@@ -154,7 +155,7 @@ console.log(post_value);
 console.log(option_obj);
             ajax_editor_container.addClass('ajax_editor_container_loading');
         },
-        'timeout': 10000
+        'timeout': 120000
     }).always(function (callback_obj, status, info_obj) {
 //$('.form_bottom_row_container').html(status+': '+callback_obj.responseText);
         console.log(status);
@@ -167,20 +168,18 @@ console.log(option_obj);
 
             if (callback_obj.status == 'OK')
             {
-                callback_obj.form_data
-            }
+                ajax_editor_container.data('update_data',callback_obj.form_data);
+console.log('trigger set_update_data');
+                ajax_editor_container.trigger('set_update_data');
 
+                ajax_editor_info.removeClass('overlay_info_error').addClass('overlay_info_success').html('<p>Listing Updated</p>');
+            }
         }
         else {
             var xhr = callback_obj;
             var error = info_obj;
 
-            if (status == 'timeout') {
-                ajax_editor_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Add/Update Listing Timeout, Try again later</p>');
-            }
-            else {
-                ajax_editor_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Add/Update Listing Failed, Error Unknown, Try again later</p>');
-            }
+            ajax_editor_info.removeClass('overlay_info_success').addClass('overlay_info_error').html('<p>Add/Update Listing Failed, Error ['+status+'], Try again later</p>'+callback_obj.responseText);
         }
     });
 });

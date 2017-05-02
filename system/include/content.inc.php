@@ -863,13 +863,13 @@ class content extends base {
                                                 {
                                                     $this->content['form_data'] = $this->request['option']['form_data'];
                                                 }
+                                                // Process logo image if provided
                                                 if (isset($this->content['form_data']['logo_image']))
                                                 {
                                                     if (empty($this->content['form_data']['logo_image']))
                                                     {
                                                         $image_obj = new entity_image($entity_organization_data['logo_id']);
                                                         $image_obj->delete();
-                                                        $image_obj->sync();
                                                         $this->content['form_data']['logo_id'] = 0;
                                                         unset($image_obj);
                                                     }
@@ -877,19 +877,73 @@ class content extends base {
                                                     {
                                                         $image_obj = new entity_image($entity_organization_data['logo_id']);
                                                         $image_obj->delete();
-                                                        $image_obj->sync();
                                                         $image_obj = new entity_image();
-                                                        $image_obj->set(['row'=>['name'=>$entity_organization_data['name'].' Logo','source_file'=>$this->content['form_data']['logo_image']]]);
-                                                        $image_obj->sync();
+                                                        $image_obj->set(['row'=>[['name'=>$entity_organization_data['name'].' Logo','source_file'=>$this->content['form_data']['logo_image']]]]);
                                                         $this->content['form_data']['logo_id'] =  implode(',',$image_obj->id_group);
                                                         unset($image_obj);
                                                     }
                                                     unset($this->content['form_data']['logo_image']);
                                                 }
 
+                                                // Process banner image if provided
+                                                if (isset($this->content['form_data']['banner_image']))
+                                                {
+                                                    if (empty($this->content['form_data']['banner_image']))
+                                                    {
+                                                        $image_obj = new entity_image($entity_organization_data['banner_id']);
+                                                        $image_obj->delete();
+                                                        $this->content['form_data']['banner_id'] = 0;
+                                                        unset($image_obj);
+                                                    }
+                                                    elseif (preg_match('/^data:/', $this->content['form_data']['banner_image']))
+                                                    {
+                                                        $image_obj = new entity_image($entity_organization_data['banner_id']);
+                                                        $image_obj->delete();
+                                                        $image_obj = new entity_image();
+                                                        $image_obj->set(['row'=>[['name'=>$entity_organization_data['name'].' Banner','source_file'=>$this->content['form_data']['banner_image']]]]);
+                                                        $this->content['form_data']['banner_id'] =  implode(',',$image_obj->id_group);
+                                                        unset($image_obj);
+                                                    }
+                                                    unset($this->content['form_data']['banner_image']);
+                                                }
+
+                                                // Process google place if provided
+                                                if (isset($this->content['form_data']['place_id']))
+                                                {
+                                                    $request = "https://maps.googleapis.com/maps/api/place/details/json?placeid=".$this->content['form_data']['place_id']."&key=".$this->preference->google_api_credential_server;
+                                                    $response = file_get_contents($request);
+                                                    if (empty($response))
+                                                    {
+                                                        $this->result['content']['status'] = 'REQUEST_DENIED';
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google, No Response';
+                                                        return true;
+                                                    }
+                                                    $response = json_decode($response,true);
+                                                    if (!is_array($response))
+                                                    {
+                                                        $this->result['content']['status'] = 'REQUEST_DENIED';
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google, Illegal Format Response';
+                                                        return true;
+                                                    }
+                                                    if ($response['status'] != 'OK')
+                                                    {
+                                                        $this->result['content']['status'] = $response['status'];
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google. '.$response['error_message'];
+                                                        return true;
+                                                    }
+                                                    if (empty($response['result']))
+                                                    {
+                                                        $this->result['content']['status'] = 'ZERO_RESULTS';
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google. Given Place ID returns empty result';
+                                                        return true;
+                                                    }
+                                                    $organization_google_place = $this->format->flatten_google_place($response['result']);
+
+                                                }
+
                                                 $entity_organization_obj->update($this->content['form_data']);
 
-                                                $entity_organization_data = $entity_organization_obj->fetch_value();
+                                                $entity_organization_data = $entity_organization_obj->fetch_value(['table_fields'=>array_keys($this->content['form_data'])]);
                                                 if ($entity_organization_data === false)
                                                 {
                                                     $this->result['content']['status'] = 'SERVER_ERROR';
@@ -901,20 +955,31 @@ class content extends base {
                                                 if (!empty($this->content['form_data']['logo_id']))
                                                 {
                                                     $view_image_obj = new view_image($this->content['form_data']['logo_id']);
+                                                    $view_image_obj->fetch_value();
                                                     if (!empty($view_image_obj->row))
                                                     {
                                                         $image_data = end($view_image_obj->row);
+                                                        $entity_organization_data['logo_image'] = $image_data['file_uri'];
+                                                        unset($image_data);
                                                     }
-                                                    $entity_organization_data['logo_image'] = $image_data['file_uri'];
-                                                    unset($image_data);
+                                                    unset($image_obj);
+                                                }
+                                                if (!empty($this->content['form_data']['banner_id']))
+                                                {
+                                                    $view_image_obj = new view_image($this->content['form_data']['banner_id']);
+                                                    $view_image_obj->fetch_value();
+                                                    if (!empty($view_image_obj->row))
+                                                    {
+                                                        $image_data = end($view_image_obj->row);
+                                                        $entity_organization_data['banner_image'] = $image_data['file_uri'];
+                                                        unset($image_data);
+                                                    }
                                                     unset($image_obj);
                                                 }
 
                                                 $this->result['content']['status'] = 'OK';
                                                 $this->result['content']['message'] = 'Business updated successfully';
                                                 $this->result['content']['form_data'] = $entity_organization_data;
-                                                break;
-                                            case 'reset':
                                                 break;
                                             default:
                                                 $this->content['field']['organization'] = $entity_organization_data;
@@ -941,7 +1006,7 @@ class content extends base {
                                                     'id'=>$this->request['option']['id']
                                                 );
                                                 $form_ajax_data_string = json_encode($form_ajax_data);
-                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
+                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_editor_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
                                         }
                                         break;
                                     default:

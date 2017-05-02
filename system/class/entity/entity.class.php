@@ -628,10 +628,10 @@ if (!isset($parameter['primary_key']))
 
     function fetch_value($parameter = array())
     {
-        if (isset($this->row))
-        {
-            return $this->row;
-        }
+//        if (isset($this->row))
+//        {
+//            return $this->row;
+//        }
         // unset rendered html when corresponding row value changes
         $this->rendered_html = null;
         if (!$this->_initialized)
@@ -644,7 +644,12 @@ if (!isset($parameter['primary_key']))
             $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): '.get_class($this).' fetch value from empty array';
             return array();
         }
-        $parameter = array_merge($this->parameter,$parameter);
+        $default_page_parameter = [
+            'page_number'=>0,
+            'page_size'=>1,
+            'page_count'=>999
+        ];
+        $parameter = array_merge($default_page_parameter,$this->parameter,$parameter);
         $page_number = intval($parameter['page_number']);
         if ($page_number > $parameter['page_count']-1) $page_number =  $parameter['page_count']-1;
         if ($page_number < 0) $page_number = 0;
