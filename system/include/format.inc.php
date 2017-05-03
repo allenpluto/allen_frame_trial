@@ -250,7 +250,11 @@ class format
         return preg_replace($search, $replace, $value);
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////      Array/Object Format Converters    //////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////
 
+    // Add key for id array for SQL binding purpose
     private function id_group($value)
     {
         if (empty($value))
@@ -298,6 +302,65 @@ class format
         {
             return false;
         }
+    }
+
+    // Flatten Google Place returned array (nested array into one layer array for database)
+    private function flatten_google_place($value)
+    {
+        //$flatten_fields = ['formatted_address','formatted_phone_number','international_phone_number','name','opening_hours','permanently_closed','photos','place_id','rating','reviews','types','utc_offset','vicinity','website'];
+        $place_type = $value['types'][0];
+        if (isset($value['address_components']))
+        {
+            $address_component_field = ['locality','sublocality','colloquial_area','postal_code','country','administrative_area_level_1','administrative_area_level_2'];
+            foreach ($value['address_components'] as $address_component_index=>$address_component)
+            {
+                $component_type = $address_component['types'][0];
+                if ($component_type == $place_type AND !isset($result['alternate_name']))
+                {
+                    $result['alternate_name'] = $address_component['short_name'];
+                }
+                $result[$type] = $address_component['long_name'];
+                $result[$type.'_short'] = $address_component['short_name'];
+                $result[$type.'_types'] = implode(',',$address_component['types']);
+            }
+            unset($value['address_components']);
+        }
+        if (isset($value['geometry']))
+        {
+            if (isset($value['geometry']['location']))
+            {
+                $result['geometry_location_lat'] = $value['geometry']['location']['lat'];
+                $result['geometry_location_lng'] = $value['geometry']['location']['lng'];
+            }
+            if (isset($value['geometry']['viewport']))
+            {
+                $result['geometry_viewport_northeast_lat'] = $value['geometry']['viewport']['northeast']['lat'];
+                $result['geometry_viewport_northeast_lng'] = $value['geometry']['viewport']['northeast']['lng'];
+                $result['geometry_viewport_southwest_lat'] = $value['geometry']['viewport']['southwest']['lat'];
+                $result['geometry_viewport_southwest_lng'] = $value['geometry']['viewport']['southwest']['lng'];
+            }
+            if (isset($value['geometry']['bounds']))
+            {
+                $result['geometry_bounds_northeast_lat'] = $value['geometry']['bounds']['northeast']['lat'];
+                $result['geometry_bounds_northeast_lng'] = $value['geometry']['bounds']['northeast']['lng'];
+                $result['geometry_bounds_southwest_lat'] = $value['geometry']['bounds']['southwest']['lat'];
+                $result['geometry_bounds_southwest_lng'] = $value['geometry']['bounds']['southwest']['lng'];
+            }
+            unset($value['geometry']);
+        }
+        foreach($value as $index=>$item)
+        {
+            if (is_array($item))
+            {
+                $result[$index] = json_encode($item);
+            }
+            else
+            {
+                $result[$index] = $item;
+            }
+        }
+
+        return $result;
     }
 
     private function pagination_param($value)

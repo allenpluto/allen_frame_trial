@@ -910,7 +910,7 @@ class content extends base {
                                                 // Process google place if provided
                                                 if (isset($this->content['form_data']['place_id']))
                                                 {
-                                                    $request = "https://maps.googleapis.com/maps/api/place/details/json?placeid=".$this->content['form_data']['place_id']."&key=".$this->preference->google_api_credential_server;
+                                                    $request = 'https://maps.googleapis.com/maps/api/place/details/json?placeid='.$this->content['form_data']['place_id'].'&key='.$this->preference->google_api_credential_server;
                                                     $response = file_get_contents($request);
                                                     if (empty($response))
                                                     {
@@ -939,6 +939,30 @@ class content extends base {
                                                     }
                                                     $organization_google_place = $this->format->flatten_google_place($response['result']);
 
+                                                    $request = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='.$organization_google_place['geometry_location_lat'].','.$organization_google_place['geometry_location_lng'].'&key='.$this->preference->google_api_credential_server;
+                                                    $response = file_get_contents($request);
+                                                    if ($response['status'] != 'OK')
+                                                    {
+                                                        $this->result['content']['status'] = $response['status'];
+                                                        $this->result['content']['message'] = 'Fail to get reverse geocoding results from Google. '.$response['error_message'];
+                                                        return true;
+                                                    }
+                                                    if (empty($response['results']))
+                                                    {
+                                                        $this->result['content']['status'] = 'ZERO_RESULTS';
+                                                        $this->result['content']['message'] = 'Fail to get reverse geocoding results from Google. Given Location returns empty result';
+                                                        return true;
+                                                    }
+                                                    $region_types = ['locality','sublocality','postal_code','country','administrative_area_level_1','administrative_area_level_2'];
+                                                    foreach($response['results'] as $result_row_index => $result_row)
+                                                    {
+                                                        $type = array_intersect($result_row['types'], $region_types);
+                                                        if (!empty($type))
+                                                        {
+                                                            // If the result_row is a region type, store the row into tbl_entity_place and relation into tbl_rel_organization_to_place
+
+                                                        }
+                                                    }
                                                 }
 
                                                 $entity_organization_obj->update($this->content['form_data']);
