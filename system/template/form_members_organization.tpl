@@ -69,15 +69,15 @@
                 <label for="form_members_organization_twitter">Twitter</label>
                 <input id="form_members_organization_twitter" name="twitter_link" type="text" placeholder="Twitter" value="[[*twitter_link]]">
             </div>
-            <div class="ajax_editor_info"></div>
             <div class="form_bottom_row_container"></div>
             <div class="footer_action_wrapper"><!--
             --><a href="[[*base]]members/listing/" class="footer_action_button footer_action_button_back">Back</a><!--
             --><a href="[[*base]]members/listing/reset" class="footer_action_button footer_action_button_reset">Reset</a><!--
             --><a href="[[*base]]members/listing/save" class="footer_action_button footer_action_button_save">Save</a><!--
         --></div>
+            <div class="ajax_editor_mask"></div>
+            <div class="ajax_editor_info"></div>
         </form>
-        <div class="ajax_editor_mask"></div>
     </div>
 </div>
 [[-script:field_name=`google_map`:field=`{"source":"https://maps.googleapis.com/maps/api/js?key=AIzaSyAtw-geY0B0clS4SRzPsYfvT0ROsSl3JVA&libraries=places&callback=initialize_autocomplete"}`]]

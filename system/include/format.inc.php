@@ -307,11 +307,25 @@ class format
     // Flatten Google Place returned array (nested array into one layer array for database)
     private function flatten_google_place($value)
     {
+        if (!isset($value['place_id']))
+        {
+            $GLOBALS['global_message']->error = 'place_id is mandatory for google_place object';
+            return false;
+        }
+        $result = ['id'=>$value['place_id']];
+        unset($value['place_id']);
+
         //$flatten_fields = ['formatted_address','formatted_phone_number','international_phone_number','name','opening_hours','permanently_closed','photos','place_id','rating','reviews','types','utc_offset','vicinity','website'];
         $place_type = $value['types'][0];
+        $address_component_field = ['street_number','route','sublocality','locality','colloquial_area','postal_code','administrative_area_level_2','administrative_area_level_1','country'];
+        if (!in_array($place_type, $address_component_field))
+        {
+            // For place type like 'street_address' and 'intersection', use short route name as alias
+            $place_type = 'route';
+        }
         if (isset($value['address_components']))
         {
-            $address_component_field = ['locality','sublocality','colloquial_area','postal_code','country','administrative_area_level_1','administrative_area_level_2'];
+            $additional_address_components = [];
             foreach ($value['address_components'] as $address_component_index=>$address_component)
             {
                 $component_type = $address_component['types'][0];
@@ -319,9 +333,20 @@ class format
                 {
                     $result['alternate_name'] = $address_component['short_name'];
                 }
-                $result[$type] = $address_component['long_name'];
-                $result[$type.'_short'] = $address_component['short_name'];
-                $result[$type.'_types'] = implode(',',$address_component['types']);
+                if (in_array($component_type,$address_component_field))
+                {
+                    $result[$component_type] = $address_component['long_name'];
+                }
+                else
+                {
+                    $additional_address_components[$component_type] = $address_component['long_name'];
+                }
+                $result['address_additional'] = json_encode($additional_address_components);
+            }
+            if (isset($result['street_number']))
+            {
+                // If street_number is provided, add street_number to route
+                $result['alternate_name'] = $result['street_number'].' '.$result['alternate_name'];
             }
             unset($value['address_components']);
         }
@@ -329,22 +354,22 @@ class format
         {
             if (isset($value['geometry']['location']))
             {
-                $result['geometry_location_lat'] = $value['geometry']['location']['lat'];
-                $result['geometry_location_lng'] = $value['geometry']['location']['lng'];
+                $result['location_latitude'] = $value['geometry']['location']['lat'];
+                $result['location_longitude'] = $value['geometry']['location']['lng'];
             }
             if (isset($value['geometry']['viewport']))
             {
-                $result['geometry_viewport_northeast_lat'] = $value['geometry']['viewport']['northeast']['lat'];
-                $result['geometry_viewport_northeast_lng'] = $value['geometry']['viewport']['northeast']['lng'];
-                $result['geometry_viewport_southwest_lat'] = $value['geometry']['viewport']['southwest']['lat'];
-                $result['geometry_viewport_southwest_lng'] = $value['geometry']['viewport']['southwest']['lng'];
+                $result['viewport_northeast_latitude'] = $value['geometry']['viewport']['northeast']['lat'];
+                $result['viewport_northeast_longitude'] = $value['geometry']['viewport']['northeast']['lng'];
+                $result['viewport_southwest_latitude'] = $value['geometry']['viewport']['southwest']['lat'];
+                $result['viewport_southwest_longitude'] = $value['geometry']['viewport']['southwest']['lng'];
             }
             if (isset($value['geometry']['bounds']))
             {
-                $result['geometry_bounds_northeast_lat'] = $value['geometry']['bounds']['northeast']['lat'];
-                $result['geometry_bounds_northeast_lng'] = $value['geometry']['bounds']['northeast']['lng'];
-                $result['geometry_bounds_southwest_lat'] = $value['geometry']['bounds']['southwest']['lat'];
-                $result['geometry_bounds_southwest_lng'] = $value['geometry']['bounds']['southwest']['lng'];
+                $result['bounds_northeast_latitude'] = $value['geometry']['bounds']['northeast']['lat'];
+                $result['bounds_northeast_longitude'] = $value['geometry']['bounds']['northeast']['lng'];
+                $result['bounds_southwest_latitude'] = $value['geometry']['bounds']['southwest']['lat'];
+                $result['bounds_southwest_longitude'] = $value['geometry']['bounds']['southwest']['lng'];
             }
             unset($value['geometry']);
         }
@@ -357,6 +382,15 @@ class format
             else
             {
                 $result[$index] = $item;
+            }
+        }
+        if (!isset($result['name']) AND isset($result[$place_type]))
+        {
+            $result['name'] = $result[$place_type];
+            if (isset($result['street_number']))
+            {
+                // If street_number is provided, add street_number to route
+                $result['name'] = $result['street_number'].' '.$result['name'];
             }
         }
 

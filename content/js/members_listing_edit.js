@@ -21,7 +21,7 @@ console.log(status);
     }
 
     $('.form_row_street_address_display_container').html('<span class="form_row_street_address_display_row form_row_street_address_display_row_name">'+place['name']+'</span><span class="form_row_street_address_display_row form_row_street_address_display_row_suburb">'+google_place_row['locality']+', '+google_place_row['administrative_area_level_1_short']+' '+google_place_row['postal_code']+'</span><span class="form_row_street_address_display_row form_row_street_address_display_row_country">'+google_place_row['country']+'</span><a href="javascript:void(0);" class="reset_map font_icon">&#xf040;</a> ');
-    $('input[name="place_id"]').val(place['place_id']);
+    $('#form_members_organization_street_address_place_id').val(place['place_id']);
     console.log(google_place_row);
     initialMap(place['geometry'].location);
 }
@@ -85,7 +85,7 @@ function fillInAddress()
     var map = null;
 
     var place = autocomplete.getPlace();
-console.log(place);
+//console.log(place);
     if (place['address_components'])
     {
         displayPlace(place,google.maps.places.PlacesServiceStatus.OK);
@@ -103,8 +103,12 @@ function initialize_autocomplete()
     // fields in the form.
     autocomplete.addListener('place_changed', fillInAddress);
 
-    var place_id = document.getElementById('form_members_organization_street_address_place_id').value;
-console.log(place_id);
+    $('#form_members_organization_street_address_place_id').trigger('change');
+}
+
+$('#form_members_organization_street_address_place_id').change(function(){
+    var place_id = $(this).val();
+//console.log(place_id);
     if (place_id)
     {
         var sydney_center = new google.maps.LatLng(-33.8736509,151.2068896);
@@ -114,8 +118,19 @@ console.log(place_id);
         service = new google.maps.places.PlacesService(map);
         service.getDetails(request, displayPlace);
     }
-}
+    else
+    {
+        resetMap();
+    }
+});
 
+function showMessage(content)
+{
+    if (typeof content !== 'object')
+    {
+        content = {'message':content, 'container_type':'success'};
+    }
+}
 
 $('.footer_action_button_reset').click(function(event){
     event.preventDefault();
@@ -137,22 +152,22 @@ $('.footer_action_button_save').click(function(event){
         return true;
     }
 
-console.log('update data: ');
-console.log(update_data);
+//console.log('update data: ');
+//console.log(update_data);
     var post_value = {
         'id':ajax_editor_container.data('form_data').id,
         'form_data':update_data,
         'file_type':'json',
         'action':'save'
     };
-console.log(post_value);
+//console.log(post_value);
     $.ajax({
         'type': 'POST',
         'url': ajax_uri,
         'data': post_value,
         'dataType': 'json',
         'beforeSend': function (ajax_obj,option_obj) {
-console.log(option_obj);
+//console.log(option_obj);
             ajax_editor_container.addClass('ajax_editor_container_loading');
         },
         'timeout': 120000
@@ -169,7 +184,7 @@ console.log(option_obj);
             if (callback_obj.status == 'OK')
             {
                 ajax_editor_container.data('update_data',callback_obj.form_data);
-console.log('trigger set_update_data');
+//console.log('trigger set_update_data');
                 ajax_editor_container.trigger('set_update_data');
 
                 ajax_editor_info.removeClass('overlay_info_error').addClass('overlay_info_success').html('<p>Listing Updated</p>');

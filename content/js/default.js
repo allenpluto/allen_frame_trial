@@ -166,13 +166,13 @@ $.fn.ajax_form = function(user_option) {
             form.find('input, select, textarea').each(function(){
                 if ($(this).attr('name') && form_data[$(this).attr('name')])
                 {
-                    $(this).val(form_data[$(this).attr('name')]);
+                    $(this).val(form_data[$(this).attr('name')]).trigger('change');
                 }
             });
         });
 
         form.on('set_update_data',function(){
-console.log('set_update_data');
+//console.log('set_update_data');
             var form_data = {};
             var update_data = {};
             form_data = form.data('form_data');
@@ -180,7 +180,7 @@ console.log('set_update_data');
             $.each(update_data, function(index, value){
                 form_data['index'] = value;
                 form.find('input[name="'+index+'"], select[name="'+index+'"], textarea[name="'+index+'"]').val(value).trigger('change');
-console.log(form.find('input[name="'+index+'"], select[name="'+index+'"], textarea[name="'+index+'"]').val());
+//console.log(form.find('input[name="'+index+'"], select[name="'+index+'"], textarea[name="'+index+'"]').val());
             });
             form.removeData('update_data');
             form.data('form_data', form_data);

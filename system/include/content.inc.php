@@ -910,6 +910,7 @@ class content extends base {
                                                 // Process google place if provided
                                                 if (isset($this->content['form_data']['place_id']))
                                                 {
+                                                    $entity_place = new entity_place();
                                                     $request = 'https://maps.googleapis.com/maps/api/place/details/json?placeid='.$this->content['form_data']['place_id'].'&key='.$this->preference->google_api_credential_server;
                                                     $response = file_get_contents($request);
                                                     if (empty($response))
@@ -938,9 +939,17 @@ class content extends base {
                                                         return true;
                                                     }
                                                     $organization_google_place = $this->format->flatten_google_place($response['result']);
+                                                    $entity_place->row[] = $organization_google_place;
 
-                                                    $request = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='.$organization_google_place['geometry_location_lat'].','.$organization_google_place['geometry_location_lng'].'&key='.$this->preference->google_api_credential_server;
+                                                    $request = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='.$organization_google_place['location_latitude'].','.$organization_google_place['location_longitude'].'&key='.$this->preference->google_api_credential_server;
                                                     $response = file_get_contents($request);
+                                                    if (empty($response))
+                                                    {
+                                                        $this->result['content']['status'] = 'REQUEST_DENIED';
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google, No Response';
+                                                        return true;
+                                                    }
+                                                    $response = json_decode($response,true);
                                                     if ($response['status'] != 'OK')
                                                     {
                                                         $this->result['content']['status'] = $response['status'];
@@ -960,12 +969,17 @@ class content extends base {
                                                         if (!empty($type))
                                                         {
                                                             // If the result_row is a region type, store the row into tbl_entity_place and relation into tbl_rel_organization_to_place
-
+                                                            $organization_region_google_place = $this->format->flatten_google_place($result_row);
+                                                            $organization_place[] = $organization_region_google_place['id'];
+                                                            $entity_place->row[] = $organization_region_google_place;
                                                         }
                                                     }
+                                                    $entity_organization_obj->set(['row'=>[['id'=>end($entity_organization_obj->id_group),'place'=>$organization_place]],'fields'=>['id','place']]);
+                                                    $entity_place->set();
                                                 }
 
                                                 $entity_organization_obj->update($this->content['form_data']);
+
 
                                                 $entity_organization_data = $entity_organization_obj->fetch_value(['table_fields'=>array_keys($this->content['form_data'])]);
                                                 if ($entity_organization_data === false)

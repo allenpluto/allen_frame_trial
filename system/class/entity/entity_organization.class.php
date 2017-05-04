@@ -10,7 +10,8 @@ class entity_organization extends entity
         $default_parameter = [
             'relational_fields'=>[
                 'category'=>[],
-                'gallery'=>[]
+                'gallery'=>[],
+                'place'=>[]
             ]
         ];
         $parameter = array_merge($default_parameter, $parameter);
