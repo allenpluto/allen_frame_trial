@@ -74,15 +74,10 @@
     line-height: 30px;
     text-align: center;
 
-    opacity: 0.6;
-    z-index: 100;
-}
-
-.form_image_uploader_delete_trigger:hover
-{
-    color: #ffffff;
+    cursor: pointer;
 
     opacity: 0.8;
+    z-index: 100;
 }
 
 .form_image_uploader_delete_trigger:before

@@ -488,8 +488,7 @@ $.fn.form_image_uploader = function(user_option){
             image_uploader_delete_trigger = image_uploader.find(option['delete_trigger']);
             if(image_uploader_delete_trigger.length == 0)
             {
-                image_uploader_delete_trigger = $('<a />',{
-                    'href':'javascript:void(0);',
+                image_uploader_delete_trigger = $('<div />',{
                     'class':'form_image_uploader_delete_trigger'
                 });
                 image_uploader_delete_trigger.appendTo(image_uploader);
