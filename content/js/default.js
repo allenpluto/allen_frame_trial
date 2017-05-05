@@ -137,9 +137,16 @@ console.log(info_obj);
 };
 
 $.fn.ajax_form = function(user_option) {
-    var default_option = {};
+    var default_option = {
+        'ajax_post':{
+            'type': 'POST',
+            'url': window.location.pathname,
+            'dataType': 'json',
+            'timeout': 30000
+        }
+    };
     // Extend our default option with user provided.
-    var option = $.extend(default_option, user_option);
+    var option = $.extend(true,default_option, user_option);
 
     return this.each(function() {
         var form = $(this);
@@ -147,6 +154,40 @@ $.fn.ajax_form = function(user_option) {
         {
             form.data('form_data', option['form_data']);
         }
+
+        form.on('display_message',function(event, message, message_type, auto_close){
+            if (!message) return false;
+            if (typeof message_type === 'undefined')
+            {
+                message_type = 'default';
+            }
+            if (typeof auto_close === 'undefined')
+            {
+                auto_close = 3000;
+            }
+            var ajax_form_info = form.find('.ajax_form_info');
+            ajax_form_info.html('<p>'+message+'</p>')
+            switch (message_type)
+            {
+                case 'success':
+                    ajax_form_info.addClass('ajax_form_info_success');
+                    break;
+                case 'error':
+                    ajax_form_info.addClass('ajax_form_info_error');
+                    break;
+                default:
+            }
+            ajax_form_info.addClass('ajax_form_info_display');
+            if (auto_close > 0)
+            {
+                setTimeout(function(){form.trigger('close_message');},auto_close);
+            }
+        });
+
+        form.on('close_message',function(){
+            var ajax_form_info = form.find('.ajax_form_info');
+            ajax_form_info.removeClass('ajax_form_info_display ajax_form_info_success ajax_form_info_error').html('');
+        });
 
         form.on('store_form_data',function(){
             var form_data = {};
@@ -164,31 +205,76 @@ $.fn.ajax_form = function(user_option) {
             var form_data = {};
             form_data = form.data('form_data');
             form.find('input, select, textarea').each(function(){
-                if ($(this).attr('name') && form_data[$(this).attr('name')])
+                if ($(this).attr('name') && (typeof form_data[$(this).attr('name')] !== 'undefined'))
                 {
                     $(this).val(form_data[$(this).attr('name')]).trigger('change');
                 }
             });
+            form.trigger('display_message',['Data Restored, all unsaved changes discarded.','success']);
         });
 
-        form.on('set_update_data',function(){
+        form.on('post_form_data',function(){
+            var update_data = {};
+            form.trigger('get_update_data',[update_data]);
+
+            if ($.isEmptyObject(update_data))
+            {
+                form.trigger('display_message',['Nothing Updated']);
+                return true;
+            }
+
+            var post_value = {
+                'id':form.data('form_data').id,
+                'form_data':update_data,
+                'file_type':'json',
+                'action':'save'
+            };
+            $.ajax({
+                'type': option['ajax_post']['type'],
+                'url': option['ajax_post']['url'],
+                'data': post_value,
+                'dataType': option['ajax_post']['dataType'],
+                'beforeSend': function (ajax_obj,option_obj) {
+                    form.addClass('ajax_form_container_loading');
+                },
+                'timeout': option['ajax_post']['timeout']
+            }).always(function (callback_obj, status, info_obj) {
+                form.removeClass('ajax_form_container_loading');
+                if (status == 'success') {
+                    var data = callback_obj;
+                    var xhr = info_obj;
+
+                    if (callback_obj.status == 'OK')
+                    {
+                        var update_data = callback_obj.form_data;
+//console.log(update_data);
+                        form.trigger('set_update_data',[update_data]);
+                        form.trigger('display_message',['Listing Updated','success']);
+                    }
+                }
+                else {
+                    var xhr = callback_obj;
+                    var error = info_obj;
+
+                    form.trigger('display_message',['Add/Update Listing Failed, Error ['+status+'], Try again later<br>'+callback_obj.responseText,'error',10000]);
+                }
+            });
+        });
+
+        form.on('set_update_data',function(event, update_data){
 //console.log('set_update_data');
             var form_data = {};
-            var update_data = {};
             form_data = form.data('form_data');
-            update_data = form.data('update_data');
             $.each(update_data, function(index, value){
-                form_data['index'] = value;
+                form_data[index] = value;
                 form.find('input[name="'+index+'"], select[name="'+index+'"], textarea[name="'+index+'"]').val(value).trigger('change');
 //console.log(form.find('input[name="'+index+'"], select[name="'+index+'"], textarea[name="'+index+'"]').val());
             });
-            form.removeData('update_data');
             form.data('form_data', form_data);
         });
 
-        form.on('get_update_data',function(){
+        form.on('get_update_data',function(event, update_data){
             var form_data = {};
-            var update_data = {};
             form_data = form.data('form_data');
             form.find('input, select, textarea').each(function(){
                 if ($(this).attr('name') && form_data[$(this).attr('name')] != $(this).val())
@@ -196,7 +282,6 @@ $.fn.ajax_form = function(user_option) {
                     update_data[$(this).attr('name')] = $(this).val();
                 }
             });
-            form.data('update_data', update_data);
         });
     });
 }

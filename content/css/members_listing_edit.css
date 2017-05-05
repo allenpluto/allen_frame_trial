@@ -21,8 +21,8 @@
     overflow: hidden;
 }
 
-.form_container:hover .form_row_container > label {height: 0;}
-.form_container .form_row_container:hover > label {height: 2em;}
+/*.form_container:hover .form_row_container > label {height: 0;}
+.form_container .form_row_container:hover > label {height: 2em;}*/
 
 .form_row_container > input[type="text"]
 {
@@ -74,7 +74,15 @@
     line-height: 30px;
     text-align: center;
 
+    opacity: 0.6;
     z-index: 100;
+}
+
+.form_image_uploader_delete_trigger:hover
+{
+    color: #ffffff;
+
+    opacity: 0.8;
 }
 
 .form_image_uploader_delete_trigger:before
@@ -154,7 +162,7 @@
     width: 100%;
 }
 
-.ajax_editor_mask
+.ajax_form_mask
 {
     display: block;
     width: 100%;
@@ -163,38 +171,100 @@
     top: 0;
     left: 0;
 
-    background: rgba(255,255,255,0.4);
+    background: rgba(0,0,0,0.4);
 
+    opacity: 0;
+    z-index: -1;
+
+    -webkit-transition:z-index 500ms ease, opacity 500ms ease;
+    -moz-transition:z-index 500ms ease, opacity 500ms ease;
+    -ms-transition:z-index 500ms ease, opacity 500ms ease;
+    -o-transition:z-index 500ms ease, opacity 500ms ease;
+    transition:z-index 500ms ease, opacity 500ms ease;
+}
+
+.ajax_form_container_loading .ajax_form_mask
+{
+    opacity: 1;
     z-index: 500;
 }
 
-.ajax_editor_info
+.ajax_form_mask_loading_icon
+{
+    display: block;
+    width: 0;
+    height: 0;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+
+    -webkit-animation: general_style_animation_rotate 2s infinite linear;
+    animation: general_style_animation_rotate 2s infinite linear;
+
+    background: url("../image/bg_ajax_loader_bottom.gif") center center no-repeat;
+    background: rgba(255,255,255,0) url("../image/bg_ajax_loader_bottom.svg") center center no-repeat;
+    background-size: contain;
+
+    -webkit-transition:width 2s ease, height 2s ease, margin 2s ease;
+    -moz-transition:width 2s ease, height 2s ease, margin 2s ease;
+    -ms-transition:width 2s ease, height 2s ease, margin 2s ease;
+    -o-transition:width 2s ease, height 2s ease, margin 2s ease;
+    transition:width 2s ease, height 2s ease, margin 2s ease;
+
+    content: ' ';
+}
+
+.ajax_form_container_loading .ajax_form_mask_loading_icon
+{
+    width: 6rem;
+    height: 6rem;
+
+    margin: -3rem 0 0 -3rem;
+}
+
+.ajax_form_info
 {
     display: block;
     width: 80%;
+    min-height: 5.5em;
     position: fixed;
     top: 20%;
     left: 10%;
-    padding: 10px 20px;
+    padding: 0.5em 1em;
 
-    background: rgba(255,255,255,0.4);
+    background: rgba(255,255,150,0.8);
 
     border: 2px solid #cccccc;
     border-radius: 5px;
 
     box-sizing: border-box;
 
+    color: #666666;
     font-size: 16px;
+    font-weight: bold;
 
+    opacity: 0;
+    z-index: -1;
+
+    -webkit-transition:z-index 500ms ease, opacity 500ms ease;
+    -moz-transition:z-index 500ms ease, opacity 500ms ease;
+    -ms-transition:z-index 500ms ease, opacity 500ms ease;
+    -o-transition:z-index 500ms ease, opacity 500ms ease;
+    transition:z-index 500ms ease, opacity 500ms ease;
+}
+
+.ajax_form_info_display
+{
+    opacity: 1;
     z-index: 600;
 }
 
-.overlay_info_success
+.ajax_form_info_success
 {
     background: rgba(150,255,150,0.8);
 }
 
-.overlay_info_error
+.ajax_form_info_error
 {
     background: rgba(255,150,150,0.8);
 }

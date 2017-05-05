@@ -1,6 +1,6 @@
 <div class="section_container container form_container">
     <div class="section_title"><h1>Edit My Business</h1></div>
-    <div class="section_content ajax_editor_container">
+    <div class="section_content ajax_form_container">
         <form id="form_members_organization" class="ajax_form">
             <div class="form_row_container">
                 <label for="form_members_organization_name">Business Name</label>
@@ -75,8 +75,8 @@
             --><a href="[[*base]]members/listing/reset" class="footer_action_button footer_action_button_reset">Reset</a><!--
             --><a href="[[*base]]members/listing/save" class="footer_action_button footer_action_button_save">Save</a><!--
         --></div>
-            <div class="ajax_editor_mask"></div>
-            <div class="ajax_editor_info"></div>
+            <div class="ajax_form_mask"><div class="ajax_form_mask_loading_icon"></div></div>
+            <div class="ajax_form_info"></div>
         </form>
     </div>
 </div>

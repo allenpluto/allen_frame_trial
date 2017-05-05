@@ -146,7 +146,7 @@ class content extends base {
             {
                 $this->request['file_uri'] = URI_ASSET.$this->request['file_type'].'/';
             }
-            $this->request['file_extension'] = $this->request['file_type'];
+            if (!isset($this->request['file_extension'])) $this->request['file_extension'] = $this->request['file_type'];
         }
         $this->request['file_path'] = PATH_ASSET.$this->request['file_type'].DIRECTORY_SEPARATOR;
         if (file_exists(PATH_PREFERENCE.$this->request['file_type'].FILE_EXTENSION_INCLUDE))
@@ -766,15 +766,26 @@ class content extends base {
 
                 if ($this->request['file_type'] == 'image')
                 {
-                    $source_image_size = getimagesize($this->content['source_file']['path']);
-                    $this->content['source_file']['width'] = $source_image_size[0];
-                    $this->content['source_file']['height'] = $source_image_size[1];
+                    switch($this->request['file_extension'])
+                    {
+                        case 'svg':
+                            $this->content['format'] = 'svg';
+                            break;
+                        case 'jpg':
+                        case 'png':
+                        case 'gif':
+                        default:
+                            $source_image_size = getimagesize($this->content['source_file']['path']);
+                            $this->content['source_file']['width'] = $source_image_size[0];
+                            $this->content['source_file']['height'] = $source_image_size[1];
 
-                    if (!isset($this->content['target_file']['width'])) $this->content['target_file']['width'] = $this->content['source_file']['width'];
-                    if (!isset($this->content['target_file']['height'])) $this->content['target_file']['height'] = $this->content['source_file']['height'] / $this->content['source_file']['width'] * $this->content['target_file']['width'];
+                            if (!isset($this->content['target_file']['width'])) $this->content['target_file']['width'] = $this->content['source_file']['width'];
+                            if (!isset($this->content['target_file']['height'])) $this->content['target_file']['height'] = $this->content['source_file']['height'] / $this->content['source_file']['width'] * $this->content['target_file']['width'];
 
-                    // If image quality is not specified, use the fast generate setting
-                    if (!isset($this->content['target_file']['quality'])) $this->content['target_file']['quality'] = $this->preference->image['quality']['spd'];
+                            // If image quality is not specified, use the fast generate setting
+                            if (!isset($this->content['target_file']['quality'])) $this->content['target_file']['quality'] = $this->preference->image['quality']['spd'];
+                            break;
+                    }
                 }
                 break;
             case 'data':
@@ -990,29 +1001,45 @@ class content extends base {
                                                 }
                                                 $entity_organization_data = end($entity_organization_data);
 
-                                                if (!empty($this->content['form_data']['logo_id']))
+                                                if (isset($entity_organization_data['logo_id']))
                                                 {
-                                                    $view_image_obj = new view_image($this->content['form_data']['logo_id']);
-                                                    $view_image_obj->fetch_value();
-                                                    if (!empty($view_image_obj->row))
+                                                    if (empty($entity_organization_data['logo_id']))
                                                     {
-                                                        $image_data = end($view_image_obj->row);
-                                                        $entity_organization_data['logo_image'] = $image_data['file_uri'];
-                                                        unset($image_data);
+                                                        $entity_organization_data['logo_image'] = '';
                                                     }
-                                                    unset($image_obj);
+                                                    else
+                                                    {
+                                                        $view_image_obj = new view_image($this->content['form_data']['logo_id']);
+                                                        $view_image_obj->fetch_value();
+                                                        if (!empty($view_image_obj->row))
+                                                        {
+                                                            $image_data = end($view_image_obj->row);
+                                                            $entity_organization_data['logo_image'] = $image_data['file_uri'];
+                                                            unset($image_data);
+                                                        }
+                                                        unset($view_image_obj);
+                                                    }
+                                                    unset($entity_organization_data['logo_id']);
                                                 }
-                                                if (!empty($this->content['form_data']['banner_id']))
+                                                if (isset($entity_organization_data['banner_id']))
                                                 {
-                                                    $view_image_obj = new view_image($this->content['form_data']['banner_id']);
-                                                    $view_image_obj->fetch_value();
-                                                    if (!empty($view_image_obj->row))
+                                                    if (empty($entity_organization_data['banner_id']))
                                                     {
-                                                        $image_data = end($view_image_obj->row);
-                                                        $entity_organization_data['banner_image'] = $image_data['file_uri'];
-                                                        unset($image_data);
+                                                        $entity_organization_data['banner_image'] = '';
                                                     }
-                                                    unset($image_obj);
+                                                    else
+                                                    {
+                                                        $view_image_obj = new view_image($this->content['form_data']['banner_id']);
+                                                        $view_image_obj->fetch_value();
+                                                        if (!empty($view_image_obj->row))
+                                                        {
+                                                            $image_data = end($view_image_obj->row);
+                                                            $entity_organization_data['banner_image'] = $image_data['file_uri'];
+                                                            unset($image_data);
+                                                        }
+                                                        unset($view_image_obj);
+                                                    }
+                                                    unset($entity_organization_data['banner_id']);
                                                 }
 
                                                 $this->result['content']['status'] = 'OK';
@@ -1044,7 +1071,7 @@ class content extends base {
                                                     'id'=>$this->request['option']['id']
                                                 );
                                                 $form_ajax_data_string = json_encode($form_ajax_data);
-                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_editor_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
+                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
                                         }
                                         break;
                                     default:
@@ -1597,6 +1624,24 @@ class content extends base {
                     unset($target_image);
                 }
                 if (empty($this->content['target_file']['last_modified']) AND file_exists($this->content['target_file']['path'])) $this->content['target_file']['last_modified'] = filemtime($this->content['target_file']['path']);
+
+                $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s',$this->content['target_file']['last_modified']).' GMT';
+                $this->result['header']['Content-Length'] = $this->content['target_file']['content_length'];
+                $this->result['header']['Content-Type'] = $this->content['target_file']['content_type'];
+
+                if (!isset($this->result['content'])) $this->result['file_path'] = $this->content['target_file']['path'];
+                break;
+            case 'svg':
+                $this->content['target_file']['last_modified'] = 'image/svg+xml';
+
+                // TODO: svg is basically xml file, file_get_content -> minify as html -> file_put_content?
+                if ($this->content['source_file']['path'] != $this->content['target_file']['path'])
+                {
+                    copy($this->content['source_file']['path'],$this->content['target_file']['path']);
+                    touch($this->content['target_file']['path'],$this->content['source_file']['last_modified']);
+                    $this->content['target_file']['last_modified'] = $this->content['source_file']['last_modified'];
+                    $this->content['target_file']['last_modified'] = $this->content['source_file']['content_length'];
+                }
 
                 $this->result['header']['Last-Modified'] = gmdate('D, d M Y H:i:s',$this->content['target_file']['last_modified']).' GMT';
                 $this->result['header']['Content-Length'] = $this->content['target_file']['content_length'];
