@@ -334,41 +334,6 @@ class content extends base {
                         }
 
                         break;
-//                    case 'members':
-//                        $method = ['account','listing',''];
-//                        if (in_array($request_path_part,$method))
-//                        {
-//                            $this->request['method'] = $request_path_part;
-//                            $request_path_part = array_shift($request_path);
-//                        }
-//                        else
-//                        {
-//                            $this->request['method'] = end($method);
-//                        }
-//                        switch($this->request['method'])
-//                        {
-//                            case 'listing':
-//                                $action = ['edit','preview','reset','save',''];
-//                                if (in_array($request_path_part,$action))
-//                                {
-//                                    $this->request['action'] = $request_path_part;
-//                                }
-//                                else
-//                                {
-//                                    $this->request['action'] = end($method);
-//                                }
-//                                if ($this->request['action'] != '')
-//                                {
-//                                    if (!isset($this->request['option']['id']))
-//                                    {
-//                                        $this->message->notice = 'Redirect - operating listing id not set';
-//                                        $this->result['status'] = 301;
-//                                        $this->result['header']['Location'] =  $this->request['file_uri'].(!empty($this->request['option'])?('?'.http_build_query($this->request['option'])):'');
-//                                    }
-//                                }
-//                                break;
-//                        }
-//                        break;
                     default:
                         $this->request['document'] = $request_path_part;
                 }
@@ -828,6 +793,24 @@ class content extends base {
 
                 switch($this->request['module'])
                 {
+                    case 'business':
+                        $view_business_detail_obj = new view_business_detail($this->request['document']);
+                        if (empty($view_business_detail_obj->id_group))
+                        {
+                            $this->result['status'] = 404;
+                            return false;
+                        }
+                        $page_fetched_value = $view_business_detail_obj->fetch_value();
+                        if (empty($page_fetched_value))
+                        {
+                            // Error Handling, fetch record row failed, database data error
+                            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): Fetch row failed '.implode(',',$page_obj->id_group);
+                            $this->result['status'] = 404;
+                            return false;
+                        }
+                        $this->content['field'] = array_merge($this->content['field'],end($page_fetched_value));
+
+                        break;
                     case 'listing':
                         switch($this->request['control_panel'])
                         {
@@ -1056,6 +1039,7 @@ class content extends base {
                                                     'default_image'=>'./image/upload_logo.jpg'
                                                 );
                                                 $image_uploader_data_string = json_encode($image_uploader_data);
+
                                                 $this->content['script']['logo_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_logo_container\').form_image_uploader('.$image_uploader_data_string.');});'];
 
                                                 $image_uploader_data = array(
@@ -1066,6 +1050,19 @@ class content extends base {
                                                 );
                                                 $image_uploader_data_string = json_encode($image_uploader_data);
                                                 $this->content['script']['banner_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_banner_container\').form_image_uploader('.$image_uploader_data_string.');});'];
+
+                                                $index_category_obj = new index_category();
+                                                $index_category_obj->filter_by_active();
+                                                $view_category_obj = new view_category($index_category_obj->id_group);
+                                                $active_category = $view_category_obj->fetch_value(['table_fields'=>['id','name']]);
+                                                if (empty($active_category))
+                                                {
+                                                    $this->message->error = 'Fail to get active categories';
+                                                    return false;
+                                                }
+                                                $active_category_string = json_encode(array_values($active_category));
+
+                                                $this->content['script']['category_select'] = ['content'=>'$(document).ready(function(){$(\'#form_members_organization_category\').form_select({"option":'.$active_category_string.'});});'];
 
                                                 $form_ajax_data = array(
                                                     'id'=>$this->request['option']['id']

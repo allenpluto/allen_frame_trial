@@ -177,7 +177,7 @@ $.fn.ajax_form = function(user_option) {
                     break;
                 default:
             }
-            ajax_form_info.addClass('ajax_form_info_display');
+            form.addClass('ajax_form_container_display_info');
             if (auto_close > 0)
             {
                 setTimeout(function(){form.trigger('close_message');},auto_close);
@@ -186,7 +186,12 @@ $.fn.ajax_form = function(user_option) {
 
         form.on('close_message',function(){
             var ajax_form_info = form.find('.ajax_form_info');
-            ajax_form_info.removeClass('ajax_form_info_display ajax_form_info_success ajax_form_info_error').html('');
+            form.removeClass('ajax_form_container_display_info');
+            ajax_form_info.removeClass('ajax_form_info_success ajax_form_info_error').html('');
+        });
+
+        form.on('click','.ajax_form_mask',function(){
+            form.removeClass('ajax_form_container_display_info');
         });
 
         form.on('store_form_data',function(){
@@ -662,6 +667,79 @@ $.fn.form_image_uploader = function(user_option){
 };
 
 // JS Selector
+$.fn.form_select = function(user_option){
+    var default_option = {
+        'max_select_allowed': 1,
+        'min_select_required': 0
+    };
+    // Extend our default option with user provided.
+    var option = $.extend(default_option, user_option);
+
+    return this.each(function() {
+        var form_select = $(this);
+
+        if (!option['option']) return false;
+
+        var form_select_option = {};
+        for(var i=0;i<option['option'].length;i++)
+        {
+            form_select_option[option['option'][i]['id']] = option['option'][i]['name'];
+        }
+        form_select.data('select_option',form_select_option);
+
+        form_select.on('change','.form_select_result',function(){
+            form_select.find('.form_select_input option').remove();
+            var form_select_option = form_select.data('select_option');
+            var form_input = form_select.find('.form_select_input');
+            form_select_option.forEach(function(item,index){
+                $('<option />',{
+                    'value':index
+                }).html(item).appendTo(form_input);
+            });
+            var option_selected = form_select.find('.form_select_result').val();
+            option_selected = option_selected.split(',');
+            option_selected.forEach(function(item,index){
+                form_input.('option[value="'+item+'"]').remove();
+            });
+        });
+
+        form_select.on('change','.form_select_input',function(){
+console.log($(this));
+            if ($(this).val())
+            {
+                form_select.trigger('add_option',[$(this).val()]);
+            }
+        });
+
+        form_select.on('click','.form_select_option_delete_trigger',function(){
+            var option_selected = form_select.find('.form_select_result').val();
+            option_selected = option_selected.split(',');
+            option_selected.splice(option_selected.indexOf($(this).data('value')),1);
+            $(this).remove();
+            form_select.find('.form_select_result').val(option_selected.join()).trigger('change');
+        });
+
+        form_select.on('add_option', function(event, new_values){
+console.log(new_values);
+            var option_selected = form_select.find('.form_select_result').val();
+            option_selected = option_selected.split(',');
+            var display_container = form_select.find('.form_select_display_container');
+            new_values.forEach(function(new_value){
+                if (option_selected.indexOf(new_value) == -1)
+                {
+                    option_selected.push(new_value);
+                    var form_select_option = form_select.data('select_option');
+                    $('<div />',{
+                        'class':'form_select_option_delete_trigger'
+                    }).html(form_select_option[new_value]).data('value',new_value);
+                }
+            });
+            option_selected.sort();
+            form_select.find('.form_select_result').val(option_selected.join()).trigger('change');
+        });
+    });
+};
+
 $.fn.form_js_selector = function(user_option){
     var default_option = {
         'max_select_allowed': 1,

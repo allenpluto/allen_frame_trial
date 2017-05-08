@@ -22,6 +22,14 @@
                 <div id="form_members_organization_street_address_map" class="form_row_street_address_map"></div>
             </div>
             <div class="form_row_container">
+                <label for="form_members_organization_category">Category</label>
+                <div id="form_members_organization_category" class="form_select_container">
+                    <input class="form_select_result" name="category" type="hidden" placeholder="Category" value="[[*category]]">
+                    <select class="form_select_input" multiple>[[active_category:template_name=`chunk_select_option`]]</select>
+                    <div class="form_select_display_container"></div>
+                </div>
+            </div>
+            <div class="form_row_container">
                 <label for="form_members_organization_telephone">Main Phone</label>
                 <input id="form_members_organization_telephone" name="telephone" type="text" placeholder="Main Phone" value="[[*telephone]]">
             </div>
@@ -75,8 +83,7 @@
             --><a href="[[*base]]members/listing/reset" class="footer_action_button footer_action_button_reset">Reset</a><!--
             --><a href="[[*base]]members/listing/save" class="footer_action_button footer_action_button_save">Save</a><!--
         --></div>
-            <div class="ajax_form_mask"><div class="ajax_form_mask_loading_icon"></div></div>
-            <div class="ajax_form_info"></div>
+            <div class="ajax_form_mask"><div class="ajax_form_mask_loading_icon"></div><div class="ajax_form_info"></div></div>
         </form>
     </div>
 </div>

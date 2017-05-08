@@ -2,12 +2,12 @@
     define('PATH_SITE_BASE', dirname(__FILE__).DIRECTORY_SEPARATOR);
 	include('system/config/config.php');
     // !!! IMPORTANT !!! DO NOT print anything before content is defined, static files and special pages may need to set header response
-//echo '<pre>';
-//print_r($_GET);
+echo '<pre>';
+print_r($_GET);
     $page_content = new content();
 
-//print_r($page_content);
-//exit();
+print_r($page_content);
+exit();
     $page_content->render();
     /*if ($page_content->result['status'] != 'OK')
     {
