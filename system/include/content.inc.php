@@ -832,7 +832,8 @@ class content extends base {
                                             $this->result['status'] = 404;
                                             return false;
                                         }
-                                        $entity_organization_data = $entity_organization_obj->fetch_value();
+
+                                        $entity_organization_data = $entity_organization_obj->get(['relational_fields'=>['category']]);
                                         if ($entity_organization_data === false)
                                         {
                                             $this->message->error = 'Fail to get entity data';
@@ -974,8 +975,7 @@ class content extends base {
 
                                                 $entity_organization_obj->update($this->content['form_data']);
 
-
-                                                $entity_organization_data = $entity_organization_obj->fetch_value(['table_fields'=>array_keys($this->content['form_data'])]);
+                                                $entity_organization_data = $entity_organization_obj->get(['fields'=>array_keys($this->content['form_data'])]);
                                                 if ($entity_organization_data === false)
                                                 {
                                                     $this->result['content']['status'] = 'SERVER_ERROR';
@@ -1051,18 +1051,25 @@ class content extends base {
                                                 $image_uploader_data_string = json_encode($image_uploader_data);
                                                 $this->content['script']['banner_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_banner_container\').form_image_uploader('.$image_uploader_data_string.');});'];
 
+                                                // Show all active category in select drop down
                                                 $index_category_obj = new index_category();
                                                 $index_category_obj->filter_by_active();
-                                                $view_category_obj = new view_category($index_category_obj->id_group);
+                                                $view_category_obj = new view_category($index_category_obj->id_group,['page_size'=>100]);
                                                 $active_category = $view_category_obj->fetch_value(['table_fields'=>['id','name']]);
                                                 if (empty($active_category))
                                                 {
                                                     $this->message->error = 'Fail to get active categories';
                                                     return false;
                                                 }
+                                                $active_category_sort = [];
+                                                foreach ($active_category as $row_index=>$row)
+                                                {
+                                                    $active_category_sort[] = $row['name'];
+                                                }
+                                                array_multisort($active_category_sort,$active_category);
                                                 $active_category_string = json_encode(array_values($active_category));
 
-                                                $this->content['script']['category_select'] = ['content'=>'$(document).ready(function(){$(\'#form_members_organization_category\').form_select({"option":'.$active_category_string.'});});'];
+                                                $this->content['script']['category_select'] = ['content'=>'$(document).ready(function(){$(\'#form_members_organization_category\').form_select({"select_option":'.$active_category_string.',"max_select_allowed":3});});'];
 
                                                 $form_ajax_data = array(
                                                     'id'=>$this->request['option']['id']

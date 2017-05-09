@@ -593,6 +593,37 @@ img {display:block;max-width:100%;}
     content: '[N/A]';
 }
 
+/*# JQuery Plugins/Form Selector #*/
+.form_select_display_container
+{
+    padding: 1em 0 0 0;
+}
+
+.form_select_option_delete_trigger
+{
+    display: inline-block;
+    padding: 0.5em 2em;
+    margin: 0 0.5em 0.5em 0;
+
+    background: #ffffc0;
+
+    border-radius: 1.2em;
+
+    font-size: 1.2em;
+    font-weight: bold;
+    font-style: italic;
+
+    cursor: pointer;
+}
+
+.form_select_option_delete_trigger:after
+{
+    padding-left: 1em;
+
+    font-family: 'FontAwesome';
+    content: '\f00d';
+}
+
 /*# JQuery Plugins/Tool Tip #*/
 .tool_tip_wrapper
 {

@@ -253,10 +253,10 @@ class entity extends base
         {
             $parameter['table_fields'] = array();
             $parameter['relational_fields'] = array();
-            foreach ($parameter['fields'] as $set_field_index=>$set_field)
+            foreach ($parameter['fields'] as $field_index=>$field)
             {
-                if (isset($this->parameter['table_fields'][$set_field])) $parameter['table_fields'][$set_field] = $this->parameter['table_fields'][$set_field];
-                if (isset($this->parameter['relational_fields'][$set_field])) $parameter['relational_fields'][$set_field] = $this->parameter['relational_fields'][$set_field];
+                if (isset($this->parameter['table_fields'][$field])) $parameter['table_fields'][$field] = $this->parameter['table_fields'][$field];
+                if (isset($this->parameter['relational_fields'][$field])) $parameter['relational_fields'][$field] = $this->parameter['relational_fields'][$field];
             }
             unset($parameter['fields']);
         }
@@ -276,8 +276,12 @@ class entity extends base
         }
         foreach ($parameter['relational_fields'] as $relational_field_name=>$relational_field)
         {
-            $fields[] = 'GROUP_CONCAT('.$relational_field['table'].'.'.$relational_field['target_id_field'].') AS '.$relational_field_name;
+            $fields[] = 'GROUP_CONCAT('.$relational_field['table'].'.'.$relational_field['target_id_field'].' ORDER BY '.$relational_field['table'].'.'.$relational_field['target_id_field'].') AS '.$relational_field_name;
             $joins[] = 'LEFT JOIN '.$relational_field['table'].' ON '.$parameter['table'].'.'.$parameter['primary_key'].' = '.$relational_field['table'].'.'.$relational_field['source_id_field'];
+        }
+        if (!in_array($parameter['primary_key'], $parameter['table_fields']))
+        {
+            $fields[] = $parameter['table'].'.'.$parameter['primary_key'];
         }
         $sql = 'SELECT '.implode(',',$fields).' FROM '.$parameter['table'].' '.implode(' ',$joins);
         $where = array();
@@ -336,6 +340,10 @@ class entity extends base
         {
             $new_id_group[] = $row_value[$parameter['primary_key']];
             $new_row['id_'.$row_value[$parameter['primary_key']]] = $row_value;
+            if (!in_array($parameter['primary_key'], $parameter['table_fields']))
+            {
+                unset($new_row['id_'.$row_value[$parameter['primary_key']]][$parameter['primary_key']]);
+            }
         }
         // Keep the original id order if no specific "order by" is set
         if (empty($parameter['order']) AND !empty($id_group))
@@ -413,13 +421,13 @@ class entity extends base
         {
             $parameter['table_fields'] = array();
             $parameter['relational_fields'] = array();
-            foreach ($parameter['fields'] as $set_field_index=>$set_field)
+            foreach ($parameter['fields'] as $field_index=>$field)
             {
                 // row provided value for updating current entity table
-                if (isset($this->parameter['table_fields'][$set_field])) $parameter['table_fields'][$set_field] = $this->parameter['table_fields'][$set_field];
+                if (isset($this->parameter['table_fields'][$field])) $parameter['table_fields'][$field] = $this->parameter['table_fields'][$field];
 
                 // row provided value for updating relational tables, e.g. category field to update rel_category_to_organization table
-                if (isset($this->parameter['relational_fields'][$set_field])) $parameter['relational_fields'][$set_field] = $this->parameter['relational_fields'][$set_field];
+                if (isset($this->parameter['relational_fields'][$field])) $parameter['relational_fields'][$field] = $this->parameter['relational_fields'][$field];
             }
             unset($parameter['fields']);
         }
@@ -446,11 +454,6 @@ class entity extends base
         $rel_table_value = array();
         foreach ($parameter['table_fields'] as $field_index=>$field_name)
         {
-if (!isset($parameter['primary_key']))
-{
-    print_r($this);
-    print_r($parameter);
-}
             if ($field_name != $parameter['primary_key'])
             {
                 $field_bind[] = '`'.$field_name.'` = :'.$field_name;
@@ -628,12 +631,6 @@ if (!isset($parameter['primary_key']))
 
     function fetch_value($parameter = array())
     {
-//        if (isset($this->row))
-//        {
-//            return $this->row;
-//        }
-        // unset rendered html when corresponding row value changes
-        $this->rendered_html = null;
         if (!$this->_initialized)
         {
             $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): '.get_class($this).' cannot fetch value before it is initialized with get() function';
@@ -734,6 +731,7 @@ if (!isset($parameter['primary_key']))
         }
     }
 
+    // Designed to update one row of data (record exists, primary key in id_group; can also be used to update same value for same field for multiple records, e.g. update multiple records status = 'S')
     function update($value = array(), $parameter = array())
     {
         if (empty($value))
@@ -765,7 +763,6 @@ if (!isset($parameter['primary_key']))
             return array();
         }
         $parameter = array_merge($this->parameter,$parameter);
-        $format = format::get_obj();
 
         if (empty($parameter['bind_param']))
         {
@@ -782,46 +779,75 @@ if (!isset($parameter['primary_key']))
                 $parameter['bind_param'][':'.$field_name] = $value[$field_name];
             }
         }
-        $sql .= implode(',',$field_bind);
-        unset($field_bind);
-
-        $where = array();
-        if (!empty($parameter['where']))
+        // $field_bind might be empty on the case of updating relational fields only
+        if (!empty($field_bind))
         {
-            if (is_array($parameter['where']))
+            $sql .= implode(',',$field_bind);
+            unset($field_bind);
+
+            $where = array();
+            if (!empty($parameter['where']))
             {
-                $where = $parameter['where'];
+                if (is_array($parameter['where']))
+                {
+                    $where = $parameter['where'];
+                }
+                else
+                {
+                    $where[] = $parameter['where'];
+                }
+            }
+            $where[] = $parameter['primary_key'].' IN ('.implode(',',array_keys($this->id_group)).')';
+            $parameter['bind_param'] = array_merge($parameter['bind_param'],$this->id_group);
+            if (!empty($where))
+            {
+                $sql .= ' WHERE '.implode(' AND ', $where);
+            }
+
+            $query = $this->query($sql, $parameter['bind_param']);
+            if ($query !== false)
+            {
+                if ($query->rowCount() == 0)
+                {
+                    $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): '.get_class($this).' no row updated for '.print_r($parameter['bind_param']).' under condition '.print_r($where, true);
+                }
+                else
+                {
+                    $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): '.get_class($this).' '.$query->rowCount().' row(s) updated';
+                }
             }
             else
             {
-                $where[] = $parameter['where'];
-            }
-        }
-        $where[] = $parameter['primary_key'].' IN ('.implode(',',array_keys($this->id_group)).')';
-        $parameter['bind_param'] = array_merge($parameter['bind_param'],$this->id_group);
-        if (!empty($where))
-        {
-            $sql .= ' WHERE '.implode(' AND ', $where);
-        }
-
-        $query = $this->query($sql, $parameter['bind_param']);
-        if ($query !== false)
-        {
-            if ($query->rowCount() == 0)
-            {
-                $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): '.get_class($this).' no row updated for '.print_r($parameter['bind_param']).' under condition '.print_r($where, true);
                 return false;
             }
-            else
+        }
+
+        if (!empty($parameter['relational_fields']))
+        {
+            $value_relational = [];
+            foreach ($parameter['relational_fields'] as $relational_field_name=>$relational_field)
             {
-                $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): '.get_class($this).' '.$query->rowCount().' row(s) updated';
-                return true;
+                if (isset($value[$relational_field_name]))
+                {
+                    if (!is_array($value[$relational_field_name])) $new_target_id_values = explode(',',$value[$relational_field_name]);
+                    asort($new_target_id_values);
+                    $new_target_id_values = array_unique($new_target_id_values);
+                    $new_target_id_group = $this->format->id_group(['value'=>$new_target_id_values,'key_prefix'=>':target_id_']);
+                    $new_target_id_values = implode(',',$new_target_id_values);
+
+                    $relational_table_bind_value = $this->id_group;
+                    $relational_sql = 'SELECT '.$relational_field['source_id_field'].' AS source_id, GROUP_CONCAT(DISTINCT '.$relational_field['target_id_field'].' ORDER BY '.$relational_field['target_id_field'].') AS current_target_id_values FROM '.$relational_field['table'].' WHERE '.$relational_field['source_id_field'].' IN ('.implode(',',array_keys($this->id_group)).');';
+                    $relational_query = $this->query($relational_sql, $relational_table_bind_value);
+                    if ($relational_query === false) continue;
+                    $relational_result = $relational_query->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+                }
             }
         }
-        else
-        {
-            return false;
-        }
+
+        return true;
     }
 
     function sync($parameter = array())

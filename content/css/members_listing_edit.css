@@ -24,7 +24,8 @@
 /*.form_container:hover .form_row_container > label {height: 0;}
 .form_container .form_row_container:hover > label {height: 2em;}*/
 
-.form_row_container > input[type="text"]
+.form_row_container input[type="text"],
+.form_row_container select
 {
     width: 100%;
     padding: 0.5em 1em;

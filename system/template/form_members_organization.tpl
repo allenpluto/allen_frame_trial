@@ -25,7 +25,7 @@
                 <label for="form_members_organization_category">Category</label>
                 <div id="form_members_organization_category" class="form_select_container">
                     <input class="form_select_result" name="category" type="hidden" placeholder="Category" value="[[*category]]">
-                    <select class="form_select_input" multiple>[[active_category:template_name=`chunk_select_option`]]</select>
+                    <select class="form_select_input"></select>
                     <div class="form_select_display_container"></div>
                 </div>
             </div>

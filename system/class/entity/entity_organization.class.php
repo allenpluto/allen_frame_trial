@@ -44,7 +44,7 @@ class entity_organization extends entity
             'website' => 'tbl_entity_organization.website_uri',
             'keywords' => 'tbl_entity_organization.keywords',
             'account' => 'tbl_entity_organization.account_id',
-            'category' => 'GROUP_CONCAT(DISTINCT tbl_rel_category_to_organization.category_id)',
+            'category' => 'GROUP_CONCAT(DISTINCT tbl_rel_category_to_organization.category_id  ORDER BY tbl_rel_category_to_organization.category_id)',
             'status' => 'tbl_entity_organization.status',
             'featured' => 'IF((CURDATE()<=ListingFeatured.date_end AND CURDATE()>=ListingFeatured.date_start), 1, 0)'
         );
@@ -157,9 +157,9 @@ class entity_organization extends entity
             'keywords' => 'tbl_entity_organization.keywords',
             'content' => 'tbl_entity_organization.content',
             'place_id' => 'tbl_entity_organization.place_id',
-            'category' => 'GROUP_CONCAT(DISTINCT tbl_rel_category_to_organization.category_id)',
-            'gallery' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_organization.gallery_id)',
-            'image' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_image.image_id)',
+            'category' => 'GROUP_CONCAT(DISTINCT tbl_rel_category_to_organization.category_id ORDER BY tbl_rel_category_to_organization.category_id)',
+            'gallery' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_organization.gallery_id ORDER BY tbl_rel_gallery_to_organization.gallery_id)',
+            'image' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_image.image_id ORDER BY tbl_rel_gallery_to_image.image_id)',
             'featured' => 'IF((CURDATE()<=ListingFeatured.date_end AND CURDATE()>=ListingFeatured.date_start), 1, 0)'
         );
 
