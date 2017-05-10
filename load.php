@@ -4,6 +4,7 @@
     // !!! IMPORTANT !!! DO NOT print anything before content is defined, static files and special pages may need to set header response
 //echo '<pre>';
 //print_r($_GET);
+//print_r($_POST);
     $page_content = new content();
 
 //print_r($page_content);

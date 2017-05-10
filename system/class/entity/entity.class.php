@@ -824,7 +824,6 @@ class entity extends base
 
         if (!empty($parameter['relational_fields']))
         {
-            $value_relational = [];
             foreach ($parameter['relational_fields'] as $relational_field_name=>$relational_field)
             {
                 if (isset($value[$relational_field_name]))
@@ -841,8 +840,45 @@ class entity extends base
                     if ($relational_query === false) continue;
                     $relational_result = $relational_query->fetchAll(PDO::FETCH_ASSOC);
 
+                    $current_relation_array = [];
+                    foreach ($relational_result as $row_index=>$row_value)
+                    {
+                        $current_relation_array[$row_value['source_id']] = $row_value['current_target_id_values'];
+                    }
 
+                    $new_source_id_group  = [];
+                    foreach ($this->id_group as $record_id_index=>$record_id)
+                    {
+                        if (!isset($current_relation_array[$record_id])) $current_relation_array[$record_id] = '';
+                        if ($current_relation_array[$record_id] != $new_target_id_values)
+                        {
+                            $new_source_id_group[] = $record_id;
+                        }
+                    }
+                    unset($current_relation_array);
+                    $new_source_id_group = $this->format->id_group($new_source_id_group);
+                    if (empty($new_source_id_group)) continue;
 
+                    $relational_sql = 'UPDATE '.$parameter['table'].' SET update_time = NOW() WHERE '.$parameter['primary_key'].' IN ('.implode(',',array_keys($new_source_id_group)).');';
+                    $relational_query = $this->query($relational_sql,$new_source_id_group);
+
+                    $relational_sql = 'DELETE FROM '.$relational_field['table'].' WHERE '.$relational_field['source_id_field'].' IN ('.implode(',',array_keys($new_source_id_group)).');';
+                    $relational_query = $this->query($relational_sql, $new_source_id_group);
+
+                    if (!empty($new_target_id_values))
+                    {
+                        $relational_sql = 'INSERT INTO '.$relational_field['table'].'('.$relational_field['source_id_field'].','.$relational_field['target_id_field'].') VALUES ';
+                        $relational_table_bind_row = [];
+                        foreach (array_keys($new_source_id_group) as $source_id_bind_index => $source_id_bind)
+                        {
+                            foreach (array_keys($new_target_id_group) as $target_id_bind_index => $target_id_bind)
+                            {
+                                $relational_table_bind_row[] = '('.$source_id_bind.','.$target_id_bind.')';
+                            }
+                        }
+                        $relational_sql .= implode(',',$relational_table_bind_row).';';
+                        $relational_query = $this->query($relational_sql, array_merge($new_source_id_group,$new_target_id_group));
+                    }
                 }
             }
         }

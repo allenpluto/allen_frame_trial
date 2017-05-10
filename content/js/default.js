@@ -694,7 +694,7 @@ $.fn.form_select = function(user_option){
             select_display.html('');
             $('<option />',{
                 'value':''
-            }).html('-- Select From Below --').appendTo(select_input);
+            }).html('-- Select One --').appendTo(select_input);
             $.each(form_select_option, function(index, item){
                 form_select_option_flip[item] = index;
                 $('<option />',{
