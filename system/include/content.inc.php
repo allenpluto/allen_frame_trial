@@ -800,14 +800,36 @@ class content extends base {
                             $this->result['status'] = 404;
                             return false;
                         }
-                        $page_fetched_value = $view_business_detail_obj->fetch_value();
-                        if (empty($page_fetched_value))
+                        $business_fetched_value = $view_business_detail_obj->fetch_value();
+                        if (empty($business_fetched_value))
                         {
                             // Error Handling, fetch record row failed, database data error
                             $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): Fetch row failed '.implode(',',$page_obj->id_group);
                             $this->result['status'] = 404;
                             return false;
                         }
+                        $business_fetched_value = end($business_fetched_value);
+                        $this->content['field']['name'] = $business_fetched_value['name'];
+                        $view_category_obj = new view_category($business_fetched_value['category']);
+                        $category_fetched_value = $view_category_obj->fetch_value();
+                        if (!empty($category_fetched_value))
+                        {
+                            $category_fetched_value = end($category_fetched_value);
+                            $this->content['field']['name'] .= ' - '.$category_fetched_value['name'];
+                        }
+                        $view_place_obj = new view_place($business_fetched_value['place_id']);
+
+                        $listingCategoryObj = new ListingCategory(end($category_id));
+                        if ($listingCategoryObj->id > 0)
+                        {
+                            $headertag_title .= ' - '.($listingCategoryObj->page_title?$listingCategoryObj->page_title:$listingCategoryObj->title);
+                        }
+
+                        if ($listing->postcode_suburb_id > 0)
+                        {
+                            $headertag_title .= ' - '.$listing->city.', '.$listing->state.' '.$listing->zip_code;
+                        }
+
                         $this->content['field'] = array_merge($this->content['field'],end($page_fetched_value));
 
                         break;

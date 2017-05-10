@@ -314,10 +314,11 @@ class format
         }
         $result = ['id'=>$value['place_id']];
         unset($value['place_id']);
+        unset($value['id']);
 
         //$flatten_fields = ['formatted_address','formatted_phone_number','international_phone_number','name','opening_hours','permanently_closed','photos','place_id','rating','reviews','types','utc_offset','vicinity','website'];
         $place_type = $value['types'][0];
-        $address_component_field = ['street_number','route','sublocality','locality','colloquial_area','postal_code','administrative_area_level_2','administrative_area_level_1','country'];
+        $address_component_field = ['subpremise','street_number','route','sublocality','locality','colloquial_area','postal_code','administrative_area_level_2','administrative_area_level_1','country'];
         if (!in_array($place_type, $address_component_field))
         {
             // For place type like 'street_address' and 'intersection', use short route name as alias
@@ -341,12 +342,17 @@ class format
                 {
                     $additional_address_components[$component_type] = $address_component['long_name'];
                 }
-                $result['address_additional'] = json_encode($additional_address_components);
+                if (!empty($additional_address_components)) $result['address_additional'] = json_encode($additional_address_components);
             }
             if (isset($result['street_number']))
             {
                 // If street_number is provided, add street_number to route
-                $result['alternate_name'] = $result['street_number'].' '.$result['alternate_name'];
+                $result['alternate_name'] = $result['street_number'].' '.$result['route'];
+            }
+            if (isset($result['subpremise']))
+            {
+                // If street_number is provided, add street_number to route
+                $result['alternate_name'] = $result['subpremise'].'/'.$result['alternate_name'];
             }
             unset($value['address_components']);
         }
