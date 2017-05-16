@@ -1054,8 +1054,8 @@ class content extends base {
                                             default:
                                                 $this->content['field']['organization'] = $entity_organization_data;
                                                 $image_uploader_data = array(
-                                                    'width'=>200,
-                                                    'height'=>200,
+                                                    'width'=>500,
+                                                    'height'=>500,
                                                     'allow_delete'=>true,
                                                     'shrink_large'=>true,
                                                     'default_image'=>'./image/upload_logo.jpg'
