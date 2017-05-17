@@ -818,19 +818,14 @@ class content extends base {
                             $this->content['field']['name'] .= ' - '.$category_fetched_value['name'];
                         }
                         $view_place_obj = new view_place($business_fetched_value['place_id']);
-
-                        $listingCategoryObj = new ListingCategory(end($category_id));
-                        if ($listingCategoryObj->id > 0)
+                        $place_fetched_value = $view_place_obj->fetch_value();
+                        if (!empty($place_fetched_value))
                         {
-                            $headertag_title .= ' - '.($listingCategoryObj->page_title?$listingCategoryObj->page_title:$listingCategoryObj->title);
+                            $place_fetched_value = end($place_fetched_value);
+                            $this->content['field']['name'] .= ' - '.$place_fetched_value['suburb'].', '.$place_fetched_value['state'].' '.$place_fetched_value['post'];
                         }
 
-                        if ($listing->postcode_suburb_id > 0)
-                        {
-                            $headertag_title .= ' - '.$listing->city.', '.$listing->state.' '.$listing->zip_code;
-                        }
-
-                        $this->content['field'] = array_merge($this->content['field'],end($page_fetched_value));
+                        $this->content['field']['business'] = $business_fetched_value;
 
                         break;
                     case 'listing':
@@ -1061,7 +1056,6 @@ class content extends base {
                                                     'default_image'=>'./image/upload_logo.jpg'
                                                 );
                                                 $image_uploader_data_string = json_encode($image_uploader_data);
-
                                                 $this->content['script']['logo_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_organization_logo_container\').form_image_uploader('.$image_uploader_data_string.');});'];
 
                                                 $image_uploader_data = array(

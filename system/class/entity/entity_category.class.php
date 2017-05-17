@@ -55,8 +55,6 @@ class entity_category extends entity
 
         $result[] = parent::sync($sync_parameter);
 
-        return $result;
-
         // set default sync parameters for view table
         $sync_parameter['sync_table'] = 'tbl_view_category';
         $sync_parameter['update_fields'] = array(
