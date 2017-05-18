@@ -1,9 +1,10 @@
 <div id="[[*friendly_uri]]" itemscope="" itemtype="[[*schema_itemtype]]">
-    <div class="wrapper listing_detail_view_wrapper">
+    <div id="listing_detail_view_wrapper_[[*id]]" class="wrapper listing_detail_view_wrapper">
         <div class="wrapper listing_detail_view_top_wrapper">
             <div class="container column_container listing_detail_view_top_container">
-                [[logo:object=`view_business_summary_logo`]]
-                <div class="listing_detail_view_top_text_container[[*top_text_container_column]]">
+                [[banner:object=`view_business_detail_banner`:field=`{"organization_id":"[[*id]]"}`]]
+                [[logo:object=`view_business_detail_logo`]]
+                <div class="listing_detail_view_top_text_container column [[*logo:template=`column_8`:empty_template=`column_12`]]">
                     <div class="listing_detail_view_title_container"><h1 itemprop="name">[[*name]]</h1></div>
                     <div class="listing_detail_view_rating_container">
                         <div class="listing_detail_view_count_visit"><span>[[*count_visit]]</span><span class="listing_detail_view_count_visit_label"> Visits</span></div>
@@ -40,7 +41,7 @@
 </div>
 <div id="organization_block_container_[[*id]]" class="block_container organization_block_container[[*extra_classes]]" itemscope="" itemtype="[[*schema_itemtype]]">
     <div class="block_thumb_container">
-        [[image:object=`view_business_summary_image`:field=`{"organization_id":"[[*id]]"}`:page_size=`1`:page_number=`0`]]
+        [[-image:object=`view_business_summary_image`:field=`{"organization_id":"[[*id]]"}`:page_size=`1`:page_number=`0`]]
         [[logo:object=`view_business_summary_logo`]]
         <div class="clear"></div>
     </div>
