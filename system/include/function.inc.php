@@ -121,6 +121,7 @@ function render_html($field = array())
             if (!is_array($field_row))
             {
                 $field_row = ['_placeholder'=>$field_row];
+                $field_row_parameter = $field_parameter;
             }
             else
             {
@@ -197,7 +198,7 @@ function render_html($field = array())
             if (isset($field_parameter['parent_row']))
             {
                 $field_row = array_merge($field_parameter['parent_row'],$field_row);
-                unset($field_row_parameter['parent_row']);
+                unset($field_parameter['parent_row']);
             }
 
             if (!is_array($global_field)) print_r($global_field);

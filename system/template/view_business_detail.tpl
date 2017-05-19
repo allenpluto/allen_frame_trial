@@ -29,8 +29,8 @@
                     <div id="listing_detail_view_address_container_large_screen" class="listing_detail_view_address_container">
                         <p itemprop="address" itemscope="" itemtype="http://schema.org/PostalAddress">
                             <span itemprop="streetAddress">[[*street_address]]</span>,
-                            <span itemprop="addressLocality">[[*suburb]]</span> <span itemprop="addressRegion">[[*state]]</span>
-                            <span itemprop="postalCode">[[*post]]</span>
+                            <span itemprop="addressLocality">[[*locality]]</span> <span itemprop="addressRegion">[[*administrative_area_level_1]]</span>
+                            <span itemprop="postalCode">[[*postal_code]]</span>
                         </p>
                     </div>
                 </div>
@@ -38,46 +38,19 @@
             </div>
         </div>
     </div>
-</div>
-<div id="organization_block_container_[[*id]]" class="block_container organization_block_container[[*extra_classes]]" itemscope="" itemtype="[[*schema_itemtype]]">
-    <div class="block_thumb_container">
-        [[-image:object=`view_business_summary_image`:field=`{"organization_id":"[[*id]]"}`:page_size=`1`:page_number=`0`]]
-        [[logo:object=`view_business_summary_logo`]]
-        <div class="clear"></div>
-    </div>
-    <div class="block_content_container">
-        <div class="block_content_text_container">
-            <h3 class="block_content_title" itemprop="name" title="[[*name]]">[[*name]]</h3>
-            <p class="block_content_description" itemprop="description">
-                [[*description]]
-            </p>
-            <p class="block_content_address" itemprop="address" itemscope="" itemtype="http://schema.org/PostalAddress">
-                <span itemprop="streetAddress">[[*street_address]]</span>,
-                <span itemprop="addressLocality">[[*suburb]]</span> <span itemprop="addressRegion">[[*state]]</span>
-                <span itemprop="postalCode">[[*post]]</span>
-            </p>
+    <div id="listing_detail_view_summary_wrapper" class="wrapper listing_detail_view_section_wrapper">
+        <div class="wrapper listing_detail_view_section_title_wrapper">
+            <div class="container listing_detail_view_section_title_container"><h2>[[*category_name]] in [[*locality]], [[*administrative_area_level_1]] [[*postal_code]]</h2></div>
         </div>
-        <div class="block_content_rating_container">
-            <div class="rating_star_wrapper">
-                <div class="rating_star_container rating_star_bg_container"><!--
-                 --><span class="rating_star"></span><!--
-                 --><span class="rating_star"></span><!--
-                 --><span class="rating_star"></span><!--
-                 --><span class="rating_star"></span><!--
-                 --><span class="rating_star"></span><!--
-             --></div>
-                <div class="rating_star_container rating_star_front_container" style="width: [[*avg_review_percentage]]%;"><!--
-                 --><span class="rating_star"></span><!--
-                 --><span class="rating_star"></span><!--
-                 --><span class="rating_star"></span><!--
-                 --><span class="rating_star"></span><!--
-                 --><span class="rating_star"></span><!--
-             --></div>
+        <div class="wrapper listing_detail_view_section_content_wrapper">
+            <div class="container listing_detail_view_section_content_container">
+                <p class="listing_detail_view_summary" itemprop="description">
+                    [[*description]]
+                </p>
             </div>
         </div>
     </div>
-    <div class="clear"></div>
-    <div class="block_cover_over_link_container">
-        <a href="[[*base]][[*module]]/[[*friendly_uri]]" itemprop="url" title="[[*name]]" class="block_thumb_cover_over_link"></a>
-    </div>
+    [[*keywords:container_name=`container_business_section_keywords`]]
+    [[*description:container_name=`container_business_section`:field=`{"section_name":"summary","section_title":"[[*category_name]] in [[*suburb]], [[*state]] [[*post]]"}`]]
+
 </div>

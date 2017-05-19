@@ -817,15 +817,20 @@ class content extends base {
                             $category_fetched_value = end($category_fetched_value);
                             $this->content['field']['name'] .= ' - '.$category_fetched_value['name'];
                         }
-                        $view_place_obj = new view_place($business_fetched_value['place_id']);
+                        $view_place_obj = new view_place();
+                        $view_place_obj->get(['where'=>'id = "'.$business_fetched_value['place_id'].'"']);
                         $place_fetched_value = $view_place_obj->fetch_value();
                         if (!empty($place_fetched_value))
                         {
                             $place_fetched_value = end($place_fetched_value);
-                            $this->content['field']['name'] .= ' - '.$place_fetched_value['suburb'].', '.$place_fetched_value['state'].' '.$place_fetched_value['post'];
+                            $this->content['field']['name'] .= ' - '.$place_fetched_value['formatted_address'];
                         }
-
                         $this->content['field']['business'] = $business_fetched_value;
+                        $this->content['field']['business']['category'] = $category_fetched_value['name'];
+                        $this->content['field']['business']['street_address'] = $place_fetched_value['name'];
+                        $this->content['field']['business']['locality'] = $place_fetched_value['locality'];
+                        $this->content['field']['business']['administrative_area_level_1'] = $place_fetched_value['administrative_area_level_1'];
+                        $this->content['field']['business']['postal_code'] = $place_fetched_value['postal_code'];
 
                         break;
                     case 'listing':

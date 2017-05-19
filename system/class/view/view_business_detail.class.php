@@ -13,6 +13,22 @@ class view_business_detail extends view_organization
 
         return $this;
     }
+
+    function fetch_value($parameter = array())
+    {
+        if (parent::fetch_value($parameter) === false)
+        {
+            return false;
+        }
+        foreach ($this->row as $row_index=>&$row_value)
+        {
+            if (!empty($row_value['keywords']))
+            {
+                $row_value['keywords'] = ['_value'=>explode("\n",$row_value['keywords']),'_parameter'=>['separator'=>', ']];
+            }
+        }
+        return $this->row;
+    }
 }
     
 ?>
