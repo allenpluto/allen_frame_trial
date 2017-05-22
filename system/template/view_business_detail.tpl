@@ -40,13 +40,23 @@
     </div>
     <div id="listing_detail_view_summary_wrapper" class="wrapper listing_detail_view_section_wrapper">
         <div class="wrapper listing_detail_view_section_title_wrapper">
-            <div class="container listing_detail_view_section_title_container"><h2>[[*category_name]] in [[*locality]], [[*administrative_area_level_1]] [[*postal_code]]</h2></div>
+            <div class="container listing_detail_view_section_title_container"><h2>[[*category]] in [[*locality]], [[*administrative_area_level_1]] [[*postal_code]]</h2></div>
         </div>
         <div class="wrapper listing_detail_view_section_content_wrapper">
             <div class="container listing_detail_view_section_content_container">
                 <p class="listing_detail_view_summary" itemprop="description">
                     [[*description]]
                 </p>
+            </div>
+        </div>
+    </div>
+    <div id="listing_detail_view_overview_wrapper" class="wrapper listing_detail_view_section_wrapper expand_parent_expanded">
+        <div class="wrapper listing_detail_view_section_title_wrapper expand_trigger">
+            <div class="container listing_detail_view_section_title_container"><h3>Overview</h3></div>
+        </div>
+        <div class="wrapper listing_detail_view_section_content_wrapper expand_wrapper">
+            <div class="container listing_detail_view_section_content_container expand_container">
+                [[*long_description]]
             </div>
         </div>
     </div>

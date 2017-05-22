@@ -17,7 +17,23 @@ class entity_place extends entity
             'description' => 'tbl_entity_place.description',
             'enter_time' => 'tbl_entity_place.enter_time',
             'update_time' => 'tbl_entity_place.update_time',
-            'view_time' => '"'.date('Y-m-d H:i:s').'"'
+            'view_time' => '"'.date('Y-m-d H:i:s').'"',
+            'subpremise' => 'subpremise',
+            'street_number' => 'street_number',
+            'route' => 'route',
+            'locality' => 'locality',
+            'colloquial_area' => 'colloquial_area',
+            'postal_code' => 'postal_code',
+            'administrative_area_level_2' => 'administrative_area_level_2',
+            'administrative_area_level_1' => 'administrative_area_level_1',
+            'country' => 'country',
+            'location_latitude' => 'location_latitude',
+            'location_longitude' => 'location_longitude',
+            'viewport_northeast_latitude' => 'viewport_northeast_latitude',
+            'viewport_northeast_longitude' => 'viewport_northeast_longitude',
+            'viewport_southwest_latitude' => 'viewport_southwest_latitude',
+            'viewport_southwest_longitude' => 'viewport_southwest_longitude',
+            'formatted_address' => 'formatted_address'
         );
 
         $sync_parameter['group'] = array(

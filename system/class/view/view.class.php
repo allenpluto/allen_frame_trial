@@ -35,6 +35,7 @@ class view extends base
 
         if ($GLOBALS['db']) $db = $GLOBALS['db'];
         else $db = new db;
+
         $this->_conn = $db->db_get_connection();
 
         if (!isset($this->parameter['entity']))
