@@ -249,6 +249,8 @@
     padding: 0.2em 0;
 
     font-size: 1.2em;
+
+    vertical-align: top;
 }
 
 .weekday_name

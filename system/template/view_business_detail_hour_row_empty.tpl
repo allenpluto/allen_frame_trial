@@ -1,0 +1,1 @@
+<div class="hour_row" itemprop="OpeningHoursSpecification" itemscope="" itemtype="http://schema.org/OpeningHoursSpecification"><link itemprop="dayOfWeek" href="http://schema.org/'[[*weekday_name]]" /><meta itemprop="opens" content="00:00"><meta itemprop="closes" content="00:00">Closed</div>

@@ -50,17 +50,20 @@
             </div>
         </div>
     </div>
-    <div id="listing_detail_view_overview_wrapper" class="wrapper listing_detail_view_section_wrapper expand_parent_expanded">
+    [[*keywords:container_name=`container_business_section_keywords`]]
+    [[*content:container_name=`container_business_section_content`]]
+    <div class="wrapper listing_detail_view_section_wrapper listing_detail_view_overview">
         <div class="wrapper listing_detail_view_section_title_wrapper expand_trigger">
-            <div class="container listing_detail_view_section_title_container"><h3>Overview</h3></div>
+            <div class="container listing_detail_view_section_title_container"><h3>Contact</h3></div>
         </div>
         <div class="wrapper listing_detail_view_section_content_wrapper expand_wrapper">
             <div class="container listing_detail_view_section_content_container expand_container">
-                [[*long_description]]
+                [[*telephone:container_name=`container_business_section_contact_telephone`]]
+                [[*website:container_name=`container_business_section_contact_website`]]
+                <div id="listing_detail_view_address_container" class="listing_detail_view_contact_row font_icon font_icon_address"><p>[[*street_address]], <br>[[*locality]]<br>[[*administrative_area_level_1]] [[*postal_code]]</p><p class="general_style_colour_orange"></p></div>
             </div>
         </div>
     </div>
-    [[*keywords:container_name=`container_business_section_keywords`]]
-    [[*description:container_name=`container_business_section`:field=`{"section_name":"summary","section_title":"[[*category_name]] in [[*suburb]], [[*state]] [[*post]]"}`]]
-
+    [[*hours_work_formatted:container_name=`container_business_section_hour`:template_name=`view_business_detail_hour`]]
+    [[*place_id:container_name=`container_business_section_map`]]
 </div>

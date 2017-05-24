@@ -809,6 +809,8 @@ class content extends base {
                             return false;
                         }
                         $business_fetched_value = end($business_fetched_value);
+                        $this->content['field']['business'] = $business_fetched_value;
+
                         $this->content['field']['name'] = $business_fetched_value['name'];
                         $view_category_obj = new view_category($business_fetched_value['category']);
                         $category_fetched_value = $view_category_obj->fetch_value();
@@ -816,6 +818,7 @@ class content extends base {
                         {
                             $category_fetched_value = end($category_fetched_value);
                             $this->content['field']['name'] .= ' - '.$category_fetched_value['name'];
+                            $this->content['field']['business']['category'] = $category_fetched_value['name'];
                         }
                         $view_place_obj = new view_place();
                         $view_place_obj->get(['where'=>'id = "'.$business_fetched_value['place_id'].'"']);
@@ -824,13 +827,44 @@ class content extends base {
                         {
                             $place_fetched_value = end($place_fetched_value);
                             $this->content['field']['name'] .= ' - '.$place_fetched_value['formatted_address'];
+
+                            $this->content['field']['business']['street_address'] = $place_fetched_value['name'];
+                            $this->content['field']['business']['locality'] = $place_fetched_value['locality'];
+                            $this->content['field']['business']['administrative_area_level_1'] = $place_fetched_value['administrative_area_level_1'];
+                            $this->content['field']['business']['postal_code'] = $place_fetched_value['postal_code'];
+                            $this->content['field']['business']['latitude'] = $place_fetched_value['location_latitude'];
+                            $this->content['field']['business']['longitude'] = $place_fetched_value['location_longitude'];
+
+                            $this->content['script']['load_map'] = ['content'=>'$(\'.listing_detail_view_map .expand_trigger\').click(function(){var map_container = $(this).closest(\'.listing_detail_view_map\').find(\'.listing_detail_view_map_frame_container\');if (map_container.data(\'placeId\')){map_container.html(\'<iframe class="listing_detail_view_map_frame" src="https://www.google.com/maps/embed/v1/place?key='.$this->preference->google_api_credential_browser.'&q=place_id:'.$this->content['field']['business']['place_id'].'"></iframe>\').data(\'placeId\',\'\')}});'];
                         }
-                        $this->content['field']['business'] = $business_fetched_value;
-                        $this->content['field']['business']['category'] = $category_fetched_value['name'];
-                        $this->content['field']['business']['street_address'] = $place_fetched_value['name'];
-                        $this->content['field']['business']['locality'] = $place_fetched_value['locality'];
-                        $this->content['field']['business']['administrative_area_level_1'] = $place_fetched_value['administrative_area_level_1'];
-                        $this->content['field']['business']['postal_code'] = $place_fetched_value['postal_code'];
+
+                        if (!empty($this->content['field']['business']['hours_work']))
+                        {
+                            $this->content['field']['business']['hours_work'] = json_decode($this->content['field']['business']['hours_work'],true);
+                            $weekday_name_list = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+                            $this->content['field']['business']['hours_work_formatted'] = [];
+                            foreach ($weekday_name_list as $weekday_index=>$weekday_name)
+                            {
+                                $this->content['field']['business']['hours_work_formatted'][$weekday_index] = ['weekday_name'=>$weekday_name,'time_period'=>[]];;
+                            }
+                            if (is_array($this->content['field']['business']['hours_work']))
+                            {
+                                foreach ($this->content['field']['business']['hours_work'] as $weekday_index=>$weekday_hour_work)
+                                {
+                                    $weekday_index = $weekday_index-1;
+                                    if ($weekday_index < 0) $weekday_index = 6;
+                                    foreach($weekday_hour_work as $hour_work_index=>$hour_work_row)
+                                    {
+                                        $this->content['field']['business']['hours_work_formatted'][$weekday_index]['time_period'][] = ['opens'=>$this->format->time($hour_work_row[0]),'closes'=>$this->format->time($hour_work_row[1])];
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!empty($this->content['field']['business']['place_id']))
+                        {
+
+                        }
 
                         break;
                     case 'listing':
@@ -1046,6 +1080,7 @@ class content extends base {
                                                     }
                                                     unset($entity_organization_data['banner_id']);
                                                 }
+                                                $entity_organization_obj->sync();
 
                                                 $this->result['content']['status'] = 'OK';
                                                 $this->result['content']['message'] = 'Business updated successfully';

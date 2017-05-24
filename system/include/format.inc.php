@@ -134,7 +134,8 @@ class format
         $minutes = round($value*1440);
         $hour = floor($minutes/60);
         $minute = $minutes%60;
-        $result = ($hour<10?'0':'').$hour.':'.($minute<10?'0':'').$minute;
+        if ($hour >= 24) $result = '23:59';
+        else $result = ($hour<10?'0':'').$hour.':'.($minute<10?'0':'').$minute;
         return $result;
     }
 
