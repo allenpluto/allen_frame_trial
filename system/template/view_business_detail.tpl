@@ -29,7 +29,7 @@
                     <div id="listing_detail_view_address_container_large_screen" class="listing_detail_view_address_container">
                         <p itemprop="address" itemscope="" itemtype="http://schema.org/PostalAddress">
                             <span itemprop="streetAddress">[[*street_address]]</span>,
-                            <span itemprop="addressLocality">[[*locality]]</span> <span itemprop="addressRegion">[[*administrative_area_level_1]]</span>
+                            <span itemprop="addressLocality">[[*suburb]]</span> <span itemprop="addressRegion">[[*state]]</span>
                             <span itemprop="postalCode">[[*postal_code]]</span>
                         </p>
                     </div>
@@ -40,7 +40,7 @@
     </div>
     <div id="listing_detail_view_summary_wrapper" class="wrapper listing_detail_view_section_wrapper">
         <div class="wrapper listing_detail_view_section_title_wrapper">
-            <div class="container listing_detail_view_section_title_container"><h2>[[*category]] in [[*locality]], [[*administrative_area_level_1]] [[*postal_code]]</h2></div>
+            <div class="container listing_detail_view_section_title_container"><h2>[[*category]] in [[*suburb]], [[*state]] [[*postal_code]]</h2></div>
         </div>
         <div class="wrapper listing_detail_view_section_content_wrapper">
             <div class="container listing_detail_view_section_content_container">
@@ -60,10 +60,11 @@
             <div class="container listing_detail_view_section_content_container expand_container">
                 [[*telephone:container_name=`container_business_section_contact_telephone`]]
                 [[*website:container_name=`container_business_section_contact_website`]]
-                <div id="listing_detail_view_address_container" class="listing_detail_view_contact_row font_icon font_icon_address"><p>[[*street_address]], <br>[[*locality]]<br>[[*administrative_area_level_1]] [[*postal_code]]</p><p class="general_style_colour_orange"></p></div>
+                <div id="listing_detail_view_address_container" class="listing_detail_view_contact_row font_icon font_icon_address"><p>[[*street_address]], <br>[[*suburb]], [[*state]] [[*postal_code]]</p><p class="general_style_colour_orange"></p></div>
             </div>
         </div>
     </div>
     [[*hours_work_formatted:container_name=`container_business_section_hour`:template_name=`view_business_detail_hour`]]
     [[*place_id:container_name=`container_business_section_map`]]
+    [[gallery:object=`view_business_detail_gallery`:container_name=`container_business_section_gallery`]]
 </div>

@@ -829,8 +829,17 @@ class content extends base {
                             $this->content['field']['name'] .= ' - '.$place_fetched_value['formatted_address'];
 
                             $this->content['field']['business']['street_address'] = $place_fetched_value['name'];
-                            $this->content['field']['business']['locality'] = $place_fetched_value['locality'];
-                            $this->content['field']['business']['administrative_area_level_1'] = $place_fetched_value['administrative_area_level_1'];
+                            $this->content['field']['business']['suburb'] = $place_fetched_value['locality'];
+                            $state_name = [
+                                'Australian Capital Territory'=>'ACT',
+                                'New South Wales'=>'NSW',
+                                'Northern Territory'=>'NT',
+                                'Queensland'=>'QLD',
+                                'South Australia'=>'SA',
+                                'Tasmania'=>'TAS',
+                                'Victoria'=>'VIC'
+                            ];
+                            $this->content['field']['business']['state'] = $state_name[$place_fetched_value['administrative_area_level_1']];
                             $this->content['field']['business']['postal_code'] = $place_fetched_value['postal_code'];
                             $this->content['field']['business']['latitude'] = $place_fetched_value['location_latitude'];
                             $this->content['field']['business']['longitude'] = $place_fetched_value['location_longitude'];
@@ -859,11 +868,6 @@ class content extends base {
                                     }
                                 }
                             }
-                        }
-
-                        if (!empty($this->content['field']['business']['place_id']))
-                        {
-
                         }
 
                         break;
