@@ -264,6 +264,31 @@
     padding: 0.5em 0;
 }
 
+@media only screen and (min-width:768px) and (max-width:991px)
+{
+    .listing_detail_view_gallery_container {width: 450px;}
+}
+@media only screen and (min-width:992px) and (max-width:1199px)
+{
+    .listing_detail_view_gallery_container {width: 280px;}
+}
+@media only screen and (min-width:1200px)
+{
+    .listing_detail_view_gallery_container {width: 300px;}
+}
+@media only screen and (min-width:768px)
+{
+    .listing_detail_view_gallery_container {display: inline-block;}
+    .listing_detail_view_gallery_wrapper_active .listing_detail_view_gallery_container {display: none;}
+    .listing_detail_view_gallery_wrapper_active .listing_detail_view_gallery_container_active
+    {
+        display: block;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+}
+
 .listing_detail_view_gallery_image_wrapper
 {
     display: block;

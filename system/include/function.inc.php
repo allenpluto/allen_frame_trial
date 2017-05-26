@@ -92,15 +92,14 @@ function render_html($field = array())
     {
         $field = $field['_value'];
     }
-    if (!is_array($field))
-    {
-        $field = ['_placeholder'=>$field];
-    }
+
     if (empty($field))
     {
-        if (!empty($field_parameter['empty_template']) AND !empty($field_parameter['parent_row']))
+        if (!empty($field_parameter['empty_template']))
         {
-            $field_rendered_content = render_html(['_value'=>$field_parameter['parent_row'],'_parameter'=>['template_name'=>$field_parameter['empty_template']]]);
+            $sub_field = [];
+            if (!empty($field_parameter['parent_row'])) $sub_field = $field_parameter['parent_row'];
+            $field_rendered_content = render_html(['_value'=>$sub_field,'_parameter'=>['template'=>$field_parameter['empty_template']]]);
         }
         else
         {
@@ -109,6 +108,10 @@ function render_html($field = array())
     }
     else
     {
+        if (!is_array($field))
+        {
+            $field = ['_placeholder'=>$field];
+        }
         if (!isset($field[0]))
         {
             $field = [$field];
@@ -334,6 +337,17 @@ function render_html($field = array())
                                 if (empty($match_result_value['parameter']['empty_template']) AND empty($match_result_value['parameter']['empty_template_name']))
                                 {
                                     $match_result_value['value'] = '';
+                                    break;
+                                }
+                                else
+                                {
+                                    $sub_field = [
+                                        '_value'=>[],
+                                        '_parameter'=>$match_result_value['parameter']
+                                    ];
+                                    if (!isset($sub_field['_parameter']['parent_row'])) $sub_field['_parameter']['parent_row'] = $field_row;
+                                    else $sub_field['_parameter']['parent_row'] = array_merge($field_row,$sub_field['_parameter']['parent_row']);
+                                    $match_result_value['value'] = render_html($sub_field);
                                     break;
                                 }
                             }
