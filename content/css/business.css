@@ -266,19 +266,23 @@
 
 @media only screen and (min-width:768px) and (max-width:991px)
 {
-    .listing_detail_view_gallery_container {width: 450px;}
+    .listing_detail_view_gallery_container {padding: 0 35px;}
 }
 @media only screen and (min-width:992px) and (max-width:1199px)
 {
-    .listing_detail_view_gallery_container {width: 280px;}
+    .listing_detail_view_gallery_container {padding: 0 10px;}
 }
-@media only screen and (min-width:1200px)
+@media only screen and (min-width:1200px) and (max-width:1599px)
 {
-    .listing_detail_view_gallery_container {width: 300px;}
+    .listing_detail_view_gallery_container {padding: 0 40px;}
+}
+@media only screen and (min-width:1600px)
+{
+    .listing_detail_view_gallery_container {padding: 0 30px;}
 }
 @media only screen and (min-width:768px)
 {
-    .listing_detail_view_gallery_container {display: inline-block;}
+    .listing_detail_view_gallery_container {display: inline-block; width: 300px; box-sizing: content-box;}
     .listing_detail_view_gallery_wrapper_active .listing_detail_view_gallery_container {display: none;}
     .listing_detail_view_gallery_wrapper_active .listing_detail_view_gallery_container_active
     {
@@ -286,6 +290,12 @@
         width: 100%;
         max-width: 800px;
         margin: 0 auto;
+        padding: 0;
+    }
+    .listing_detail_view_gallery_container_active .listing_detail_view_gallery_title
+    {
+        font-size:2.4em;
+        text-align: center;
     }
 }
 
@@ -341,6 +351,25 @@
 .touch_slider_navigation_button_pressed:before {opacity: 1;}
 .touch_slider_navigation_button_previous:before {left:0.2em;content: '\f053';}
 .touch_slider_navigation_button_next:before {right:0.2em;content: '\f054';}
+
+.touch_slider_navigation_button_zoom {display: none;}
+@media only screen and (min-width:768px)
+{
+    .touch_slider_navigation_button_zoom {display: block;}
+    .touch_slider_navigation_button_zoom:before
+    {
+        width: 1.4em;
+        top:0.2em;
+        right:0.2em;
+        margin-top:0;
+        padding: 0.1em 0;
+
+        border-radius: 50%;
+
+        content: '\f00e';
+    }
+    .listing_detail_view_gallery_container_active .touch_slider_navigation_button_zoom:before {content: '\f010';}
+}
 
 .touch_slider_image_counter_container
 {

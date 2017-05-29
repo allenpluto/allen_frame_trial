@@ -846,6 +846,101 @@ class content extends base {
 
                             $this->content['script']['load_map'] = ['content'=>'$(\'.listing_detail_view_map .expand_trigger\').click(function(){var map_container = $(this).closest(\'.listing_detail_view_map\').find(\'.listing_detail_view_map_frame_container\');if (map_container.data(\'placeId\')){map_container.html(\'<iframe class="listing_detail_view_map_frame" src="https://www.google.com/maps/embed/v1/place?key='.$this->preference->google_api_credential_browser.'&q=place_id:'.$this->content['field']['business']['place_id'].'"></iframe>\').data(\'placeId\',\'\')}});'];
                         }
+                        else
+                        {
+                            if (!empty($business_fetched_value['place_id']))
+                            {
+                                $entity_place = new entity_place();
+                                $request = 'https://maps.googleapis.com/maps/api/place/details/json?placeid='.$business_fetched_value['place_id'].'&key='.$this->preference->google_api_credential_server;
+                                $response = file_get_contents($request);
+                                if (empty($response))
+                                {
+                                    $this->result['content']['status'] = 'REQUEST_DENIED';
+                                    $this->result['content']['message'] = 'Fail to get place info from Google, No Response';
+                                    return true;
+                                }
+                                $response = json_decode($response,true);
+                                if (!is_array($response))
+                                {
+                                    $this->result['content']['status'] = 'REQUEST_DENIED';
+                                    $this->result['content']['message'] = 'Fail to get place info from Google, Illegal Format Response';
+                                    return true;
+                                }
+                                if ($response['status'] != 'OK')
+                                {
+                                    $this->result['content']['status'] = $response['status'];
+                                    $this->result['content']['message'] = 'Fail to get place info from Google. '.$response['error_message'];
+                                    file_put_contents(PATH_ASSET.'log/google_place_fail_log.txt',json_encode($response,['listing_id'=>$business_fetched_value['id'],'place_id'=>$business_fetched_value['place_id']]).PHP_EOL);
+                                    return true;
+                                }
+                                if (empty($response['result']))
+                                {
+                                    $this->result['content']['status'] = 'ZERO_RESULTS';
+                                    $this->result['content']['message'] = 'Fail to get place info from Google. Given Place ID returns empty result';
+                                    return true;
+                                }
+                                $organization_google_place = $this->format->flatten_google_place($response['result']);
+                                $entity_place->row[] = $organization_google_place;
+                                $this->content['field']['name'] .= ' - '.$organization_google_place['formatted_address'];
+
+                                $this->content['field']['business']['street_address'] = $organization_google_place['name'];
+                                $this->content['field']['business']['suburb'] = $organization_google_place['locality'];
+                                $state_name = [
+                                    'Australian Capital Territory'=>'ACT',
+                                    'New South Wales'=>'NSW',
+                                    'Northern Territory'=>'NT',
+                                    'Queensland'=>'QLD',
+                                    'South Australia'=>'SA',
+                                    'Tasmania'=>'TAS',
+                                    'Victoria'=>'VIC'
+                                ];
+                                $this->content['field']['business']['state'] = $state_name[$organization_google_place['administrative_area_level_1']];
+                                $this->content['field']['business']['postal_code'] = $organization_google_place['postal_code'];
+                                $this->content['field']['business']['latitude'] = $organization_google_place['location_latitude'];
+                                $this->content['field']['business']['longitude'] = $organization_google_place['location_longitude'];
+
+                                $this->content['script']['load_map'] = ['content'=>'$(\'.listing_detail_view_map .expand_trigger\').click(function(){var map_container = $(this).closest(\'.listing_detail_view_map\').find(\'.listing_detail_view_map_frame_container\');if (map_container.data(\'placeId\')){map_container.html(\'<iframe class="listing_detail_view_map_frame" src="https://www.google.com/maps/embed/v1/place?key='.$this->preference->google_api_credential_browser.'&q=place_id:'.$organization_google_place['id'].'"></iframe>\').data(\'placeId\',\'\')}});'];
+
+
+                                $request = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='.$organization_google_place['location_latitude'].','.$organization_google_place['location_longitude'].'&key='.$this->preference->google_api_credential_server;
+                                $response = file_get_contents($request);
+                                if (empty($response))
+                                {
+                                    $this->result['content']['status'] = 'REQUEST_DENIED';
+                                    $this->result['content']['message'] = 'Fail to get place info from Google, No Response';
+                                    return true;
+                                }
+                                $response = json_decode($response,true);
+                                if ($response['status'] != 'OK')
+                                {
+                                    $this->result['content']['status'] = $response['status'];
+                                    $this->result['content']['message'] = 'Fail to get reverse geocoding results from Google. '.$response['error_message'];
+                                    return true;
+                                }
+                                if (empty($response['results']))
+                                {
+                                    $this->result['content']['status'] = 'ZERO_RESULTS';
+                                    $this->result['content']['message'] = 'Fail to get reverse geocoding results from Google. Given Location returns empty result';
+                                    return true;
+                                }
+                                $region_types = ['locality','sublocality','postal_code','country','administrative_area_level_1','administrative_area_level_2'];
+                                foreach($response['results'] as $result_row_index => $result_row)
+                                {
+                                    $type = array_intersect($result_row['types'], $region_types);
+                                    if (!empty($type))
+                                    {
+                                        // If the result_row is a region type, store the row into tbl_entity_place and relation into tbl_rel_organization_to_place
+                                        $organization_region_google_place = $this->format->flatten_google_place($result_row);
+                                        $organization_place[] = $organization_region_google_place['id'];
+                                        $entity_place->row[] = $organization_region_google_place;
+                                    }
+                                }
+                                $entity_organization_obj = new entity_organization($business_fetched_value['id']);
+                                $entity_organization_obj->set(['row'=>[['id'=>$business_fetched_value['id'],'place'=>$organization_place]],'fields'=>['id','place']]);
+                                $entity_place->set();
+
+                            }
+                        }
 
                         if (!empty($this->content['field']['business']['hours_work']))
                         {

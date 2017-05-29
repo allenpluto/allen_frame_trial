@@ -7,7 +7,7 @@ class view_gallery extends view
 {
     var $parameter = array(
         'entity' => 'entity_gallery',
-        'table' => 'tbl_entity_gallery',
+        'table' => 'tbl_view_gallery',
         'primary_key' => 'id'
     );
 
