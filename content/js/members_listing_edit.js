@@ -135,3 +135,67 @@ $('.footer_action_button_save').click(function(event){
 console.log('save clicked');
     $(this).closest('.ajax_form_container').trigger('post_form_data');
 });
+
+$('.form_hours_work_input_submit').click(function(){
+    var form_hours_work_container = $(this).closest('.form_hours_work_container');
+    var form_hours_work_result = form_hours_work_container.find('.form_hours_work_result');
+    var form_hours_work_input_time = form_hours_work_container.find('.form_hours_work_input_time');
+    var form_hours_work_input_weekday = form_hours_work_container.find('.form_hours_work_input_weekday');
+
+    var result = $.parseJSON(form_hours_work_result.val());
+    if (!result)
+    {
+        result = {};
+    }
+
+    var time_period = form_hours_work_input_time.val();
+    var weekday = form_hours_work_input_weekday.val();
+    weekday = weekday.split(',');
+console.log(weekday);
+
+    if (time_period == 'close')
+    {
+        weekday.forEach(function(item,index){
+            if (result[item])
+            {
+                delete result[item];
+            }
+        });
+    }
+    else
+    {
+        if (time_period == 'custom')
+        {
+            // TODO: convert custom input into time json string
+
+        }
+        weekday.forEach(function(item,index){
+            result[item] = time_period;
+        });
+
+    }
+
+    var result_array = [];
+    $.each(function(key,value){
+        result_array.push('"'+key+'":['+value+']');
+    });
+    var result_string = '';
+    if (result_array.length > 0)
+    {
+        result_string = '{'+result_array.join()+'}';
+    }
+    form_hours_work_result.val(result_string).trigger('change');
+});
+
+$('.form_hours_work_result').on('change',function(){
+    var form_hours_work_container = $(this).closest('.form_hours_work_container');
+    var form_hours_work_result = $(this);
+    var form_hours_work_display = form_hours_work_container.find('.form_hours_work_display');
+
+    var result = $.parseJSON(form_hours_work_result.val());
+    if (!result)
+    {
+        result = {};
+    }
+
+});

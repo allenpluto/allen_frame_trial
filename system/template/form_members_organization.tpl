@@ -77,6 +77,35 @@
                 <label for="form_members_organization_twitter">Twitter</label>
                 <input id="form_members_organization_twitter" name="twitter_link" type="text" placeholder="Twitter" value="[[*twitter_link]]">
             </div>
+            <div class="form_row_container">
+                <label>Opening Hours</label>
+                <div class="form_hours_work_container">
+                    <input class="form_hours_work_result" type="hidden" name="hours_work" value="[[*hours_work]]">
+                    <div class="form_hours_work_input">
+                        <select class="form_hours_work_input_time">
+                            <option value="[0.375,0.708333333333]">9:00 to 17:00</option>
+                            <option value="[0.375,0.5],[0.541666666667,0.708333333333]">9:00 to 12:00, 13:00 to 17:00</option>
+                            <option value="[0,1]">24 Hours</option>
+                            <option value="close">Close</option>
+                            <option value="custom">Customise</option>
+                        </select>
+                        <select class="form_hours_work_input_weekday">
+                            <option value="1,2,3,4,5">Mon to Fri</option>
+                            <option value="6,0">Sat and Sun</option>
+                            <option value="1,2,3,4,5,6,0">All Week</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                            <option value="0">Sunday</option>
+                        </select>
+                        <input class="form_hours_work_input_submit" type="button" value="Apply">
+                    </div>
+                    <div class="form_hours_work_display"></div>
+                </div>
+            </div>
             <div class="form_bottom_row_container"></div>
             <div class="footer_action_wrapper"><!--
             --><a href="[[*base]]members/listing/" class="footer_action_button footer_action_button_back">Back</a><!--
