@@ -1187,6 +1187,7 @@ class content extends base {
                                                 break;
                                             default:
                                                 $this->content['field']['organization'] = $entity_organization_data;
+                                                $this->content['field']['organization']['hours_work'] = htmlentities($this->content['field']['organization']['hours_work']);
                                                 $image_uploader_data = array(
                                                     'width'=>500,
                                                     'height'=>500,

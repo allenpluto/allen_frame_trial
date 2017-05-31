@@ -220,7 +220,7 @@ function render_html($field = array())
                 $template_match[$field_row_parameter['template_name']]['match_result'] = array();
                 $template_match[$field_row_parameter['template_name']]['template_translated'] = $field_row_parameter['template'];
                 // If there are multi layer template variables, chunks..., set match_result array from inner ones to outer ones, due to regular express limitation
-                while(preg_match_all('/\[\[((\W*)([^\[]+?))\]\]/', $template_match[$field_row_parameter['template_name']]['template_translated'], $matches))
+                while(preg_match_all('/\[\[((\W*)([_a-z][^\[]+?))\]\]/', $template_match[$field_row_parameter['template_name']]['template_translated'], $matches))
                 {
                     $template_translate = array();
                     foreach($matches[3] as $match_key=>$match_value)
@@ -656,7 +656,7 @@ function render_html($field = array())
             }
 
             // self loop, if page still have untranslated template variables (place holder type excepted, [[+example]], as they are not suppose to be translated at all), use same field and template to render again
-            if (preg_match('/\[\[[^\+](.*?)\]\]/', $field_row_rendered_content))
+            if (preg_match('/\[\[[^\+][a-z](.*?)\]\]/', $field_row_rendered_content))
             {
                 $field_row_rendered_content = render_html(['_value'=>$field_row,'_parameter'=>['template'=>$field_row_rendered_content,'debug'=>true]]);
             }

@@ -81,14 +81,23 @@
                 <label>Opening Hours</label>
                 <div class="form_hours_work_container">
                     <input class="form_hours_work_result" type="hidden" name="hours_work" value="[[*hours_work]]">
+                    <div class="form_hours_work_display"></div>
                     <div class="form_hours_work_input">
+                        <div class="form_hours_work_input_label">Time Period</div>
                         <select class="form_hours_work_input_time">
-                            <option value="[0.375,0.708333333333]">9:00 to 17:00</option>
-                            <option value="[0.375,0.5],[0.541666666667,0.708333333333]">9:00 to 12:00, 13:00 to 17:00</option>
-                            <option value="[0,1]">24 Hours</option>
-                            <option value="close">Close</option>
+                            <option value="[[0.375,0.708333333333]]">9:00 to 17:00</option>
+                            <option value="[[0,1]]">24 Hours</option>
+                            <option value="closed">Closed</option>
                             <option value="custom">Customise</option>
                         </select>
+                        <div class="form_hours_work_input_time_custom_container">
+                            <input class="form_hours_work_input_time_custom_result" type="hidden" value="[[0.375,0.708333333333]]">
+                            <div class="form_hours_work_input_label">Open Time</div>
+                            <select class="form_hours_work_input_time_custom_open"><option value="0">00:00</option><option value="0.0208333333">00:30</option><option value="0.0416666667">01:00</option><option value="0.0625">01:30</option><option value="0.0833333333">02:00</option><option value="0.1041666667">02:30</option><option value="0.125">03:00</option><option value="0.1458333333">03:30</option><option value="0.1666666667">04:00</option><option value="0.1875">04:30</option><option value="0.2083333333">05:00</option><option value="0.2291666667">05:30</option><option value="0.25">06:00</option><option value="0.2708333333">06:30</option><option value="0.2916666667">07:00</option><option value="0.3125">07:30</option><option value="0.3333333333">08:00</option><option value="0.3541666667">08:30</option><option value="0.375" selected>09:00</option><option value="0.3958333333">09:30</option><option value="0.4166666667">10:00</option><option value="0.4375">10:30</option><option value="0.4583333333">11:00</option><option value="0.4791666667">11:30</option><option value="0.5">12:00</option></select>
+                            <div class="form_hours_work_input_label">Close Time</div>
+                            <select class="form_hours_work_input_time_custom_close"><option value="0.5208333333">12:30</option><option value="0.5416666667">13:00</option><option value="0.5625">13:30</option><option value="0.5833333333">14:00</option><option value="0.6041666667">14:30</option><option value="0.625">15:00</option><option value="0.6458333333">15:30</option><option value="0.6666666667">16:00</option><option value="0.6875">16:30</option><option value="0.7083333333" selected>17:00</option><option value="0.7291666667">17:30</option><option value="0.75">18:00</option><option value="0.7708333333">18:30</option><option value="0.7916666667">19:00</option><option value="0.8125">19:30</option><option value="0.8333333333">20:00</option><option value="0.8541666667">20:30</option><option value="0.875">21:00</option><option value="0.8958333333">21:30</option><option value="0.9166666667">22:00</option><option value="0.9375">22:30</option><option value="0.9583333333">23:00</option><option value="0.9791666667">23:30</option><option value="1">23:59</option></select>
+                        </div>
+                        <div class="form_hours_work_input_label">Weekday</div>
                         <select class="form_hours_work_input_weekday">
                             <option value="1,2,3,4,5">Mon to Fri</option>
                             <option value="6,0">Sat and Sun</option>
@@ -101,9 +110,8 @@
                             <option value="6">Saturday</option>
                             <option value="0">Sunday</option>
                         </select>
-                        <input class="form_hours_work_input_submit" type="button" value="Apply">
+                        <input class="form_hours_work_input_submit general_style_input_button general_style_input_button_gray" type="button" value="Change Opening Hour">
                     </div>
-                    <div class="form_hours_work_display"></div>
                 </div>
             </div>
             <div class="form_bottom_row_container"></div>
