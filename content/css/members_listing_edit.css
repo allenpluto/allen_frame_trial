@@ -113,8 +113,6 @@
     position: relative;
     padding: 0;
 
-    font-size: 1.6em;
-
     background: #ffffc0;
 
     border-radius: 5px;
@@ -158,6 +156,14 @@
     width: 100%;
 }
 
+.form_hours_work_input {display: none;}
+.form_hours_work_input_show {display: block;}
+
+.form_hours_work_input select
+{
+    margin-bottom: 0.5em;
+}
+
 .form_hours_work_input_label
 {
     padding: 0.3em 0.8em;
@@ -168,21 +174,52 @@
 .form_hours_work_input_time_custom_container
 {
     display: none;
+    padding: 1em;
+
+    background: rgba(255,255,255,0.8);
+
+    border-radius: 3px;
+
+    font-size: 0.9em;
 }
 
-.form_hours_work_input_submit
+.form_hours_work_input_time_custom_container_show
 {
     display: block;
-    width: 100%;
-    max-width: 300px;
-    margin: 1em auto;
+}
+
+.form_hours_work_input_button_container
+{
+    text-align: center;
+}
+
+.form_hours_work_input_submit,
+.form_hours_work_input_cancel
+{
+    display: inline-block;
+    width: 13em;
+    margin: 0.5em 1em;
 
     font-size: 1.4em;
 }
 
+@media only screen and (max-width:479px)
+{
+    .form_hours_work_input_submit,
+    .form_hours_work_input_cancel
+    {
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        margin: 0.5em auto;
+    }
+
+}
+
 .form_hours_work_display
 {
-    font-size: 1.6em;
+    position: relative;
+    padding: 0.5em 1em;
 
     background: #ffffc0;
 
@@ -192,4 +229,15 @@
     font-size: 1.2em;
     font-style: italic;
     font-weight: bold;
+}
+
+.form_hours_work_display .edit_hours_work
+{
+    display: block;
+    position: absolute;
+    top: 0.2em;
+    right: 0.6em;
+
+    font-size: 1.6em;
+    font-style: normal;
 }
