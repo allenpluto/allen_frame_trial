@@ -270,7 +270,7 @@ class content extends base {
                 switch ($this->request['module'])
                 {
                     case 'listing':
-                        $method = ['search','find','edit','preview','reset','save',''];
+                        $method = ['search','find','edit','gallery','gallery_image','save',''];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
@@ -1233,6 +1233,42 @@ class content extends base {
                                                 $form_ajax_data_string = json_encode($form_ajax_data);
                                                 $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
                                         }
+                                        break;
+                                    case 'gallery':
+                                        if (!isset($this->request['option']['id']))
+                                        {
+                                            $this->message->notice = 'Redirect - operating listing id not set';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/'.$this->request['method'].'/';
+                                            return false;
+                                        }
+                                        $entity_organization_obj = new entity_organization($this->request['option']['id']);
+                                        if (empty($entity_organization_obj->id_group))
+                                        {
+                                            $this->message->notice = 'Invalid request id';
+                                            $this->result['status'] = 404;
+                                            return false;
+                                        }
+
+                                        $entity_organization_data = $entity_organization_obj->get(['fields'=>['id','account_id','name','gallery']]);
+                                        if ($entity_organization_data === false)
+                                        {
+                                            $this->message->error = 'Fail to get entity data';
+                                            return false;
+                                        }
+                                        $entity_organization_data = end($entity_organization_data);
+                                        if ($this->content['account']['id'] != $entity_organization_data['account_id'])
+                                        {
+                                            $this->message->notice = 'Unauthorised access';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/'.$this->request['method'].'/';
+                                            return false;
+                                        }
+
+                                        print_r($entity_organization_data);exit;
+
+                                        break;
+                                    case 'gallery_image':
                                         break;
                                     default:
                                         $ajax_loading_data = array(
