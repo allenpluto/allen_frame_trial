@@ -42,6 +42,6 @@
     <div class="wrapper footer_action_wrapper"><!--
         --><a href="[[*base]]business/[[*friendly_uri]]" class="footer_action_button">Preview</a><!--
         --><a href="[[*base]]members/listing/edit?id=[[*id]]" class="footer_action_button">Edit</a><!--
-        --><a href="[[*base]]members/listing/gallery?id=[[*id]]" class="footer_action_button">Gallery</a><!--
+        --><a href="[[*base]]members/listing/gallery?organization_id=[[*id]]" class="footer_action_button">Gallery</a><!--
     --></div>
 </div>

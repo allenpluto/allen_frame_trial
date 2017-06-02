@@ -270,7 +270,7 @@ class content extends base {
                 switch ($this->request['module'])
                 {
                     case 'listing':
-                        $method = ['search','find','edit','gallery','gallery_image','save',''];
+                        $method = ['search','find','edit','save','gallery','gallery_add','gallery_edit','save_gallery',''];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
@@ -1235,17 +1235,17 @@ class content extends base {
                                         }
                                         break;
                                     case 'gallery':
-                                        if (!isset($this->request['option']['id']))
+                                        if (!isset($this->request['option']['organization_id']))
                                         {
                                             $this->message->notice = 'Redirect - operating listing id not set';
                                             $this->result['status'] = 301;
                                             $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/'.$this->request['method'].'/';
                                             return false;
                                         }
-                                        $entity_organization_obj = new entity_organization($this->request['option']['id']);
+                                        $entity_organization_obj = new entity_organization($this->request['option']['organization_id']);
                                         if (empty($entity_organization_obj->id_group))
                                         {
-                                            $this->message->notice = 'Invalid request id';
+                                            $this->message->notice = 'Invalid request listing id';
                                             $this->result['status'] = 404;
                                             return false;
                                         }
@@ -1265,10 +1265,8 @@ class content extends base {
                                             return false;
                                         }
 
-                                        print_r($entity_organization_data);exit;
+                                        $this->content['field']['organization'] = $entity_organization_data;
 
-                                        break;
-                                    case 'gallery_image':
                                         break;
                                     default:
                                         $ajax_loading_data = array(
