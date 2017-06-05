@@ -256,7 +256,7 @@ class content extends base {
                 }
 
                 //$request_path_part = array_shift($request_path);
-                $module = ['profile','listing','business','business-amp'];
+                $module = ['profile','listing','business','business-amp','gallery'];
                 if (in_array($request_path_part,$module))
                 {
                     $this->request['module'] = $request_path_part;
@@ -965,6 +965,102 @@ class content extends base {
                             }
                         }
 
+                        break;
+                    case 'gallery':
+                        switch($this->request['control_panel'])
+                        {
+                            case 'members':
+                                switch($this->request['method'])
+                                {
+                                    case 'add';
+                                        $this->content['field']['gallery'] = [];
+
+                                        if (isset($this->request['option']['organization_id']))
+                                        {
+                                            $entity_organization_obj = new entity_organization($this->request['option']['organization_id']);
+                                            if (empty($entity_organization_obj->id_group))
+                                            {
+                                                $this->message->notice = 'Invalid request listing id';
+                                                $this->result['status'] = 404;
+                                                return false;
+                                            }
+
+                                            $entity_organization_data = $entity_organization_obj->get(['fields'=>['id','account_id','name','gallery']]);
+                                            if ($entity_organization_data === false)
+                                            {
+                                                $this->message->error = 'Fail to get entity data';
+                                                return false;
+                                            }
+                                            $entity_organization_data = end($entity_organization_data);
+                                            if ($this->content['account']['id'] != $entity_organization_data['account_id'])
+                                            {
+                                                $this->message->notice = 'Unauthorised access';
+                                                $this->result['status'] = 301;
+                                                $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/'.$this->request['method'].'/';
+                                                return false;
+                                            }
+
+                                            $this->content['field']['gallery']['name'] = $entity_organization_data['name'].' Gallery - '.date('d M, Y');
+                                        }
+
+                                        break;
+                                    case 'edit':
+                                        if (!isset($this->request['option']['id']))
+                                        {
+                                            $this->message->notice = 'Redirect - operating gallery id not set';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
+                                            return false;
+                                        }
+                                        $entity_gallery_obj = new entity_gallery($this->request['option']['id']);
+                                        if (empty($entity_gallery_obj->id_group))
+                                        {
+                                            $this->message->notice = 'Invalid request id';
+                                            $this->result['status'] = 404;
+                                            return false;
+                                        }
+
+                                        $entity_gallery_data = $entity_gallery_obj->get(['relational_fields'=>['category']]);
+                                        if ($entity_gallery_data === false)
+                                        {
+                                            $this->message->error = 'Fail to get entity data';
+                                            return false;
+                                        }
+                                        $entity_gallery_data = end($entity_gallery_data);
+                                        if ($this->content['account']['id'] != $entity_gallery_data['account_id'])
+                                        {
+                                            $this->message->notice = 'Unauthorised access';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/'.$this->request['method'].'/';
+                                            return false;
+                                        }
+
+                                        switch($this->request['action']) {
+                                            case 'save':
+                                                if (!is_array($this->request['option']['form_data']))
+                                                {
+                                                    parse_str($this->request['option']['form_data'],$this->content['form_data']);
+                                                }
+                                                else
+                                                {
+                                                    $this->content['form_data'] = $this->request['option']['form_data'];
+                                                }
+
+                                                if (isset($this->content['form_data']['image']))
+                                                {
+
+                                                }
+                                                break;
+                                            default:
+                                                break;
+                                        }
+
+                                        break;
+                                    case 'save':
+                                        break;
+                                }
+                                break;
+                        }
                         break;
                     case 'listing':
                         switch($this->request['control_panel'])

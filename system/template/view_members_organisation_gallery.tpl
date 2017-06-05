@@ -3,6 +3,7 @@
     <div class="members_organization_gallery_title"><h3>[[*name]]</h3></div>
     <div class="clear"></div>
     <div class="wrapper footer_action_wrapper"><!--
-        --><a href="[[*base]]members/listing/gallery_edit?id=[[*id]]" class="footer_action_button">Edit</a><!--
+        --><a href="[[*base]]members/gallery/delete?id=[[*id]]" class="footer_action_button">Delete</a><!--
+        --><a href="[[*base]]members/gallery/edit?id=[[*id]]" class="footer_action_button">Edit</a><!--
     --></div>
 </div><!--
