@@ -269,8 +269,20 @@ class content extends base {
 
                 switch ($this->request['module'])
                 {
+                    case 'gallery':
+                        $method = ['add','edit',''];
+                        if (in_array($request_path_part,$method))
+                        {
+                            $this->request['method'] = $request_path_part;
+                            $request_path_part = array_shift($request_path);
+                        }
+                        else
+                        {
+                            $this->request['method'] = end($method);
+                        }
+                        break;
                     case 'listing':
-                        $method = ['search','find','edit','save','gallery','gallery_add','gallery_edit','save_gallery',''];
+                        $method = ['search','find','edit','save','gallery',''];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
@@ -1020,7 +1032,7 @@ class content extends base {
                                             return false;
                                         }
 
-                                        $entity_gallery_data = $entity_gallery_obj->get(['relational_fields'=>['category']]);
+                                        $entity_gallery_data = $entity_gallery_obj->get(['relational_fields'=>['image']]);
                                         if ($entity_gallery_data === false)
                                         {
                                             $this->message->error = 'Fail to get entity data';
@@ -1035,7 +1047,8 @@ class content extends base {
                                             return false;
                                         }
 
-                                        switch($this->request['action']) {
+                                        switch($this->request['action'])
+                                        {
                                             case 'save':
                                                 if (!is_array($this->request['option']['form_data']))
                                                 {
@@ -1052,11 +1065,14 @@ class content extends base {
                                                 }
                                                 break;
                                             default:
+                                                $view_image_obj = new view_image($entity_gallery_data['image']);
+                                                $view_image_data = $view_image_obj->fetch_value(['page_size'=>20]);
+                                                $this->content['field']['gallery'] = $entity_gallery_data;
                                                 break;
                                         }
 
                                         break;
-                                    case 'save':
+                                    default:
                                         break;
                                 }
                                 break;

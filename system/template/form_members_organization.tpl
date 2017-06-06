@@ -125,8 +125,8 @@
             <div class="form_bottom_row_container"></div>
             <div class="footer_action_wrapper"><!--
             --><a href="[[*base]]members/listing/" class="footer_action_button footer_action_button_back">Back</a><!--
-            --><a href="[[*base]]members/listing/reset" class="footer_action_button footer_action_button_reset">Reset</a><!--
-            --><a href="[[*base]]members/listing/save" class="footer_action_button footer_action_button_save">Save</a><!--
+            --><a href="javascript:void(0)" class="footer_action_button footer_action_button_reset">Reset</a><!--
+            --><a href="javascript:void(0)" class="footer_action_button footer_action_button_save">Save</a><!--
         --></div>
             <div class="ajax_form_mask"><div class="ajax_form_mask_loading_icon"></div><div class="ajax_form_info"></div></div>
         </form>

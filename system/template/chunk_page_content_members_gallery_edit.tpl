@@ -1,0 +1,1 @@
+[[*gallery:template_name=`form_members_gallery`:page_size=`1`]]
