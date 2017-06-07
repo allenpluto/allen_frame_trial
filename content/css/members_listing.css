@@ -4,21 +4,6 @@
     border:2px solid #ffb303;
 }
 
-.footer_action_wrapper
-{
-    display:block;
-    width:100%;
-    position:fixed;
-    left:0;
-    bottom:0;
-
-    color: #ffffff;
-    font-size: 1.6em;
-    text-align: center;
-
-    z-index: 500;
-}
-
 .members_organization_block_container .footer_action_wrapper
 {
     opacity: 0;
@@ -36,25 +21,4 @@
 {
     opacity: 1;
     pointer-events: auto;
-}
-
-.footer_action_button
-{
-    display:inline-block;
-    width: 33.333333333%;
-    padding: 0.5em 0;
-
-    background: rgba(0,0,0,0.6);
-
-    border-left: 1px solid #333333;
-    border-right: 1px solid #999999;
-
-    box-sizing: border-box;
-
-    cursor: pointer;
-}
-
-.footer_action_button:hover
-{
-    background: rgba(0,0,0,0.5);
 }

@@ -1068,6 +1068,12 @@ class content extends base {
                                                 $view_image_obj = new view_image($entity_gallery_data['image']);
                                                 $view_image_data = $view_image_obj->fetch_value(['page_size'=>20]);
                                                 $this->content['field']['gallery'] = $entity_gallery_data;
+                                                $form_ajax_data = array(
+                                                    'id'=>$this->request['option']['id']
+                                                );
+                                                $form_ajax_data_string = json_encode($form_ajax_data);
+                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
+
                                                 break;
                                         }
 
