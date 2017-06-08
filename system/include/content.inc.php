@@ -1385,6 +1385,15 @@ class content extends base {
 
                                         $this->content['field']['organization'] = $entity_organization_data;
 
+                                        if (!empty($this->request['option']['id']))
+                                        {
+                                            $form_ajax_data = array(
+                                                'id'=>$this->request['option']['id']
+                                            );
+                                            $form_ajax_data_string = json_encode($form_ajax_data);
+                                            $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
+                                        }
+
                                         break;
                                     default:
                                         $ajax_loading_data = array(

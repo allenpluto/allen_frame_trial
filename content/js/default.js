@@ -221,7 +221,7 @@ $.fn.ajax_form = function(user_option) {
         form.on('post_form_data',function(){
             var update_data = {};
             form.trigger('get_update_data',[update_data]);
-
+console.log(update_data);
             if ($.isEmptyObject(update_data))
             {
                 form.trigger('display_message',['Nothing Updated']);
@@ -252,7 +252,7 @@ $.fn.ajax_form = function(user_option) {
                     if (callback_obj.status == 'OK')
                     {
                         var update_data = callback_obj.form_data;
-//console.log(update_data);
+console.log(update_data);
                         form.trigger('set_update_data',[update_data]);
                         form.trigger('display_message',['Listing Updated','success']);
                     }
@@ -669,38 +669,21 @@ $.fn.form_image_uploader = function(user_option){
 // Image Uploader
 $.fn.form_gallery_uploader = function(user_option){
     var default_option = {
-        'trigger': '.form_gallery_uploader_trigger',
-        'result': '.form_image_uploader_result',
-        'allow_delete': false,
+        'add_trigger': '.form_gallery_uploader_trigger',
         'delete_trigger': '.form_image_uploader_delete_trigger',
-        'default_image': './image/upload_image.jpg',
-        'shrink_large': false,
-        'width': 200,
-        'height': 200,
+        'default_image': './image/upload_gallery_image.jpg',
+        'width': 800,
+        'height': 600,
         'quality': 0.6
     };
     // Extend our default option with user provided.
     var option = $.extend(default_option, user_option);
 
     return this.each(function() {
-        var image_uploader = $(this);
-        var image_uploader_trigger = image_uploader.find(option['trigger']);
-        var image_uploader_result = image_uploader.find(option['result']);
-        var image_uploader_delete_trigger = null;
-        if (option['allow_delete'])
-        {
-            image_uploader_delete_trigger = image_uploader.find(option['delete_trigger']);
-            if(image_uploader_delete_trigger.length == 0)
-            {
-                image_uploader_delete_trigger = $('<div />',{
-                    'class':'form_image_uploader_delete_trigger'
-                });
-                image_uploader_delete_trigger.appendTo(image_uploader);
-            }
-        }
+        var gallery_uploader = $(this);
+        var gallery_uploader_add_trigger = gallery_uploader.find(option['add_trigger']);
 
         var source_image = $('<img />');
-        var result_image = image_uploader_trigger.find('img');
 
         source_image[0].onload = function(){
             var source_image_width = source_image[0].width;
@@ -744,10 +727,9 @@ $.fn.form_gallery_uploader = function(user_option){
                 temp_ctx.drawImage(source_image[0],(option['width']-source_image_width)/2,(option['height']-source_image_height)/2,source_image_width,source_image_height);
 
                 // Apply Image
-                //result_image.attr('src',temp_canvas.toDataURL('image/jpeg',option['quality']));
-                //image_uploader_result.val(result_image.attr('src'));
-                image_uploader_result.val(temp_canvas.toDataURL('image/jpeg',option['quality'])).change();
-                image_uploader.removeClass('form_image_uploader_container_empty');
+                var form_gallery_image_container = $('<div />',{
+                    'class':'form_row_container form_gallery_image_container form_gallery_image_container_new'
+                }).html('<img class="form_gallery_image_file" src="'+temp_canvas.toDataURL('image/jpeg',option['quality'])+'"><div class="form_gallery_image_delete_trigger"></div><label>Image Name</label><input class="form_members_gallery_image_name" type="text" placeholder="Image Name" value="">').appendTo(gallery_uploader);
             }
         };
 
@@ -811,13 +793,13 @@ $.fn.form_gallery_uploader = function(user_option){
             }
         };
 
-        image_uploader_trigger.click(function(event)
+        gallery_uploader_add_trigger.click(function(event)
         {
             event.preventDefault();
             var image_source = $('<input />',{
                 'type': 'file'
             });
-            image_source.hide().appendTo(image_uploader);
+            image_source.hide().appendTo(gallery_uploader);
 
             // File Upload Functions
             image_source.change(function(event){
@@ -834,7 +816,7 @@ $.fn.form_gallery_uploader = function(user_option){
 
         });
 
-        image_uploader.on('drop', function(event){
+        gallery_uploader.on('drop', function(event){
             event.preventDefault();
 
             var file = event.originalEvent.dataTransfer.files[0];
@@ -842,26 +824,17 @@ $.fn.form_gallery_uploader = function(user_option){
 
         });
 
-        image_uploader_result.change(function(){
-            if ($(this).val() == '')
+        gallery_uploader.on('click', '.form_gallery_image_delete_trigger', function(event){
+            var form_gallery_image_container = $(this).closest('.form_gallery_image_container');
+            if (form_gallery_image_container.hasClass('form_gallery_image_container_new'))
             {
-                result_image.attr('src',option['default_image']);
+                form_gallery_image_container.remove();
             }
             else
             {
-                result_image.attr('src',$(this).val());
+                form_gallery_image_container.addClass('form_gallery_image_container_delete');
             }
         });
-
-        if (option['allow_delete'])
-        {
-            image_uploader_delete_trigger.click(function(event)
-            {
-                //result_image.attr('src',option['default_image']);
-                image_uploader_result.val('').change();
-                image_uploader.addClass('form_image_uploader_container_empty');
-            });
-        }
     });
 };
 

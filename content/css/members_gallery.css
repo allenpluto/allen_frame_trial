@@ -53,6 +53,11 @@
     background: #ffffff;
 }
 
+.form_gallery_image_container_delete
+{
+    display: none;
+}
+
 .form_gallery_image_trigger
 {
     display: inline-block;
@@ -65,8 +70,8 @@
 .form_gallery_image_delete_trigger
 {
     display: block;
-    width: 30px;
-    height: 30px;
+    width: 0;
+    height: 0;
     position: absolute;
     top:-10px;
     right:-10px;
@@ -81,8 +86,21 @@
 
     cursor: pointer;
 
-    opacity: 0.8;
+    -webkit-transition:opacity 500ms ease;
+    -moz-transition:opacity 500ms ease;
+    -ms-transition:opacity 500ms ease;
+    -o-transition:opacity 500ms ease;
+    transition:opacity 500ms ease;
+
+    opacity: 0;
     z-index: 100;
+}
+
+.form_gallery_image_container:hover .form_gallery_image_delete_trigger
+{
+    width: 30px;
+    height: 30px;
+    opacity: 0.8;
 }
 
 .form_gallery_image_delete_trigger:before

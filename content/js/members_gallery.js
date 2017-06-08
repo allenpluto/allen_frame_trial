@@ -33,3 +33,17 @@ form.on('get_update_data', function(event, update_data){
         update_data['new_image'] = new_image;
     }
 });
+
+$('.footer_action_button_reset').click(function(event){
+    event.preventDefault();
+    $(this).closest('.ajax_form_container').trigger('retrieve_form_data');
+});
+
+$('.footer_action_button_save').click(function(event){
+    event.preventDefault();
+    $(this).closest('.ajax_form_container').trigger('post_form_data');
+});
+
+$(document).ready(function(){
+    $('.form_gallery_uploader_container').form_gallery_uploader();
+});
