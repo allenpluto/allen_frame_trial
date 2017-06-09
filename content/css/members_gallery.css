@@ -35,6 +35,18 @@
 
     border:2px solid #cccccc;
     border-radius:3px;
+
+    -webkit-transition:border-color 500ms ease;
+    -moz-transition:border-color 500ms ease;
+    -ms-transition:border-color 500ms ease;
+    -o-transition:border-color 500ms ease;
+    transition:border-color 500ms ease;
+}
+
+.form_row_container_highlight input[type="text"],
+.form_row_container_highlight select
+{
+    border-color: #ffb303;
 }
 
 .form_bottom_row_container

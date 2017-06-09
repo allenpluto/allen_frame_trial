@@ -674,6 +674,7 @@ $.fn.form_gallery_uploader = function(user_option){
         'default_image': './image/upload_gallery_image.jpg',
         'width': 800,
         'height': 600,
+        'ratio': [0.5,1.5],
         'quality': 0.6
     };
     // Extend our default option with user provided.
@@ -697,39 +698,77 @@ $.fn.form_gallery_uploader = function(user_option){
             {
                 // Resize Image
                 var source_image_ratio = source_image_width / source_image_height;
-                var result_image_ratio = option['width'] / option['height'];
+                var result_image_width = option['width'];
+                var result_image_height = option['height'];
+                var result_image_ratio = result_image_width/result_image_height;
 
-                if (source_image_ratio > result_image_ratio)
+                if (result_image_ratio < option['ratio'][0])
                 {
-                    if (source_image_height < option['height'] || option['shrink_large'])
+                    result_image_height = result_image_width / option['ratio'][0];
+                    result_image_ratio = option['ratio'][0];
+                }
+                if (result_image_ratio > option['ratio'][1])
+                {
+                    result_image_width = result_image_height * option['ratio'][1];
+                    result_image_ratio = option['ratio'][1];
+                }
+
+                if (source_image_ratio < result_image_ratio)
+                {
+                    if (source_image_ratio < option['ratio'][0])
                     {
-                        source_image_height = option['height'];
-                        source_image_width = source_image_ratio * source_image_height;
+                        result_image_width = result_image_height * option['ratio'][0];
+                        source_image_width = result_image_width;
+                        source_image_height = source_image_width / source_image_ratio;
+                    }
+                    else
+                    {
+                        source_image_height = result_image_height;
+                        source_image_width = source_image_height * source_image_ratio;
+                        result_image_width = source_image_width;
                     }
                 }
                 else
                 {
-                    if (source_image_width < option['width'] || option['shrink_large'])
+                    if (source_image_ratio > option['ratio'][1])
                     {
-                        source_image_width = option['width'];
+                        result_image_height = result_image_width / option['ratio'][1];
+                        source_image_height = result_image_height;
+                        source_image_width = source_image_height * source_image_ratio;
+                    }
+                    else
+                    {
+                        source_image_width = result_image_width;
                         source_image_height = source_image_width / source_image_ratio;
+                        result_image_height = source_image_height;
                     }
                 }
 
                 // Crop Image
                 var temp_canvas = document.createElement('canvas');
-                temp_canvas.width = option['width'];
-                temp_canvas.height = option['height'];
+                temp_canvas.width = result_image_width;
+                temp_canvas.height = result_image_height;
                 temp_ctx = temp_canvas.getContext('2d');
 
                 temp_ctx.fillStyle = '#ffffff';
-                temp_ctx.fillRect(0,0,option['width'],option['height']);
-                temp_ctx.drawImage(source_image[0],(option['width']-source_image_width)/2,(option['height']-source_image_height)/2,source_image_width,source_image_height);
+                temp_ctx.fillRect(0,0,result_image_width,result_image_height);
+                temp_ctx.drawImage(source_image[0],(result_image_width-source_image_width)/2,(result_image_height-source_image_height)/2,source_image_width,source_image_height);
 
                 // Apply Image
                 var form_gallery_image_container = $('<div />',{
-                    'class':'form_row_container form_gallery_image_container form_gallery_image_container_new'
+                    'class':'form_row_container form_row_container_highlight form_gallery_image_container form_gallery_image_container_new'
                 }).html('<img class="form_gallery_image_file" src="'+temp_canvas.toDataURL('image/jpeg',option['quality'])+'"><div class="form_gallery_image_delete_trigger"></div><label>Image Name</label><input class="form_members_gallery_image_name" type="text" placeholder="Image Name" value="">').appendTo(gallery_uploader);
+                if (gallery_uploader.find('.form_row_container_highlight').length == 1)
+                {
+                    $('#off_canvas_wrapper').animate({
+                        scrollTop:form_gallery_image_container.position().top
+                    },500,function(){
+                        form_gallery_image_container.find('input').focus();
+                    });
+                }
+                setTimeout(function(){
+                    form_gallery_image_container.removeClass('form_row_container_highlight')
+                },3000);
             }
         };
 
@@ -819,9 +858,13 @@ $.fn.form_gallery_uploader = function(user_option){
         gallery_uploader.on('drop', function(event){
             event.preventDefault();
 
-            var file = event.originalEvent.dataTransfer.files[0];
-            read_file(file);
-
+            var files = event.originalEvent.dataTransfer.files;
+            for (var i=0; i<files.length; i++)
+            {
+                read_file(files[i]);
+            }
+            //var file = event.originalEvent.dataTransfer.files[0];
+            //read_file(file);
         });
 
         gallery_uploader.on('click', '.form_gallery_image_delete_trigger', function(event){

@@ -37,6 +37,12 @@
     border-radius:3px;
 }
 
+.form_row_container_highlight input[type="text"],
+.form_row_container_highlight select
+{
+    border-color: #ffb303;
+}
+
 .form_bottom_row_container
 {
     height: 2.4em;

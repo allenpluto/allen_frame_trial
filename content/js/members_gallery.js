@@ -7,6 +7,7 @@ form.on('retrieve_form_data',function(){
 });
 
 form.on('set_update_data',function(event, update_data){
+console.log('member gallery set_update_data');
     if (update_data['image_row'])
     {
         var form_data = {};
@@ -24,6 +25,7 @@ form.on('set_update_data',function(event, update_data){
 });
 
 form.on('get_update_data', function(event, update_data){
+console.log('member gallery get_update_data');
     var new_image = [];
     form.find('.form_gallery_image_container_new').each(function(){
         new_image.push({'name':$(this).find('.form_members_gallery_image_name').val(),'source_file':$(this).find('.form_gallery_image_file').attr('src')})
