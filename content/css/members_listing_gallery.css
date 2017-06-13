@@ -137,25 +137,6 @@
 .touch_slider_navigation_button_previous:before {left:0.2em;content: '\f053';}
 .touch_slider_navigation_button_next:before {right:0.2em;content: '\f054';}
 
-.touch_slider_navigation_button_zoom {display: none;}
-@media only screen and (min-width:768px)
-{
-    .touch_slider_navigation_button_zoom {display: block;}
-    .touch_slider_navigation_button_zoom:before
-    {
-        width: 1.4em;
-        top:0.2em;
-        right:0.2em;
-        margin-top:0;
-        padding: 0.1em 0;
-
-        border-radius: 50%;
-
-        content: '\f00e';
-    }
-    .members_organization_gallery_container_active .touch_slider_navigation_button_zoom:before {content: '\f010';}
-}
-
 .touch_slider_image_counter_container
 {
     display: block;

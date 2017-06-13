@@ -138,6 +138,7 @@ console.log(info_obj);
 
 $.fn.ajax_form = function(user_option) {
     var default_option = {
+        'action': 'update',
         'ajax_post':{
             'type': 'POST',
             'url': window.location.pathname,
@@ -153,6 +154,10 @@ $.fn.ajax_form = function(user_option) {
         if (option['form_data'])
         {
             form.data('form_data', option['form_data']);
+        }
+        if (option['action'])
+        {
+            form.data('action', option['action']);
         }
 
         form.on('display_message',function(event, message, message_type, auto_close){
@@ -232,7 +237,7 @@ console.log(update_data);
                 'id':form.data('form_data').id,
                 'form_data':update_data,
                 'file_type':'json',
-                'action':'save'
+                'action':form.data('action')
             };
             $.ajax({
                 'type': option['ajax_post']['type'],
@@ -244,11 +249,13 @@ console.log(update_data);
                 },
                 'timeout': option['ajax_post']['timeout']
             }).always(function (callback_obj, status, info_obj) {
+console.log('Post Complete');
+console.log(status);
                 form.removeClass('ajax_form_container_loading');
                 if (status == 'success') {
                     var data = callback_obj;
                     var xhr = info_obj;
-
+console.log(callback_obj);
                     if (callback_obj.status == 'OK')
                     {
                         var update_data = callback_obj.form_data;
@@ -757,7 +764,7 @@ $.fn.form_gallery_uploader = function(user_option){
                 // Apply Image
                 var form_gallery_image_container = $('<div />',{
                     'class':'form_row_container form_row_container_highlight form_gallery_image_container form_gallery_image_container_new'
-                }).html('<img class="form_gallery_image_file" src="'+temp_canvas.toDataURL('image/jpeg',option['quality'])+'"><div class="form_gallery_image_delete_trigger"></div><label>Image Name</label><input class="form_members_gallery_image_name" type="text" placeholder="Image Name" value="">').appendTo(gallery_uploader);
+                }).html('<img class="form_gallery_image_file" src="'+temp_canvas.toDataURL('image/jpeg',option['quality'])+'"><div class="form_gallery_image_delete_trigger"></div><input class="form_members_gallery_image_name" type="text" placeholder="Image Name" value="">').appendTo(gallery_uploader);
                 if (gallery_uploader.find('.form_row_container_highlight').length == 1)
                 {
                     $('#off_canvas_wrapper').animate({

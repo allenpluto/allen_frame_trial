@@ -282,7 +282,7 @@ class content extends base {
                         }
                         break;
                     case 'listing':
-                        $method = ['search','find','edit','save','gallery',''];
+                        $method = ['search','find','edit','update','gallery',''];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
@@ -1049,7 +1049,7 @@ class content extends base {
 
                                         switch($this->request['action'])
                                         {
-                                            case 'save':
+                                            case 'update':
                                                 if (!is_array($this->request['option']['form_data']))
                                                 {
                                                     parse_str($this->request['option']['form_data'],$this->content['form_data']);
@@ -1059,14 +1059,78 @@ class content extends base {
                                                     $this->content['form_data'] = $this->request['option']['form_data'];
                                                 }
 
-                                                if (isset($this->content['form_data']['image']))
+                                                $current_image = explode(',',$entity_gallery_data['image']);
+                                                $new_image = [];
+                                                if (isset($this->content['form_data']['new_image']))
                                                 {
-
+                                                    $image_obj = new entity_image();
+                                                    $image_obj->set(['row'=>$this->content['form_data']['new_image']]);
+                                                    $new_image = array_values($image_obj->id_group);
+                                                    unset($image_obj);
+                                                    unset($this->content['form_data']['new_image']);
                                                 }
+
+                                                $delete_image = [];
+                                                if (isset($this->content['form_data']['delete_image']))
+                                                {
+                                                    $delete_image = $this->content['form_data']['delete_image'];
+                                                    if (!is_array($delete_image)) $delete_image = explode(',',$delete_image);
+                                                    $delete_image = array_intersect($delete_image,$current_image);
+
+                                                    $image_obj = new entity_image($delete_image);
+                                                    $image_obj->delete();
+                                                    unset($image_obj);
+                                                    unset($this->content['form_data']['delete_image']);
+                                                }
+                                                $current_image = array_diff($current_image,$delete_image);
+                                                $current_image = array_merge($current_image,$new_image);
+                                                $current_image = implode(',',$current_image);
+                                                if ($current_image != $entity_gallery_data['image'])
+                                                {
+                                                    $this->content['form_data']['image'] = $current_image;
+                                                }
+
+                                                foreach ($this->content['form_data'] as $form_field_name=>$form_field_value)
+                                                {
+                                                    if (preg_match('/^image_name_(\d+)$/',$form_field_name,$matches))
+                                                    {
+                                                        $image_id = $matches[1];
+                                                        $image_obj = new entity_image($image_id);
+                                                        $image_obj->update(['name'=>$form_field_value]);
+                                                        unset($image_obj);
+                                                        unset($this->content['form_data'][$form_field_name]);
+                                                    }
+                                                }
+
+                                                $entity_gallery_obj->update($this->content['form_data']);
+
+                                                $entity_gallery_data = $entity_gallery_obj->get(['fields'=>['name','image']]);
+                                                if ($entity_gallery_data === false)
+                                                {
+                                                    $this->result['content']['status'] = 'SERVER_ERROR';
+                                                    $this->result['content']['message'] = 'Database update request failed, try again later';
+                                                    return true;
+                                                }
+                                                $entity_gallery_data = end($entity_gallery_data);
+
+                                                if (!empty($entity_gallery_data['image']))
+                                                {
+                                                    $view_image_obj = new view_image($entity_gallery_data['image']);
+                                                    $view_image_data = $view_image_obj->fetch_value(['page_size'=>20]);
+                                                    $entity_gallery_data['image_row'] = [];
+                                                    foreach($view_image_data as $view_image_row)
+                                                    {
+                                                        $entity_gallery_data['image_row'][] = ['id'=>$view_image_row['id'],'name'=>$view_image_row['name'],'file_uri'=>$view_image_row['file_uri']];
+                                                    }
+                                                }
+
+                                                $entity_gallery_obj->sync();
+
+                                                $this->result['content']['status'] = 'OK';
+                                                $this->result['content']['message'] = 'Gallery updated successfully';
+                                                $this->result['content']['form_data'] = $entity_gallery_data;
                                                 break;
                                             default:
-                                                $view_image_obj = new view_image($entity_gallery_data['image']);
-                                                $view_image_data = $view_image_obj->fetch_value(['page_size'=>20]);
                                                 $this->content['field']['gallery'] = $entity_gallery_data;
                                                 $form_ajax_data = array(
                                                     'id'=>$this->request['option']['id']
@@ -1122,7 +1186,7 @@ class content extends base {
                                         }
                                         switch($this->request['action'])
                                         {
-                                            case 'save':
+                                            case 'update':
                                                 if (!is_array($this->request['option']['form_data']))
                                                 {
                                                     parse_str($this->request['option']['form_data'],$this->content['form_data']);
@@ -1349,7 +1413,7 @@ class content extends base {
                                                     'id'=>$this->request['option']['id']
                                                 );
                                                 $form_ajax_data_string = json_encode($form_ajax_data);
-                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
+                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.',"form_action":"save"}).trigger(\'store_form_data\');});'];
                                         }
                                         break;
                                     case 'gallery':
@@ -1384,16 +1448,6 @@ class content extends base {
                                         }
 
                                         $this->content['field']['organization'] = $entity_organization_data;
-
-                                        if (!empty($this->request['option']['id']))
-                                        {
-                                            $form_ajax_data = array(
-                                                'id'=>$this->request['option']['id']
-                                            );
-                                            $form_ajax_data_string = json_encode($form_ajax_data);
-                                            $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
-                                        }
-
                                         break;
                                     default:
                                         $ajax_loading_data = array(
@@ -1981,12 +2035,6 @@ class content extends base {
                                 switch($this->request['method'])
                                 {
                                     case 'edit':
-//                                        switch($this->request['action'])
-//                                        {
-//                                            case 'save':
-//                                                $this->result['content']['form'] = $this->request['option'];
-//                                                break;
-//                                        }
                                         break;
                                     case '':
                                         $this->result['content']['html'] = render_html(['_value'=>$this->content['field'],'_parameter'=>['template'=>'[[organization:template_name=`view_members_organization_summary`]]']]);

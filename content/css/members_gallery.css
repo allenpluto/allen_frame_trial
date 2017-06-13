@@ -63,6 +63,18 @@
     margin: 1em 0;
 
     background: #ffffff;
+
+    vertical-align: top;
+}
+
+@media only screen and (min-width:480px) and (max-width:991px)
+{
+    .form_gallery_image_container {width: 48%;margin:1em 1%;}
+}
+
+@media only screen and (min-width:992px)
+{
+    .form_gallery_image_container  {width: 23%;margin:1em 1%;}
 }
 
 .form_gallery_image_container_delete
@@ -70,13 +82,23 @@
     display: none;
 }
 
-.form_gallery_image_trigger
+.form_gallery_uploader_trigger
 {
-    display: inline-block;
+    display: block;
     background: #ffffff;
 
     border:2px solid #cccccc;
     border-radius: 3px;
+}
+
+.form_gallery_image_file
+{
+    padding-bottom: 1em;
+}
+
+.form_gallery_uploader_trigger_container .form_gallery_image_file
+{
+    padding: 0.5em;
 }
 
 .form_gallery_image_delete_trigger
