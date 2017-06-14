@@ -7,6 +7,11 @@
 //print_r($_POST);
     $page_content = new content();
 
+if (!empty($page_content->message->error))
+{
+    print_r($page_content);
+    exit();
+}
 //print_r($page_content);
 //exit();
     $page_content->render();

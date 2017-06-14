@@ -14,7 +14,7 @@
             --></div>
             <div class="form_bottom_row_container"></div>
             <div class="footer_action_wrapper"><!--
-            --><a href="[[*base]]members/" class="footer_action_button footer_action_button_back">Back</a><!--
+            --><a href="[[*back_link]]" class="footer_action_button footer_action_button_back">Back</a><!--
             --><a href="javascript:void(0)" class="footer_action_button footer_action_button_reset">Reset</a><!--
             --><a href="javascript:void(0)" class="footer_action_button footer_action_button_save">Save</a><!--
         --></div>

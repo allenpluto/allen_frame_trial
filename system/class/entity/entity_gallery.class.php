@@ -17,6 +17,15 @@ class entity_gallery extends entity
         return parent::__construct($value, $parameter);
     }
 
+    function fetch_value($parameter = array())
+    {
+        if (empty($parameter['relational_fields']))
+        {
+            $parameter['relational_fields'] = ['image'];
+        }
+        return parent::get($parameter);
+    }
+
     function sync($parameter = array())
     {
         $sync_parameter = array();

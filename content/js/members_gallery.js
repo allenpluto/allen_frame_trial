@@ -19,21 +19,30 @@ $(document).ready(function(){
     });
 
     form.on('set_update_data',function(event, update_data){
-        console.log('member gallery set_update_data');
+console.log('member gallery set_update_data');
+console.log(update_data);
+        var form_data = {};
+        form_data = form.data('form_data');
+        var form_gallery_image_wrapper = form.find('.form_gallery_image_wrapper');
+        form_gallery_image_wrapper.html('');
+        var key_pattern = 'image_name_';
+        for (var key in form_data)
+        {
+            if (key.indexOf(key_pattern) !== -1)
+            {
+                delete form_data[key];
+            }
+        }
         if (update_data['image_row'])
         {
-            var form_data = {};
-            form_data = form.data('form_data');
-            var form_gallery_image_wrapper = form.find('.form_gallery_image_wrapper');
-            form_gallery_image_wrapper.html('');
             update_data['image_row'].forEach(function(image_row, image_row_index){
                 var form_gallery_image_container = $('<div />',{
                     'class':'form_row_container form_gallery_image_container'
                 }).html('<img class="form_gallery_image_file" src="'+image_row['file_uri']+'"><div class="form_gallery_image_delete_trigger"></div><input id="form_members_gallery_image_name_'+image_row['id']+'" class="form_members_gallery_image_name" name="image_name_'+image_row['id']+'" type="text" placeholder="Image Name" value="'+image_row['name']+'">').appendTo(form_gallery_image_wrapper);
                 form_data['image_name_'+image_row['id']] = image_row['name'];
             });
-            form.data('form_data',form_data);
         }
+        form.data('form_data',form_data);
     });
 
     form.on('get_update_data', function(event, update_data){

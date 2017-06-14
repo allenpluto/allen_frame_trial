@@ -232,7 +232,14 @@ class entity extends base
 
         if (isset($parameter['relational_fields']))
         {
-            if (isset($parameter['relational_fields'][0])) $parameter['relational_fields'] = array_flip($parameter['relational_fields']);
+            if (isset($parameter['relational_fields'][0]))
+            {
+                $parameter['relational_fields'] = array_flip($parameter['relational_fields']);
+                foreach ($parameter['relational_fields'] as $relational_field_name=>&$relational_field)
+                {
+                    $parameter['relational_fields'][$relational_field_name] = [];
+                }
+            }
             foreach ($parameter['relational_fields'] as $relational_field_name=>&$relational_field)
             {
                 if (empty($relational_field))
@@ -748,7 +755,7 @@ class entity extends base
                     $GLOBALS['global_message']->warning = __FILE__.'(line '.__LINE__.'): '.get_class($this).' UPDATE entity with multiple row';
                     return false;
                 }
-                $value = $this->row[0];
+                $value = end($this->row);
                 $this->row = null;
             }
         }

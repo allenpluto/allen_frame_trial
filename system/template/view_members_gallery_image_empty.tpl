@@ -1,0 +1,2 @@
+<div class="members_organization_gallery_image_container members_organization_gallery_empty_icon_container"><div class="members_organization_gallery_empty_icon font_icon font_icon_empty"></div></div>
+<div class="members_organization_gallery_empty_info_container"><p>Gallery is empty, please click "Edit" to add images. Empty gallery would not be displayed in the frontend.</p></div>

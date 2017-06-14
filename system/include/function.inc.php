@@ -555,18 +555,25 @@ function render_html($field = array())
                                 $empty_field_parameter = [];
                                 if (isset($field_parameter['parent_row'])) $empty_field_row = $field_parameter['parent_row'];
                                 if (isset($match_result_value['parameter']['parent_row'])) $empty_field_row = array_merge($empty_field_row,$match_result_value['parameter']['parent_row']);
+                                if (empty($empty_field_row)) $empty_field_row = $field_row;
                                 if (!empty($match_result_value['parameter']['empty_template'])) $empty_field_parameter['template'] = $match_result_value['parameter']['empty_template'];
                                 else $empty_field_parameter['template_name'] = $match_result_value['parameter']['empty_template_name'];
+//if ($match_result_value['parameter']['template_name'] == 'view_members_gallery_image') print_r('test point 1');
+//if ($match_result_value['parameter']['template_name'] == 'view_members_gallery_image') print_r($empty_field_row);
+//if ($match_result_value['parameter']['template_name'] == 'view_members_gallery_image') print_r($empty_field_parameter);
                                 $match_result_value['value'] = render_html(['_value'=>$empty_field_row,'_parameter'=>$empty_field_parameter]);
+//if ($match_result_value['parameter']['template_name'] == 'view_members_gallery_image') print_r('test point 2');
                                 unset($empty_field_row);
                             }
                             else
                             {
+//if ($match_result_value['parameter']['template_name'] == 'view_members_gallery_image') print_r('test point 3');
                                 $match_result_value['value'] = '';
                             }
                         }
                         else
                         {
+//if ($match_result_value['parameter']['template_name'] == 'view_members_gallery_image') print_r('test point 4');
                             //$field_row[$match_result_value['name']]['_parameter'] = array_merge_recursive($match_result_value['parameter'],$field_row[$match_result_value['name']]['_parameter']);
 
                             $sub_field = [

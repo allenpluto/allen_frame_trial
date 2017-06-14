@@ -80,6 +80,7 @@
 {
     display: none;
 }
+.members_organization_gallery_empty_icon_container,
 .members_organization_gallery_add_new_icon_container
 {
     text-align: center;
@@ -89,6 +90,7 @@
 
     border-radius: 3px;
 }
+.members_organization_gallery_empty_icon,
 .members_organization_gallery_add_new_icon
 {
     display: block;
@@ -107,6 +109,13 @@
     color: #999999;
     font-size: 5em;
     line-height: 1.4;
+}
+.members_organization_gallery_empty_info_container
+{
+    padding: 0 1em;
+
+    text-align: center;
+    white-space: normal;
 }
 .touch_slider_navigation_button:before
 {

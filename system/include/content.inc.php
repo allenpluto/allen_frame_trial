@@ -270,7 +270,7 @@ class content extends base {
                 switch ($this->request['module'])
                 {
                     case 'gallery':
-                        $method = ['add','edit',''];
+                        $method = ['add','delete','edit',''];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
@@ -985,7 +985,7 @@ class content extends base {
                                 switch($this->request['method'])
                                 {
                                     case 'add';
-                                        $this->content['field']['gallery'] = [];
+                                        $this->content['field']['gallery'] = ['account_id'=>$this->content['account']['id']];
 
                                         if (isset($this->request['option']['organization_id']))
                                         {
@@ -1013,7 +1013,84 @@ class content extends base {
                                             }
 
                                             $this->content['field']['gallery']['name'] = $entity_organization_data['name'].' Gallery - '.date('d M, Y');
+                                            $this->content['field']['gallery']['organization'] = $entity_organization_data['id'];
                                         }
+                                        $entity_gallery_obj = new entity_gallery();
+                                        $entity_gallery_obj->set(['row'=>[$this->content['field']['gallery']],'fields'=>array_keys($this->content['field']['gallery'])]);
+
+                                        if (count($entity_gallery_obj->id_group) > 0)
+                                        {
+                                            if (isset($this->request['option']['organization_id']))
+                                            {
+                                                $entity_organization_obj->sync();
+                                            }
+
+                                            $this->message->notice = 'New Gallery Created, Redirect to Edit';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/'.$this->request['module'].'/edit/?id='.end($entity_gallery_obj->id_group);
+                                            return true;
+                                        }
+                                        else
+                                        {
+                                            $this->message->notice = 'Creating Gallery Failed';
+                                            $this->result['status'] = 403;
+                                            $this->result['content'] = json_encode($this->message->display());
+                                            return false;
+                                        }
+
+                                        break;
+                                    case 'delete':
+                                        if (!isset($this->request['option']['id']))
+                                        {
+                                            $this->message->notice = 'Redirect - operating gallery id not set';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
+                                            return false;
+                                        }
+                                        $entity_gallery_obj = new entity_gallery($this->request['option']['id']);
+                                        if (empty($entity_gallery_obj->id_group))
+                                        {
+                                            $this->message->notice = 'Invalid request id';
+                                            $this->result['status'] = 404;
+                                            return false;
+                                        }
+                                        $entity_gallery_data = $entity_gallery_obj->get(['relational_fields'=>['image']]);print_r('test point 2');
+                                        if ($entity_gallery_data === false)
+                                        {
+                                            $this->message->error = 'Fail to get entity data';
+                                            return false;
+                                        }
+                                        $entity_gallery_data = end($entity_gallery_data);
+                                        if ($this->content['account']['id'] != $entity_gallery_data['account_id'])
+                                        {
+                                            $this->message->notice = 'Unauthorised access';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/'.$this->request['method'].'/';
+                                            return false;
+                                        }
+
+                                        if (!empty($entity_gallery_data['image']))
+                                        {
+                                            $image_obj = new entity_image($entity_gallery_data['image']);
+                                            $image_obj->delete();
+                                            unset($image_obj);
+                                        }
+                                        $entity_gallery_data = $entity_gallery_obj->get(['relational_fields'=>['organization']]);
+                                        $entity_gallery_data = end($entity_gallery_data);
+                                        $entity_gallery_obj->delete();
+
+                                        if (!empty($entity_gallery_data['organization']))
+                                        {
+                                            $this->message->notice = 'Listing Gallery Deleted, redirect to parent listing gallery page';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/listing/gallery/?organization_id='.$entity_gallery_data['organization'];
+                                            return true;
+                                        }
+
+                                        $this->message->notice = 'Gallery Deleted, redirect to members home page';
+                                        $this->result['status'] = 301;
+                                        $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
+                                        return true;
 
                                         break;
                                     case 'edit':
@@ -1124,7 +1201,15 @@ class content extends base {
                                                     }
                                                 }
 
-                                                $entity_gallery_obj->sync();
+                                                $entity_gallery_obj->sync(['sync_type'=>'update_current']);
+
+                                                $gallery_data_organization = $entity_gallery_obj->get(['relational_fields'=>['organization']]);
+                                                $gallery_data_organization = end($gallery_data_organization);
+                                                if (!empty($gallery_data_organization['organization']))
+                                                {
+                                                    $entity_organization_obj = new entity_organization($gallery_data_organization['organization']);
+                                                    $entity_organization_obj->sync(['sync_type'=>'update_current']);
+                                                }
 
                                                 $this->result['content']['status'] = 'OK';
                                                 $this->result['content']['message'] = 'Gallery updated successfully';
@@ -1132,6 +1217,20 @@ class content extends base {
                                                 break;
                                             default:
                                                 $this->content['field']['gallery'] = $entity_gallery_data;
+                                                $this->content['field']['back_link'] = URI_SITE_BASE.'members/';
+                                                $gallery_relation_data = $entity_gallery_obj->get(['relational_fields'=>['organization']]);
+                                                if (!empty($gallery_relation_data))
+                                                {
+                                                    $gallery_relation_data = end($gallery_relation_data);
+                                                    if (!empty($gallery_relation_data['organization']))
+                                                    {
+                                                        $parent_entity_organization_obj = new entity_organization($gallery_relation_data['organization']);
+                                                        if (!empty($parent_entity_organization_obj->id_group))
+                                                        {
+                                                            $this->content['field']['back_link'] = URI_SITE_BASE.'members/listing/gallery/?organization_id='.end($parent_entity_organization_obj->id_group);
+                                                        }
+                                                    }
+                                                }
                                                 $form_ajax_data = array(
                                                     'id'=>$this->request['option']['id']
                                                 );
