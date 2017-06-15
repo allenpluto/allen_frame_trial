@@ -42,7 +42,7 @@ class entity_gallery extends entity
             'update_time' => 'tbl_entity_gallery.update_time',
             'view_time' => '"'.date('Y-m-d H:i:s').'"',
             'account_id' => 'tbl_entity_gallery.account_id',
-            'image' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_image.image_id ORDER BY tbl_rel_gallery_to_image.image_id)',
+            'image' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_image.image_id ORDER BY tbl_rel_gallery_to_image.image_order, tbl_rel_gallery_to_image.image_id)',
         );
 
         $sync_parameter['join'] = array(

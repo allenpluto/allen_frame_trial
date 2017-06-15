@@ -158,7 +158,7 @@ class entity_organization extends entity
             'content' => 'tbl_entity_organization.content',
             'place_id' => 'tbl_entity_organization.place_id',
             'category' => 'GROUP_CONCAT(DISTINCT tbl_rel_category_to_organization.category_id ORDER BY tbl_rel_category_to_organization.category_id)',
-            'gallery' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_organization.gallery_id ORDER BY tbl_rel_gallery_to_organization.gallery_id)',
+            'gallery' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_organization.gallery_id ORDER BY tbl_rel_gallery_to_organization.gallery_order,tbl_rel_gallery_to_organization.gallery_id)',
             'image' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_image.image_id ORDER BY tbl_rel_gallery_to_image.image_id)',
             'featured' => 'IF((CURDATE()<=ListingFeatured.date_end AND CURDATE()>=ListingFeatured.date_start), 1, 0)'
         );

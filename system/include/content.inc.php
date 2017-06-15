@@ -1232,10 +1232,21 @@ class content extends base {
                                                     }
                                                 }
                                                 $form_ajax_data = array(
-                                                    'id'=>$this->request['option']['id']
+                                                    'id'=>$entity_gallery_data['id'],
+                                                    'name'=>$entity_gallery_data['name'],
+                                                    'image_row'=>[]
                                                 );
+                                                if (!empty($entity_gallery_data['image']))
+                                                {
+                                                    $view_image_obj = new view_image($entity_gallery_data['image']);
+                                                    $gallery_image_data = $view_image_obj->fetch_value();
+                                                    foreach($gallery_image_data as $image_index=>$image)
+                                                    {
+                                                        $form_ajax_data['image_row'][] = ['id'=>$image['id'],'name'=>$image['name'],'file_uri'=>$image['file_uri'],'order'=>$image_index];
+                                                    }
+                                                }
                                                 $form_ajax_data_string = json_encode($form_ajax_data);
-                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\');});'];
+                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\').trigger(\'set_image_row\')});'];
 
                                                 break;
                                         }

@@ -7,7 +7,7 @@
                 <input id="form_members_gallery_name" name="name" type="text" placeholder="Gallery Name" value="[[*name]]">
             </div>
             <input name="image" class="form_gallery_uploader_result" type="hidden" value="[[*image]]">
-            <div class="form_gallery_uploader_container"><!--
+            <div class="form_gallery_uploader_container form_gallery_image_wrapper"><!--
                 --><div class="form_row_container form_gallery_image_container form_gallery_uploader_trigger_container">
                     <a href="javascript:void(0);" class="form_gallery_uploader_trigger"><img class="form_gallery_image_file" src="./image/upload_gallery_image.jpg"></a>
                 </div>[[image:object=`view_gallery_image`:template_name=`form_gallery_image_uploader`]]<!--

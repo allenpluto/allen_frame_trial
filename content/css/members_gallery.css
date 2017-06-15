@@ -98,7 +98,29 @@
 
 .form_gallery_uploader_trigger_container .form_gallery_image_file
 {
+    width: 100%;
     padding: 0.5em;
+}
+
+.form_gallery_image_background
+{
+    display: none;
+    width: 100%;
+    padding-bottom: 75%;
+    margin-bottom: 1em;
+
+    background: center center no-repeat;
+    background-size: contain;
+
+    border:2px solid #cccccc;
+    border-radius: 3px;
+}
+
+@media only screen and (min-width:480px)
+{
+    .form_gallery_image_file {display: none;}
+    .form_gallery_uploader_trigger_container .form_gallery_image_file {display: block;}
+    .form_gallery_image_background {display: block;}
 }
 
 .form_gallery_image_delete_trigger

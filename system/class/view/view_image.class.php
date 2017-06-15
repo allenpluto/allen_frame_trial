@@ -27,7 +27,7 @@ class view_image extends view
         $result = parent::fetch_value($parameter);
         if ($result == false) return $result;
         $sync_id_group = array();
-        foreach ($result as $row_index=>$row)
+        foreach ($this->row as $row_index=>$row)
         {
             if (!file_exists($row['file_path']))
             {
