@@ -774,6 +774,43 @@ class content extends base {
 //                $this->content['style'] = array();
                 $this->content['style'] = ['default'=>[]];
                 $this->content['script'] = ['jquery'=>['source'=>PATH_CONTENT_JS.'jquery-1.11.3.js'],'default'=>[]];
+                if (isset($this->request['option']['template_name']))
+                {
+                    $this->content['template_name'] = $this->request['option']['template_name'];
+                }
+                else
+                {
+                    // Looking for default template
+                    $template_name_part = [];
+                    if (!empty($this->request['control_panel'])) $template_name_part[] = $this->request['control_panel'];
+                    if (!empty($this->request['module'])) $template_name_part[] = $this->request['module'];
+                    else $template_name_part[] = 'default';
+                    if (!empty($this->request['method'])) $template_name_part[] = $this->request['method'];
+                    if (isset($this->request['document'])) $template_name_part[] = $this->request['document'];
+    //print_r($template_name_part);
+                    $default_css = array();
+                    $default_js = array();
+                    while (!empty($template_name_part))
+                    {
+                        if (file_exists(PATH_CONTENT_CSS.implode('_',$template_name_part).'.css'))
+                        {
+                            $default_css = array_merge([implode('_',$template_name_part)=>[]],$default_css);
+                        }
+                        if (file_exists(PATH_CONTENT_JS.implode('_',$template_name_part).'.js'))
+                        {
+                            $default_js = array_merge([implode('_',$template_name_part)=>[]],$default_js);
+                        }
+                        if (!isset($this->content['template_name']) AND file_exists(PATH_TEMPLATE.'page_'.implode('_',$template_name_part).FILE_EXTENSION_TEMPLATE))
+                        {
+                            $this->content['template_name'] = 'page_'.implode('_',$template_name_part);
+                        }
+                        array_pop($template_name_part);
+                    }
+
+                    $this->content['style'] = array_merge($this->content['style'],$default_css);
+                    $this->content['script'] = array_merge($this->content['script'],$default_js);
+                    if (!isset($this->content['template_name'])) $this->content['template_name'] = 'page_default';
+                }
 
                 $this->content['field']['base'] = URI_SITE_BASE;
 
@@ -1004,6 +1041,7 @@ class content extends base {
                                                 return false;
                                             }
                                             $entity_organization_data = end($entity_organization_data);
+
                                             if ($this->content['account']['id'] != $entity_organization_data['account_id'])
                                             {
                                                 $this->message->notice = 'Unauthorised access';
@@ -1022,6 +1060,11 @@ class content extends base {
                                         {
                                             if (isset($this->request['option']['organization_id']))
                                             {
+                                                $gallery = [];
+                                                if (!empty( $entity_organization_data['gallery'])) $gallery = explode(',', $entity_organization_data['gallery']);
+                                                $gallery[] = end($entity_gallery_obj->id_group);
+
+                                                $entity_organization_obj->update(['gallery'=>$gallery]);
                                                 $entity_organization_obj->sync();
                                             }
 
@@ -1054,7 +1097,7 @@ class content extends base {
                                             $this->result['status'] = 404;
                                             return false;
                                         }
-                                        $entity_gallery_data = $entity_gallery_obj->get(['relational_fields'=>['image']]);print_r('test point 2');
+                                        $entity_gallery_data = $entity_gallery_obj->get(['relational_fields'=>['image']]);
                                         if ($entity_gallery_data === false)
                                         {
                                             $this->message->error = 'Fail to get entity data';
@@ -1136,49 +1179,27 @@ class content extends base {
                                                     $this->content['form_data'] = $this->request['option']['form_data'];
                                                 }
 
-                                                $current_image = explode(',',$entity_gallery_data['image']);
-                                                $new_image = [];
-                                                if (isset($this->content['form_data']['new_image']))
+                                                if (isset($this->content['form_data']['image_row']))
                                                 {
                                                     $image_obj = new entity_image();
-                                                    $image_obj->set(['row'=>$this->content['form_data']['new_image']]);
-                                                    $new_image = array_values($image_obj->id_group);
-                                                    unset($image_obj);
-                                                    unset($this->content['form_data']['new_image']);
-                                                }
+                                                    $image_obj->set(['row'=>$this->content['form_data']['image_row']]);
 
-                                                $delete_image = [];
-                                                if (isset($this->content['form_data']['delete_image']))
-                                                {
-                                                    $delete_image = $this->content['form_data']['delete_image'];
-                                                    if (!is_array($delete_image)) $delete_image = explode(',',$delete_image);
-                                                    $delete_image = array_intersect($delete_image,$current_image);
+                                                    $current_image_id_group = [];
+                                                    if (!empty($entity_gallery_data['image'])) $current_image_id_group = explode(',',$entity_gallery_data['image']);
+                                                    $delete_image_id_group = array_diff($current_image_id_group,$image_obj->id_group);
+                                                    $sync_image_id_group = array_merge($image_obj->id_group,$current_image_id_group);
+//print_r("\ncurrent\n");print_r($current_image_id_group);print_r("\ndelete\n");print_r($delete_image_id_group);print_r("\nsync\n");print_r($sync_image_id_group);exit;
 
-                                                    $image_obj = new entity_image($delete_image);
-                                                    $image_obj->delete();
-                                                    unset($image_obj);
-                                                    unset($this->content['form_data']['delete_image']);
-                                                }
-                                                $current_image = array_diff($current_image,$delete_image);
-                                                $current_image = array_merge($current_image,$new_image);
-                                                $current_image = implode(',',$current_image);
-                                                if ($current_image != $entity_gallery_data['image'])
-                                                {
-                                                    $this->content['form_data']['image'] = $current_image;
-                                                }
+                                                    $delete_image_obj = new entity_image($delete_image_id_group);
+                                                    $delete_image_obj->delete();
+                                                    unset($delete_image_obj);
 
-                                                foreach ($this->content['form_data'] as $form_field_name=>$form_field_value)
-                                                {
-                                                    if (preg_match('/^image_name_(\d+)$/',$form_field_name,$matches))
-                                                    {
-                                                        $image_id = $matches[1];
-                                                        $image_obj = new entity_image($image_id);
-                                                        $image_obj->update(['name'=>$form_field_value]);
-                                                        unset($image_obj);
-                                                        unset($this->content['form_data'][$form_field_name]);
-                                                    }
-                                                }
+                                                    $image_obj->sync(['id_group'=>$sync_image_id_group]);
 
+                                                    $this->content['form_data']['image'] = $image_obj->id_group;
+                                                    unset($this->content['form_data']['image_row']);
+                                                }
+//print_r($this->content['form_data']);exit;
                                                 $entity_gallery_obj->update($this->content['form_data']);
 
                                                 $entity_gallery_data = $entity_gallery_obj->get(['fields'=>['name','image']]);
@@ -1246,7 +1267,7 @@ class content extends base {
                                                     }
                                                 }
                                                 $form_ajax_data_string = json_encode($form_ajax_data);
-                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'store_form_data\').trigger(\'set_image_row\')});'];
+                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.'}).trigger(\'set_image_row\').trigger(\'store_form_data\')});'];
 
                                                 break;
                                         }
@@ -1549,6 +1570,7 @@ class content extends base {
                                             return false;
                                         }
                                         $entity_organization_data = end($entity_organization_data);
+
                                         if ($this->content['account']['id'] != $entity_organization_data['account_id'])
                                         {
                                             $this->message->notice = 'Unauthorised access';
@@ -1906,43 +1928,6 @@ class content extends base {
                         }
                 }
 
-                if (isset($this->request['option']['template_name']))
-                {
-                    $this->content['template_name'] = $this->request['option']['template_name'];
-                }
-                else
-                {
-                    // Looking for default template
-                    $template_name_part = [];
-                    if (!empty($this->request['control_panel'])) $template_name_part[] = $this->request['control_panel'];
-                    if (!empty($this->request['module'])) $template_name_part[] = $this->request['module'];
-                    else $template_name_part[] = 'default';
-                    if (!empty($this->request['method'])) $template_name_part[] = $this->request['method'];
-                    if (isset($this->request['document'])) $template_name_part[] = $this->request['document'];
-//print_r($template_name_part);
-                    $default_css = array();
-                    $default_js = array();
-                    while (!empty($template_name_part))
-                    {
-                        if (file_exists(PATH_CONTENT_CSS.implode('_',$template_name_part).'.css'))
-                        {
-                            $default_css = array_merge([implode('_',$template_name_part)=>[]],$default_css);
-                        }
-                        if (file_exists(PATH_CONTENT_JS.implode('_',$template_name_part).'.js'))
-                        {
-                            $default_js = array_merge([implode('_',$template_name_part)=>[]],$default_js);
-                        }
-                        if (!isset($this->content['template_name']) AND file_exists(PATH_TEMPLATE.'page_'.implode('_',$template_name_part).FILE_EXTENSION_TEMPLATE))
-                        {
-                            $this->content['template_name'] = 'page_'.implode('_',$template_name_part);
-                        }
-                        array_pop($template_name_part);
-                    }
-
-                    $this->content['style'] = array_merge($this->content['style'],$default_css);
-                    $this->content['script'] = array_merge($this->content['script'],$default_js);
-                    if (!isset($this->content['template_name'])) $this->content['template_name'] = 'page_default';
-                }
             //print_r($this->content['script']);exit();
 
 

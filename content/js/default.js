@@ -677,6 +677,23 @@ $.fn.form_image_uploader = function(user_option){
 $.fn.form_gallery_uploader = function(user_option){
     var default_option = {
         'add_trigger': '.form_gallery_uploader_trigger',
+        'add_function': function(image_data_uri,gallery_uploader){
+            // Apply Image
+            var form_gallery_image_container = $('<div />',{
+                'class':'form_row_container form_row_container_highlight form_gallery_image_container form_gallery_image_container_new'
+            }).html('<img class="form_gallery_image_file" src="'+image_data_uri+'"><div class="form_gallery_image_background" style="background-image: url('+image_data_uri+')"></div><div class="form_gallery_image_delete_trigger"></div><input class="form_members_gallery_image_name" type="text" placeholder="Image Name" value="">').appendTo(gallery_uploader);
+            if (gallery_uploader.find('.form_row_container_highlight').length == 1)
+            {
+                $('#off_canvas_wrapper').animate({
+                    scrollTop:form_gallery_image_container.position().top
+                },500,function(){
+                    form_gallery_image_container.find('input').focus();
+                });
+            }
+            setTimeout(function(){
+                form_gallery_image_container.removeClass('form_row_container_highlight')
+            },3000);
+        },
         'delete_trigger': '.form_image_uploader_delete_trigger',
         'default_image': './image/upload_gallery_image.jpg',
         'width': 800,
@@ -761,21 +778,24 @@ $.fn.form_gallery_uploader = function(user_option){
                 temp_ctx.fillRect(0,0,result_image_width,result_image_height);
                 temp_ctx.drawImage(source_image[0],(result_image_width-source_image_width)/2,(result_image_height-source_image_height)/2,source_image_width,source_image_height);
 
-                // Apply Image
-                var form_gallery_image_container = $('<div />',{
-                    'class':'form_row_container form_row_container_highlight form_gallery_image_container form_gallery_image_container_new'
-                }).html('<img class="form_gallery_image_file" src="'+temp_canvas.toDataURL('image/jpeg',option['quality'])+'"><div class="form_gallery_image_delete_trigger"></div><input class="form_members_gallery_image_name" type="text" placeholder="Image Name" value="">').appendTo(gallery_uploader);
-                if (gallery_uploader.find('.form_row_container_highlight').length == 1)
-                {
-                    $('#off_canvas_wrapper').animate({
-                        scrollTop:form_gallery_image_container.position().top
-                    },500,function(){
-                        form_gallery_image_container.find('input').focus();
-                    });
-                }
-                setTimeout(function(){
-                    form_gallery_image_container.removeClass('form_row_container_highlight')
-                },3000);
+                var image_data_uri = temp_canvas.toDataURL('image/jpeg',option['quality']);
+                option['add_function'](image_data_uri,gallery_uploader);
+
+                //// Apply Image
+                //var form_gallery_image_container = $('<div />',{
+                //    'class':'form_row_container form_row_container_highlight form_gallery_image_container form_gallery_image_container_new'
+                //}).html('<img class="form_gallery_image_file" src="'+temp_canvas.toDataURL('image/jpeg',option['quality'])+'"><div class="form_gallery_image_delete_trigger"></div><input class="form_members_gallery_image_name" type="text" placeholder="Image Name" value="">').appendTo(gallery_uploader);
+                //if (gallery_uploader.find('.form_row_container_highlight').length == 1)
+                //{
+                //    $('#off_canvas_wrapper').animate({
+                //        scrollTop:form_gallery_image_container.position().top
+                //    },500,function(){
+                //        form_gallery_image_container.find('input').focus();
+                //    });
+                //}
+                //setTimeout(function(){
+                //    form_gallery_image_container.removeClass('form_row_container_highlight')
+                //},3000);
             }
         };
 

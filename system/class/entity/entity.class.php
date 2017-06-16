@@ -588,6 +588,7 @@ class entity extends base
                         $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): SQL Error - '.$query_errorInfo[2];
                     }
                 }
+
                 if (isset($record_primary_key))
                 {
                     $new_row['id_'.$record_primary_key] = $record;
@@ -631,7 +632,6 @@ class entity extends base
                                     $relational_table_bind_field_has_order = false;
                                     $relational_table_bind_field = array();
                                     $relational_table_bind_row = array();
-                                    $relational_table_bind_value = array();
                                     $relational_table_bind_field[] = $relational_field['source_id_field'];
                                     $relational_table_bind_field[] = $relational_field['target_id_field'];
                                     if (in_array($relational_field_name.'_order', $relational_field['table_fields']))
@@ -773,7 +773,7 @@ class entity extends base
                 {
                     foreach ($parameter['relational_fields'] as $relational_field_name=>$relational_field)
                     {
-                        $relational_sql = 'DELETE * FROM '.$relational_field['table'].' WHERE '.$relational_field['source_id_field'].' IN ('.implode(',',$deleted_id_group).')';
+                        $relational_sql = 'DELETE FROM '.$relational_field['table'].' WHERE '.$relational_field['source_id_field'].' IN ('.implode(',',$deleted_id_group).')';
                         $relational_delete_query = $this->query($relational_sql);
                     }
                 }
@@ -820,7 +820,6 @@ class entity extends base
             return array();
         }
         $parameter = array_merge($this->parameter,$parameter);
-
         if (empty($parameter['bind_param']))
         {
             $parameter['bind_param'] = array();
@@ -885,14 +884,22 @@ class entity extends base
             {
                 if (isset($value[$relational_field_name]))
                 {
-                    if (!is_array($value[$relational_field_name])) $new_target_id_values = explode(',',$value[$relational_field_name]);
-                    asort($new_target_id_values);
+                    $new_target_id_values = [];
+                    if (!empty($value[$relational_field_name]))
+                    {
+                        if (!is_array($value[$relational_field_name])) $new_target_id_values = explode(',',$value[$relational_field_name]);
+                        else $new_target_id_values = $value[$relational_field_name];
+                    }
+                    if (!in_array($relational_field_name.'_order', $relational_field['table_fields']))
+                    {
+                        asort($new_target_id_values);
+                    }
                     $new_target_id_values = array_unique($new_target_id_values);
                     $new_target_id_group = $this->format->id_group(['value'=>$new_target_id_values,'key_prefix'=>':target_id_']);
                     $new_target_id_values = implode(',',$new_target_id_values);
 
                     $relational_table_bind_value = $this->id_group;
-                    $relational_sql = 'SELECT '.$relational_field['source_id_field'].' AS source_id, GROUP_CONCAT(DISTINCT '.$relational_field['target_id_field'].' ORDER BY '.$relational_field['target_id_field'].') AS current_target_id_values FROM '.$relational_field['table'].' WHERE '.$relational_field['source_id_field'].' IN ('.implode(',',array_keys($this->id_group)).');';
+                    $relational_sql = 'SELECT '.$relational_field['source_id_field'].' AS source_id, GROUP_CONCAT(DISTINCT '.$relational_field['target_id_field'].' ORDER BY '.$relational_field['order'].') AS current_target_id_values FROM '.$relational_field['table'].' WHERE '.$relational_field['source_id_field'].' IN ('.implode(',',array_keys($this->id_group)).');';
                     $relational_query = $this->query($relational_sql, $relational_table_bind_value);
                     if ($relational_query === false) continue;
                     $relational_result = $relational_query->fetchAll(PDO::FETCH_ASSOC);
@@ -927,7 +934,6 @@ class entity extends base
                         $relational_table_bind_field_has_order = false;
                         $relational_table_bind_field = array();
                         $relational_table_bind_row = array();
-                        $relational_table_bind_value = array();
                         $relational_table_bind_field[] = $relational_field['source_id_field'];
                         $relational_table_bind_field[] = $relational_field['target_id_field'];
                         if (in_array($relational_field_name.'_order', $relational_field['table_fields']))
@@ -936,7 +942,6 @@ class entity extends base
                             $relational_table_bind_field_has_order = true;
                         }
                         $relational_sql = 'INSERT INTO '.$relational_field['table'].'('.implode(',',$relational_table_bind_field).') VALUES ';
-                        $relational_table_bind_row = [];
                         foreach (array_keys($new_source_id_group) as $source_id_bind_index => $source_id_bind)
                         {
                             foreach (array_keys($new_target_id_group) as $target_id_bind_index => $target_id_bind)

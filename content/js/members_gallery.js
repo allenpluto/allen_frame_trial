@@ -25,11 +25,12 @@ console.log('set image row');
         image_row_array.forEach(function(image_row, image_row_index){
             var form_gallery_image_container = $('<div />',{
                 'class':'form_row_container form_gallery_image_container'
-            }).data(image_row).data('order',image_row_index).html('<img class="form_gallery_image_file" src="'+image_row['file_uri']+'"><div class="form_gallery_image_background" style="background-image: url('+image_row['file_uri']+')"></div><div class="form_gallery_image_delete_trigger"></div><input id="form_members_gallery_image_name_'+image_row['id']+'" class="form_members_gallery_image_name" name="image_name_'+image_row['id']+'" type="text" placeholder="Image Name" value="'+image_row['name']+'">').appendTo(form_gallery_image_wrapper);
+            }).data(image_row).data('order',image_row_index).html('<img class="form_gallery_image_file" src="'+image_row['file_uri']+'"><div class="form_gallery_image_background" style="background-image: url('+image_row['file_uri']+')"></div><div class="form_gallery_image_delete_trigger"></div><input class="form_members_gallery_image_name" type="text" placeholder="Image Name" value="'+image_row['name']+'">').appendTo(form_gallery_image_wrapper);
         });
     });
 
     form.on('store_form_data',function(){
+console.log('store form data');
         var form_data = {};
         form_data = form.data('form_data');
         form_data['image_row'] = [];
@@ -54,8 +55,6 @@ console.log('retrieve form data');
     form.on('set_update_data',function(event, update_data){
         var form_data = {};
         form_data = form.data('form_data');
-        var form_gallery_image_wrapper = form.find('.form_gallery_image_wrapper');
-        form_gallery_image_wrapper.html('');
         if (update_data['image_row'])
         {
             form.trigger('set_image_row',[update_data['image_row']]);
@@ -90,10 +89,10 @@ console.log('form_gallery_image_container '+index);
             form.find('.form_gallery_image_container:not(.form_gallery_uploader_trigger_container,.form_gallery_image_container_delete)').each(function(index){
                 if ($(this).hasClass('form_gallery_image_container_new'))
                 {
-                    update_data['image_row'].push({'name':$(this).find('.form_members_gallery_image_name').val(),'source_file':$(this).find('.form_gallery_image_file').attr('src'),'order':index})
+                    update_data['image_row'].push({'name':$(this).find('.form_members_gallery_image_name').val(),'source_file':$(this).find('.form_gallery_image_file').attr('src')})
                     return true;
                 }
-                update_data['image_row'].push({'id':$(this).data('id'),'name':$(this).find('.form_members_gallery_image_name').val(),'order':index})
+                update_data['image_row'].push({'id':$(this).data('id'),'name':$(this).find('.form_members_gallery_image_name').val()})
             });
         }
     });
