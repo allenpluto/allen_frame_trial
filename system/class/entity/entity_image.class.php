@@ -298,7 +298,7 @@ class entity_image extends entity
 //            unset($record['data']);
 //            unset($record['source_file']);
 
-            $record['file_size'] = filesize($record['file_path']);
+            $record['file_size'] = @filesize($record['file_path']);
         }
 
         return $source_row;

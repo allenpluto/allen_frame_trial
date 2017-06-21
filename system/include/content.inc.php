@@ -1080,7 +1080,6 @@ class content extends base {
                                             $this->result['content'] = json_encode($this->message->display());
                                             return false;
                                         }
-
                                         break;
                                     case 'delete':
                                         if (!isset($this->request['option']['id']))
@@ -1178,28 +1177,41 @@ class content extends base {
                                                 {
                                                     $this->content['form_data'] = $this->request['option']['form_data'];
                                                 }
-
                                                 if (isset($this->content['form_data']['image_row']))
                                                 {
-                                                    $image_obj = new entity_image();
-                                                    $image_obj->set(['row'=>$this->content['form_data']['image_row']]);
+                                                    $new_image_id_group = [];
+
+                                                    foreach ($this->content['form_data']['image_row'] as $image_row_index=>$image_row)
+                                                    {
+                                                        if (!empty($image_row['id']))
+                                                        {
+                                                            $image_obj = new entity_image($image_row['id']);
+                                                            $image_obj->update($image_row);
+                                                        }
+                                                        else
+                                                        {
+                                                            $image_obj = new entity_image();
+                                                            $image_obj->set(['row'=>[$image_row]]);
+                                                        }
+                                                        $new_image_id_group[] = end($image_obj->id_group);
+                                                        unset($image_obj);
+                                                    }
 
                                                     $current_image_id_group = [];
                                                     if (!empty($entity_gallery_data['image'])) $current_image_id_group = explode(',',$entity_gallery_data['image']);
-                                                    $delete_image_id_group = array_diff($current_image_id_group,$image_obj->id_group);
-                                                    $sync_image_id_group = array_merge($image_obj->id_group,$current_image_id_group);
-//print_r("\ncurrent\n");print_r($current_image_id_group);print_r("\ndelete\n");print_r($delete_image_id_group);print_r("\nsync\n");print_r($sync_image_id_group);exit;
+                                                    $delete_image_id_group = array_diff($current_image_id_group,$new_image_id_group);
+                                                    $sync_image_id_group = array_merge($new_image_id_group,$current_image_id_group);
 
                                                     $delete_image_obj = new entity_image($delete_image_id_group);
                                                     $delete_image_obj->delete();
                                                     unset($delete_image_obj);
 
+                                                    $image_obj = new entity_image();
                                                     $image_obj->sync(['id_group'=>$sync_image_id_group]);
 
-                                                    $this->content['form_data']['image'] = $image_obj->id_group;
+                                                    $this->content['form_data']['image'] = $new_image_id_group;
                                                     unset($this->content['form_data']['image_row']);
                                                 }
-//print_r($this->content['form_data']);exit;
                                                 $entity_gallery_obj->update($this->content['form_data']);
 
                                                 $entity_gallery_data = $entity_gallery_obj->get(['fields'=>['name','image']]);
