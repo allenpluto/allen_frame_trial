@@ -1276,7 +1276,10 @@ img {display:block;max-width:100%;}
 {
     margin-bottom: 1em;
 }
-
+.bottom_section_container
+{
+    padding-bottom: 2.4em;
+}
 .article_container
 {
     margin: 1em auto 1em auto;
@@ -1300,6 +1303,7 @@ img {display:block;max-width:100%;}
 .article_container .section_title > * {padding-top:0.5em;}
 
 .section_content {}
+.section_content_bottom
 .article_container .section_content {}
 
 .article_container .section_content h2,

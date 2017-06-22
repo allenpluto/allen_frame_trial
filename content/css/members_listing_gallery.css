@@ -1,6 +1,14 @@
 .members_organization_gallery_container
 {
     position: relative;
+
+    border:2px solid transparent;
+    border-radius: 3px;
+}
+
+.members_organization_gallery_container_active
+{
+    border-color: #ffb303;
 }
 
 @media only screen and (min-width:480px)

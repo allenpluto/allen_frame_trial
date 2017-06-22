@@ -1,5 +1,5 @@
 <div class="section_container container">
-    <div class="section_title">
+    <div class="section_title member_cta_button_wrapper">
         <h1>Manage Business Gallery</h1>
         <h2>[[*name]]</h2>
     </div>
@@ -15,5 +15,10 @@
                 </div>
             </div><!--
         --></div>
+    </div>
+</div>
+<div class="section_container bottom_section_container container">
+    <div class="section_content">
+        <a class="member_cta_button general_style_input_button general_style_input_button_gray" href="[[*base]]members/listing/">Back to My Businesses</a>
     </div>
 </div>
