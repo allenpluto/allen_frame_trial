@@ -1,18 +1,13 @@
-#login
+#login .off_canvas_container
 {
     background:#796fce url(../image/bg_top4_api_login.jpg) bottom left no-repeat;
     background-size: cover;
 }
 
-#login > .body_wrapper
-{
-    min-height: 100%;
-    position: relative;
-}
 
 @media only screen and (max-width:319px)
 {
-    #login
+    #login .off_canvas_container
     {
         background-image: url("../image/bg_vertical_top4_api_login.m.max.jpg");
         background-size: 100% auto;
@@ -21,7 +16,7 @@
 
 @media only screen and (min-width:320px) and (max-width:479px)
 {
-    #login
+    #login .off_canvas_container
     {
         background-image: url("../image/bg_vertical_top4_api_login.l.max.jpg");
         background-size: 100% auto;
@@ -30,18 +25,18 @@
 
 @media only screen and (min-width:480px) and (max-width:767px)
 {
-    #login
+    #login .off_canvas_container
     {
         background-image: url("../image/bg_vertical_top4_api_login.xl.max.jpg");
         background-size: 100% auto;
     }
 }
 
-@media only screen and (min-width:768px) and (max-width:1199px)
+@media only screen and (min-width:768px) and (max-width:991px)
 {
-    #login
+    #login .off_canvas_container
     {
-        background-image: url("../image/bg_top4_api_login.xxl.max.jpg");
+        background-image: url("../image/bg_vertical_top4_api_login.xxl.max.jpg");
     }
 }
 

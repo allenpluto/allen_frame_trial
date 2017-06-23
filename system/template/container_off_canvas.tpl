@@ -1,9 +1,9 @@
-<div id="off_canvas_wrapper" class="wrapper">
-    <div id="off_canvas_container" class="wrapper">
-        <div id="off_canvas_container_mask" class="off_canvas_halt"></div>
+<div class="off_canvas_wrapper wrapper">
+    <div class="off_canvas_container wrapper">
+        <div class="off_canvas_container_mask off_canvas_halt"></div>
         [[$chunk_menu]]
         [[$chunk_header]]
-        <div id="body_wrapper" class="wrapper">
+        <div class="body_wrapper wrapper">
             [[*_placeholder]]
         </div><!-- #body_wrapper -->
     </div>

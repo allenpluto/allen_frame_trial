@@ -21,9 +21,10 @@ $.fn.ajax_loader = function(user_option) {
         ajax_loader_container.data('option',option);
         $('<div class="ajax_loader_bottom"><div class="ajax_loader_bottom_text_container"><span class="ajax_loader_bottom_icon"></span><span class="ajax_loader_bottom_text">Loading...</span></div></div>').appendTo(ajax_loader_container);
 
-        $('#off_canvas_wrapper').scroll(function() {
-//console.log([$('#off_canvas_wrapper').scrollTop(),$(window).height(),$('#off_canvas_container').height()]);
-            if($('#off_canvas_wrapper').scrollTop() + $(window).height() - $('#off_canvas_container').height() > - 100) {
+        $(window).scroll(function() {
+//console.log(['window',$(window).scrollTop(),$(window).height(),$(document).height()]);
+//console.log(['canvas_container',$('#off_canvas_wrapper').scrollTop(),$(window).height(),$('#off_canvas_container').height()]);
+            if($(window).scrollTop() + $(window).height() - $(document).height() > - 100) {
                 var ajax_loader_option = ajax_loader_container.data('option');
                 if (!ajax_loader_container.hasClass('ajax_loader_container_complete') && !ajax_loader_container.hasClass('ajax_loader_container_loading')) {
                     ajax_loader_container.addClass('ajax_loader_container_loading');
@@ -684,7 +685,7 @@ $.fn.form_gallery_uploader = function(user_option){
             }).html('<img class="form_gallery_image_file" src="'+image_data_uri+'"><div class="form_gallery_image_background" style="background-image: url('+image_data_uri+')"></div><div class="form_gallery_image_delete_trigger"></div><input class="form_members_gallery_image_name" type="text" placeholder="Image Name" value="">').appendTo(gallery_uploader);
             if (gallery_uploader.find('.form_row_container_highlight').length == 1)
             {
-                $('#off_canvas_wrapper').animate({
+                $('.off_canvas_wrapper').animate({
                     scrollTop:form_gallery_image_container.position().top
                 },500,function(){
                     form_gallery_image_container.find('input').focus();
@@ -1695,12 +1696,12 @@ function FrameOnload(){
     $('.off_canvas_trigger').click(function(event){
         event.preventDefault();
         
-        $('#off_canvas_wrapper').toggleClass('off_canvas_expand');
+        $('.off_canvas_wrapper').toggleClass('off_canvas_expand');
     });
     $('.off_canvas_halt').click(function(event){
         event.preventDefault();
         
-        $('#off_canvas_wrapper').removeClass('off_canvas_expand');
+        $('.off_canvas_wrapper').removeClass('off_canvas_expand');
     });
 
     $('.expand_parent').expandable_content();

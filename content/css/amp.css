@@ -107,7 +107,7 @@ a, a:hover, a:visited {
 
 /*# Off Canvas #*/
 /* Base Z-INDEX 1000 */
-#off_canvas_wrapper
+.off_canvas_wrapper
 {
     position:relative;
     width:100%;
@@ -118,13 +118,13 @@ a, a:hover, a:visited {
     -webkit-backface-visibility:hidden;
 }
 
-#off_canvas_container
+.off_canvas_container
 {
     position:relative;
     width:100%;
 }
 
-#off_canvas_container_mask
+.off_canvas_container_mask
 {
     display:block;
     width:100%;
@@ -140,7 +140,7 @@ a, a:hover, a:visited {
     z-index:-1;
 }
 
-#off_canvas_menu
+.off_canvas_menu
 {
     display:block;
     width:250px;
@@ -165,7 +165,7 @@ a, a:hover, a:visited {
     z-index:1100;
 }
 
-#off_canvas_menu:hover
+.off_canvas_menu:hover
 {
     left:0;
 }
@@ -237,7 +237,7 @@ a, a:hover, a:visited {
     z-index:1020;
 }
 
-#off_canvas_menu:hover #top_wrapper_off_canvas_trigger
+.off_canvas_menu:hover #top_wrapper_off_canvas_trigger
 {
     background-color:#333333;
     pointer-events: none;

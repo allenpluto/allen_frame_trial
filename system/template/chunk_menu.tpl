@@ -1,4 +1,4 @@
-<div id="off_canvas_menu">
+<div class="off_canvas_menu">
     <div class="off_canvas_menu_section">
         <div class="off_canvas_menu_title">
             <h1>TOP4 Business Directory</h1>

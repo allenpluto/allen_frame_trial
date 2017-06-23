@@ -706,7 +706,7 @@ img {display:block;max-width:100%;}
 
 /*# JQuery Plugins/Off Canvas #*/
 /* Base Z-INDEX 1000 */
-#off_canvas_wrapper
+.off_canvas_wrapper
 {
     position: relative;
     width: 100%;
@@ -717,7 +717,7 @@ img {display:block;max-width:100%;}
     -webkit-overflow-scrolling: touch;
 }
 
-#off_canvas_container
+.off_canvas_container
 {
     position:relative;
     width:100%;
@@ -732,7 +732,7 @@ img {display:block;max-width:100%;}
     -webkit-backface-visibility:hidden;
 }
 
-.off_canvas_expand #off_canvas_container
+.off_canvas_expand .off_canvas_container
 {
     -ms-transform: translate(250px, 0);
     -webkit-transform: translateX(250px);
@@ -742,7 +742,7 @@ img {display:block;max-width:100%;}
     transform: translateX(250px);
 }
 
-#off_canvas_container_mask
+.off_canvas_container_mask
 {
     display:block;
     width:100%;
@@ -758,12 +758,12 @@ img {display:block;max-width:100%;}
     z-index:-1;
 }
 
-.off_canvas_expand #off_canvas_container_mask
+.off_canvas_expand .off_canvas_container_mask
 {
     z-index:1050;
 }
 
-#off_canvas_container_background
+.off_canvas_container_background
 {
     display:block;
     width:100%;
@@ -773,7 +773,7 @@ img {display:block;max-width:100%;}
     left:0;
 }
 
-#off_canvas_menu
+.off_canvas_menu
 {
     display:block;
     width:250px;
@@ -786,6 +786,8 @@ img {display:block;max-width:100%;}
     background:#333333;
 
     color:#cccccc;
+
+    overflow-y: auto;
 
     z-index:1100;
 }
@@ -871,7 +873,7 @@ img {display:block;max-width:100%;}
     overflow: hidden;
 }
 
-.overlay_active #off_canvas_wrapper
+.overlay_active .off_canvas_wrapper
 {
     overflow: hidden;
 }
@@ -1268,7 +1270,30 @@ img {display:block;max-width:100%;}
 .body_wrapper
 {
     padding-bottom: 1em;
-    min-height: 800px;
+}
+
+@media only screen and (max-width:767px)
+{
+    .off_canvas_container .body_wrapper
+    {
+        min-height: 640px;
+    }
+}
+
+@media only screen and (min-width:768px) and (max-width:991px)
+{
+    .off_canvas_container .body_wrapper
+    {
+        min-height: 974px;
+    }
+}
+
+@media only screen and (min-width:992px)
+{
+    .off_canvas_container .body_wrapper
+    {
+        min-height: 924px;
+    }
 }
 
 /*# Body/Section #*/
