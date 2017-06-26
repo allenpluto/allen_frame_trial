@@ -256,7 +256,7 @@ class content extends base {
                 }
 
                 //$request_path_part = array_shift($request_path);
-                $module = ['profile','listing','business','business-amp','gallery'];
+                $module = ['account','profile','listing','business','business-amp','gallery'];
                 if (in_array($request_path_part,$module))
                 {
                     $this->request['module'] = $request_path_part;
@@ -269,6 +269,18 @@ class content extends base {
 
                 switch ($this->request['module'])
                 {
+                    case 'account':
+                        $method = ['edit',''];
+                        if (in_array($request_path_part,$method))
+                        {
+                            $this->request['method'] = $request_path_part;
+                            $request_path_part = array_shift($request_path);
+                        }
+                        else
+                        {
+                            $this->request['method'] = end($method);
+                        }
+                        break;
                     case 'gallery':
                         $method = ['add','delete','edit',''];
                         if (in_array($request_path_part,$method))
@@ -842,6 +854,232 @@ class content extends base {
 
                 switch($this->request['module'])
                 {
+                    case 'account':
+                        switch($this->request['control_panel']) {
+                            case 'members':
+                                switch($this->request['method'])
+                                {
+                                    case 'edit':
+                                        if (!isset($this->request['option']['id']))
+                                        {
+                                            $this->message->notice = 'Redirect - operating account id not set';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
+                                            return false;
+                                        }
+                                        if ($this->content['account']['id'] != $this->request['option']['id'])
+                                        {
+                                            $this->message->error = 'Redirect - illegal account id set, log in account is different from edit account';
+                                            $this->result['status'] = 301;
+                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
+                                            return false;
+                                        }
+                                        $entity_account_obj = new entity_account($this->request['option']['id']);
+                                        if (empty($entity_account_obj->id_group))
+                                        {
+                                            $this->message->notice = 'Invalid account id';
+                                            $this->result['status'] = 404;
+                                            return false;
+                                        }
+
+                                        $entity_account_data = $this->content['account'];
+
+                                        switch($this->request['action'])
+                                        {
+                                            case 'update':
+                                                if (!is_array($this->request['option']['form_data']))
+                                                {
+                                                    parse_str($this->request['option']['form_data'],$this->content['form_data']);
+                                                }
+                                                else
+                                                {
+                                                    $this->content['form_data'] = $this->request['option']['form_data'];
+                                                }
+                                                // Process image if provided
+                                                if (isset($this->content['form_data']['image_image']))
+                                                {
+                                                    if (empty($this->content['form_data']['image_image']))
+                                                    {
+                                                        $image_obj = new entity_image($entity_account_data['image_id']);
+                                                        $image_obj->delete();
+                                                        $this->content['form_data']['image_id'] = 0;
+                                                        unset($image_obj);
+                                                    }
+                                                    elseif (preg_match('/^data:/', $this->content['form_data']['image_image']))
+                                                    {
+                                                        $image_obj = new entity_image($entity_account_data['image_id']);
+                                                        $image_obj->delete();
+                                                        $image_obj = new entity_image();
+                                                        $image_obj->set(['row'=>[['name'=>$entity_account_data['name'].' image','source_file'=>$this->content['form_data']['image_image']]]]);
+                                                        $this->content['form_data']['image_id'] =  implode(',',$image_obj->id_group);
+                                                        unset($image_obj);
+                                                    }
+                                                    unset($this->content['form_data']['image_image']);
+                                                }
+
+                                                // Process banner image if provided
+                                                if (isset($this->content['form_data']['banner_image']))
+                                                {
+                                                    if (empty($this->content['form_data']['banner_image']))
+                                                    {
+                                                        $image_obj = new entity_image($entity_account_data['banner_id']);
+                                                        $image_obj->delete();
+                                                        $this->content['form_data']['banner_id'] = 0;
+                                                        unset($image_obj);
+                                                    }
+                                                    elseif (preg_match('/^data:/', $this->content['form_data']['banner_image']))
+                                                    {
+                                                        $image_obj = new entity_image($entity_account_data['banner_id']);
+                                                        $image_obj->delete();
+                                                        $image_obj = new entity_image();
+                                                        $image_obj->set(['row'=>[['name'=>$entity_account_data['name'].' Banner','source_file'=>$this->content['form_data']['banner_image']]]]);
+                                                        $this->content['form_data']['banner_id'] =  implode(',',$image_obj->id_group);
+                                                        unset($image_obj);
+                                                    }
+                                                    unset($this->content['form_data']['banner_image']);
+                                                }
+
+                                                // Process google place if provided
+                                                if (isset($this->content['form_data']['place_id']))
+                                                {
+                                                    $entity_place = new entity_place();
+                                                    $request = 'https://maps.googleapis.com/maps/api/place/details/json?placeid='.$this->content['form_data']['place_id'].'&key='.$this->preference->google_api_credential_server;
+                                                    $response = file_get_contents($request);
+                                                    if (empty($response))
+                                                    {
+                                                        $this->result['content']['status'] = 'REQUEST_DENIED';
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google, No Response';
+                                                        return true;
+                                                    }
+                                                    $response = json_decode($response,true);
+                                                    if (!is_array($response))
+                                                    {
+                                                        $this->result['content']['status'] = 'REQUEST_DENIED';
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google, Illegal Format Response';
+                                                        return true;
+                                                    }
+                                                    if ($response['status'] != 'OK')
+                                                    {
+                                                        $this->result['content']['status'] = $response['status'];
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google. '.$response['error_message'];
+                                                        return true;
+                                                    }
+                                                    if (empty($response['result']))
+                                                    {
+                                                        $this->result['content']['status'] = 'ZERO_RESULTS';
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google. Given Place ID returns empty result';
+                                                        return true;
+                                                    }
+                                                    $organization_google_place = $this->format->flatten_google_place($response['result']);
+                                                    $entity_place->row[] = $organization_google_place;
+
+                                                    $request = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='.$organization_google_place['location_latitude'].','.$organization_google_place['location_longitude'].'&key='.$this->preference->google_api_credential_server;
+                                                    $response = file_get_contents($request);
+                                                    if (empty($response))
+                                                    {
+                                                        $this->result['content']['status'] = 'REQUEST_DENIED';
+                                                        $this->result['content']['message'] = 'Fail to get place info from Google, No Response';
+                                                        return true;
+                                                    }
+                                                    $response = json_decode($response,true);
+                                                    if ($response['status'] != 'OK')
+                                                    {
+                                                        $this->result['content']['status'] = $response['status'];
+                                                        $this->result['content']['message'] = 'Fail to get reverse geocoding results from Google. '.$response['error_message'];
+                                                        return true;
+                                                    }
+                                                    if (empty($response['results']))
+                                                    {
+                                                        $this->result['content']['status'] = 'ZERO_RESULTS';
+                                                        $this->result['content']['message'] = 'Fail to get reverse geocoding results from Google. Given Location returns empty result';
+                                                        return true;
+                                                    }
+                                                    $region_types = ['locality','sublocality','postal_code','country','administrative_area_level_1','administrative_area_level_2'];
+                                                    foreach($response['results'] as $result_row_index => $result_row)
+                                                    {
+                                                        $type = array_intersect($result_row['types'], $region_types);
+                                                        if (!empty($type))
+                                                        {
+                                                            // If the result_row is a region type, store the row into tbl_entity_place and relation into tbl_rel_organization_to_place
+                                                            $organization_region_google_place = $this->format->flatten_google_place($result_row);
+                                                            $organization_place[] = $organization_region_google_place['id'];
+                                                            $entity_place->row[] = $organization_region_google_place;
+                                                        }
+                                                    }
+                                                    $entity_account_obj->set(['row'=>[['id'=>end($entity_account_obj->id_group),'place'=>$organization_place]],'fields'=>['id','place']]);
+                                                    $entity_place->set();
+                                                }
+
+                                                $entity_account_obj->update($this->content['form_data']);
+
+                                                $entity_account_data = $entity_account_obj->get(['fields'=>array_keys($this->content['form_data'])]);
+                                                if ($entity_account_data === false)
+                                                {
+                                                    $this->result['content']['status'] = 'SERVER_ERROR';
+                                                    $this->result['content']['message'] = 'Database update request failed, try again later';
+                                                    return true;
+                                                }
+                                                $entity_account_data = end($entity_account_data);
+
+                                                if (isset($entity_account_data['logo_id']))
+                                                {
+                                                    if (empty($entity_account_data['logo_id']))
+                                                    {
+                                                        $entity_account_data['logo_image'] = '';
+                                                    }
+                                                    else
+                                                    {
+                                                        $view_image_obj = new view_image($this->content['form_data']['logo_id']);
+                                                        $view_image_obj->fetch_value();
+                                                        if (!empty($view_image_obj->row))
+                                                        {
+                                                            $image_data = end($view_image_obj->row);
+                                                            $entity_account_data['logo_image'] = $image_data['file_uri'];
+                                                            unset($image_data);
+                                                        }
+                                                        unset($view_image_obj);
+                                                    }
+                                                    unset($entity_account_data['logo_id']);
+                                                }
+                                                if (isset($entity_account_data['banner_id']))
+                                                {
+                                                    if (empty($entity_account_data['banner_id']))
+                                                    {
+                                                        $entity_account_data['banner_image'] = '';
+                                                    }
+                                                    else
+                                                    {
+                                                        $view_image_obj = new view_image($this->content['form_data']['banner_id']);
+                                                        $view_image_obj->fetch_value();
+                                                        if (!empty($view_image_obj->row))
+                                                        {
+                                                            $image_data = end($view_image_obj->row);
+                                                            $entity_account_data['banner_image'] = $image_data['file_uri'];
+                                                            unset($image_data);
+                                                        }
+                                                        unset($view_image_obj);
+                                                    }
+                                                    unset($entity_account_data['banner_id']);
+                                                }
+                                                $entity_account_obj->sync();
+
+                                                $this->result['content']['status'] = 'OK';
+                                                $this->result['content']['message'] = 'Business updated successfully';
+                                                $this->result['content']['form_data'] = $entity_account_data;
+
+                                                break;
+                                            default:
+                                                $this->content['field']['account'] = $entity_account_data;
+//print_r($this->content['field']['account']);exit;
+
+                                        }
+                                        break;
+                                    default:
+
+                                }
+                                break;
+                        }
+                        break;
                     case 'business':
                         $view_business_detail_obj = new view_business_detail($this->request['document']);
                         if (empty($view_business_detail_obj->id_group))

@@ -5,6 +5,17 @@
 
 class entity_account extends entity
 {
+    function __construct($value = Null, $parameter = array())
+    {
+        $default_parameter = [
+            'relational_fields'=>[
+                'place'=>[]
+            ]
+        ];
+        $parameter = array_merge($default_parameter, $parameter);
+        return parent::__construct($value, $parameter);
+    }
+
     function set($parameter = array())
     {
         if (isset($parameter['row']))
