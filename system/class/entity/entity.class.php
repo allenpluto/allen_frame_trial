@@ -965,11 +965,11 @@ class entity extends base
 
     function sync($parameter = array())
     {
+        $parameter = array_merge($this->parameter,$parameter);
         if (!isset($parameter['sync_table']))
         {
             $parameter['sync_table'] = str_replace('entity','view',$parameter['table']);
         }
-        $parameter = array_merge($this->parameter,$parameter);
 
         if (!isset($parameter['join']))
         {

@@ -860,33 +860,31 @@ class content extends base {
                                 switch($this->request['method'])
                                 {
                                     case 'edit':
-                                        if (!isset($this->request['option']['id']))
-                                        {
-                                            $this->message->notice = 'Redirect - operating account id not set';
-                                            $this->result['status'] = 301;
-                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
-                                            return false;
-                                        }
-                                        if ($this->content['account']['id'] != $this->request['option']['id'])
-                                        {
-                                            $this->message->error = 'Redirect - illegal account id set, log in account is different from edit account';
-                                            $this->result['status'] = 301;
-                                            $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
-                                            return false;
-                                        }
-                                        $entity_account_obj = new entity_account($this->request['option']['id']);
-                                        if (empty($entity_account_obj->id_group))
-                                        {
-                                            $this->message->notice = 'Invalid account id';
-                                            $this->result['status'] = 404;
-                                            return false;
-                                        }
-
-                                        $entity_account_data = $this->content['account'];
-
                                         switch($this->request['action'])
                                         {
                                             case 'update':
+                                                if (!isset($this->request['option']['id']))
+                                                {
+                                                    $this->message->notice = 'Redirect - operating account id not set';
+                                                    $this->result['status'] = 301;
+                                                    $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
+                                                    return false;
+                                                }
+                                                if ($this->content['account']['id'] != $this->request['option']['id'])
+                                                {
+                                                    $this->message->error = 'Redirect - illegal account id set, log in account is different from edit account';
+                                                    $this->result['status'] = 301;
+                                                    $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
+                                                    return false;
+                                                }
+                                                $entity_account_obj = new entity_account($this->request['option']['id']);
+                                                if (empty($entity_account_obj->id_group))
+                                                {
+                                                    $this->message->notice = 'Invalid account id';
+                                                    $this->result['status'] = 404;
+                                                    return false;
+                                                }
+
                                                 if (!is_array($this->request['option']['form_data']))
                                                 {
                                                     parse_str($this->request['option']['form_data'],$this->content['form_data']);
@@ -900,17 +898,17 @@ class content extends base {
                                                 {
                                                     if (empty($this->content['form_data']['image_image']))
                                                     {
-                                                        $image_obj = new entity_image($entity_account_data['image_id']);
+                                                        $image_obj = new entity_image($this->content['account']['image_id']);
                                                         $image_obj->delete();
                                                         $this->content['form_data']['image_id'] = 0;
                                                         unset($image_obj);
                                                     }
                                                     elseif (preg_match('/^data:/', $this->content['form_data']['image_image']))
                                                     {
-                                                        $image_obj = new entity_image($entity_account_data['image_id']);
+                                                        $image_obj = new entity_image($this->content['account']['image_id']);
                                                         $image_obj->delete();
                                                         $image_obj = new entity_image();
-                                                        $image_obj->set(['row'=>[['name'=>$entity_account_data['name'].' image','source_file'=>$this->content['form_data']['image_image']]]]);
+                                                        $image_obj->set(['row'=>[['name'=>$this->content['account']['name'].' image','source_file'=>$this->content['form_data']['image_image']]]]);
                                                         $this->content['form_data']['image_id'] =  implode(',',$image_obj->id_group);
                                                         unset($image_obj);
                                                     }
@@ -922,17 +920,17 @@ class content extends base {
                                                 {
                                                     if (empty($this->content['form_data']['banner_image']))
                                                     {
-                                                        $image_obj = new entity_image($entity_account_data['banner_id']);
+                                                        $image_obj = new entity_image($this->content['account']['banner_id']);
                                                         $image_obj->delete();
                                                         $this->content['form_data']['banner_id'] = 0;
                                                         unset($image_obj);
                                                     }
                                                     elseif (preg_match('/^data:/', $this->content['form_data']['banner_image']))
                                                     {
-                                                        $image_obj = new entity_image($entity_account_data['banner_id']);
+                                                        $image_obj = new entity_image($this->content['account']['banner_id']);
                                                         $image_obj->delete();
                                                         $image_obj = new entity_image();
-                                                        $image_obj->set(['row'=>[['name'=>$entity_account_data['name'].' Banner','source_file'=>$this->content['form_data']['banner_image']]]]);
+                                                        $image_obj->set(['row'=>[['name'=>$this->content['account']['name'].' Banner','source_file'=>$this->content['form_data']['banner_image']]]]);
                                                         $this->content['form_data']['banner_id'] =  implode(',',$image_obj->id_group);
                                                         unset($image_obj);
                                                     }
@@ -970,10 +968,10 @@ class content extends base {
                                                         $this->result['content']['message'] = 'Fail to get place info from Google. Given Place ID returns empty result';
                                                         return true;
                                                     }
-                                                    $organization_google_place = $this->format->flatten_google_place($response['result']);
-                                                    $entity_place->row[] = $organization_google_place;
+                                                    $google_place = $this->format->flatten_google_place($response['result']);
+                                                    $entity_place->row[] = $google_place;
 
-                                                    $request = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='.$organization_google_place['location_latitude'].','.$organization_google_place['location_longitude'].'&key='.$this->preference->google_api_credential_server;
+                                                    $request = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='.$google_place['location_latitude'].','.$google_place['location_longitude'].'&key='.$this->preference->google_api_credential_server;
                                                     $response = file_get_contents($request);
                                                     if (empty($response))
                                                     {
@@ -1001,12 +999,12 @@ class content extends base {
                                                         if (!empty($type))
                                                         {
                                                             // If the result_row is a region type, store the row into tbl_entity_place and relation into tbl_rel_organization_to_place
-                                                            $organization_region_google_place = $this->format->flatten_google_place($result_row);
-                                                            $organization_place[] = $organization_region_google_place['id'];
-                                                            $entity_place->row[] = $organization_region_google_place;
+                                                            $region_google_place = $this->format->flatten_google_place($result_row);
+                                                            $place[] = $region_google_place['id'];
+                                                            $entity_place->row[] = $region_google_place;
                                                         }
                                                     }
-                                                    $entity_account_obj->set(['row'=>[['id'=>end($entity_account_obj->id_group),'place'=>$organization_place]],'fields'=>['id','place']]);
+                                                    $entity_account_obj->set(['row'=>[['id'=>end($entity_account_obj->id_group),'place'=>$place]],'fields'=>['id','place']]);
                                                     $entity_place->set();
                                                 }
 
@@ -1021,25 +1019,25 @@ class content extends base {
                                                 }
                                                 $entity_account_data = end($entity_account_data);
 
-                                                if (isset($entity_account_data['logo_id']))
+                                                if (isset($entity_account_data['image_id']))
                                                 {
-                                                    if (empty($entity_account_data['logo_id']))
+                                                    if (empty($entity_account_data['image_id']))
                                                     {
-                                                        $entity_account_data['logo_image'] = '';
+                                                        $entity_account_data['image_image'] = '';
                                                     }
                                                     else
                                                     {
-                                                        $view_image_obj = new view_image($this->content['form_data']['logo_id']);
+                                                        $view_image_obj = new view_image($this->content['form_data']['image_id']);
                                                         $view_image_obj->fetch_value();
                                                         if (!empty($view_image_obj->row))
                                                         {
                                                             $image_data = end($view_image_obj->row);
-                                                            $entity_account_data['logo_image'] = $image_data['file_uri'];
+                                                            $entity_account_data['image_image'] = $image_data['file_uri'];
                                                             unset($image_data);
                                                         }
                                                         unset($view_image_obj);
                                                     }
-                                                    unset($entity_account_data['logo_id']);
+                                                    unset($entity_account_data['image_id']);
                                                 }
                                                 if (isset($entity_account_data['banner_id']))
                                                 {
@@ -1069,7 +1067,32 @@ class content extends base {
 
                                                 break;
                                             default:
-                                                $this->content['field']['account'] = $entity_account_data;
+                                                $this->content['field']['account'] = $this->content['account'];
+                                                $image_uploader_data = array(
+                                                    'width'=>200,
+                                                    'height'=>200,
+                                                    'allow_delete'=>true,
+                                                    'shrink_large'=>true,
+                                                    'default_image'=>'./image/upload_image.jpg'
+                                                );
+                                                $image_uploader_data_string = json_encode($image_uploader_data);
+                                                $this->content['script']['logo_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_account_image_container\').form_image_uploader('.$image_uploader_data_string.');});'];
+
+                                                $image_uploader_data = array(
+                                                    'width'=>1200,
+                                                    'height'=>375,
+                                                    'allow_delete'=>true,
+                                                    'default_image'=>'./image/upload_account_banner.jpg'
+                                                );
+                                                $image_uploader_data_string = json_encode($image_uploader_data);
+                                                $this->content['script']['banner_uploader'] = ['content'=>'$(document).ready(function(){$(\'.form_row_account_banner_container\').form_image_uploader('.$image_uploader_data_string.');});'];
+
+                                                $form_ajax_data = array(
+                                                    'id'=>$this->content['account']['id']
+                                                );
+                                                $form_ajax_data_string = json_encode($form_ajax_data);
+                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.',"form_action":"save"}).trigger(\'store_form_data\');});'];
+
 //print_r($this->content['field']['account']);exit;
 
                                         }

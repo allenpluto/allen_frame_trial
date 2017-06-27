@@ -8,11 +8,11 @@
             </div>
             <div class="form_row_container form_row_account_image_container">
                 <label>Image</label>
-                [[image_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader`:field=`{"file_uri":"./image/upload_image.jpg","field_name":"image","image_uploader_id":"form_members_account_image"}`]]
+                [[image_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader_empty`:field=`{"empty_file_uri":"./image/upload_image.jpg","field_name":"image","image_uploader_id":"form_members_account_image"}`]]
             </div>
             <div class="form_row_container form_row_account_banner_container">
                 <label>Banner</label>
-                [[banner_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader`:field=`{"file_uri":"./image/upload_banner.jpg","field_name":"banner","image_uploader_id":"form_members_account_banner"}`]]
+                [[banner_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader_empty`:field=`{"empty_file_uri":"./image/upload_account_banner.jpg","field_name":"banner","image_uploader_id":"form_members_account_banner"}`]]
             </div>
             <div class="form_row_container">
                 <label for="form_members_account_first_name">First Name</label>
@@ -26,7 +26,7 @@
                 <label for="form_members_account_company">Company</label>
                 <input id="form_members_account_company" name="company" type="text" placeholder="Company" value="[[*company]]">
             </div>
-            <div class="form_row_container form_row_account_street_address_container">
+            <div class="form_row_container form_row_street_address_container">
                 <input id="form_members_account_street_address_place_id" name="place_id" type="hidden" value="[[*place_id]]">
                 <label for="form_members_account_street_address">Street Address</label>
                 <input id="form_members_account_street_address" class="form_row_street_address_input" type="text">

@@ -168,6 +168,8 @@
     content: '\f00d';
 }
 
+.form_image_uploader_container_empty .form_image_uploader_delete_trigger {display:none;}
+
 .form_row_street_address_map
 {
     display: none;
@@ -175,12 +177,12 @@
     padding-bottom: 75%;
 }
 
-.form_row_organization_street_address_container_show_map .form_row_street_address_input
+.form_row_street_address_container_show_map .form_row_street_address_input
 {
     display: none;
 }
 
-.form_row_organization_street_address_container_show_map .form_row_street_address_map
+.form_row_street_address_container_show_map .form_row_street_address_map
 {
     display: block;
 }
@@ -222,7 +224,7 @@
 
 }
 
-.form_row_organization_street_address_container_show_map .form_row_street_address_display_container
+.form_row_street_address_container_show_map .form_row_street_address_display_container
 {
     height: 5.2em;
     padding: 0.5em 1em;

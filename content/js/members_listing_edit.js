@@ -59,12 +59,12 @@ function initialMap(map_center, map_zoom, map_mapTypeId)
         map.setCenter(map_center);
         marker.setPosition(map_center);
     }
-    $(".form_row_organization_street_address_container").addClass('form_row_organization_street_address_container_show_map');
+    $(".form_row_street_address_container").addClass('form_row_street_address_container_show_map');
 }
 
 function resetMap()
 {
-    $(".form_row_organization_street_address_container").removeClass('form_row_organization_street_address_container_show_map');
+    $(".form_row_street_address_container").removeClass('form_row_street_address_container_show_map');
     $('#form_members_organization_street_address').val('');
     $('#form_members_organization_street_address_place_id').val('');
     $('.form_row_street_address_display_container').html('');
