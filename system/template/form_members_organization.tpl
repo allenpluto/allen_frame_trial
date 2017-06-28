@@ -2,7 +2,7 @@
     <div class="section_title"><h1>Edit My Business</h1></div>
     <div class="section_content ajax_form_container">
         <form id="form_members_organization" class="ajax_form">
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_mandatory">
                 <label for="form_members_organization_name">Business Name</label>
                 <input id="form_members_organization_name" name="name" type="text" placeholder="Business Name" value="[[*name]]">
             </div>

@@ -270,7 +270,7 @@ class content extends base {
                 switch ($this->request['module'])
                 {
                     case 'account':
-                        $method = ['edit',''];
+                        $method = ['change_password','edit',''];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
@@ -859,6 +859,51 @@ class content extends base {
                             case 'members':
                                 switch($this->request['method'])
                                 {
+                                    case 'change_password':
+                                        switch($this->request['action'])
+                                        {
+                                            case 'update':
+                                                if (!isset($this->request['option']['id']))
+                                                {
+                                                    $this->message->notice = 'Redirect - operating account id not set';
+                                                    $this->result['status'] = 301;
+                                                    $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
+                                                    return false;
+                                                }
+                                                if ($this->content['account']['id'] != $this->request['option']['id'])
+                                                {
+                                                    $this->message->error = 'Redirect - illegal account id set, log in account is different from edit account';
+                                                    $this->result['status'] = 301;
+                                                    $this->result['header']['Location'] =  URI_SITE_BASE.$this->request['control_panel'].'/';
+                                                    return false;
+                                                }
+                                                $entity_account_obj = new entity_account($this->request['option']['id']);
+                                                if (empty($entity_account_obj->id_group))
+                                                {
+                                                    $this->message->notice = 'Invalid account id';
+                                                    $this->result['status'] = 404;
+                                                    return false;
+                                                }
+
+                                                if (!is_array($this->request['option']['form_data']))
+                                                {
+                                                    parse_str($this->request['option']['form_data'],$this->content['form_data']);
+                                                }
+                                                else
+                                                {
+                                                    $this->content['form_data'] = $this->request['option']['form_data'];
+                                                }
+
+                                                break;
+                                            default:
+                                                $this->content['field']['account'] = $this->content['account'];
+                                                $form_ajax_data = array(
+                                                    'id'=>$this->content['account']['id']
+                                                );
+                                                $form_ajax_data_string = json_encode($form_ajax_data);
+                                                $this->content['script']['ajax_form'] = ['content'=>'$(document).ready(function(){$(\'.ajax_form_container\').ajax_form({"form_data":'.$form_ajax_data_string.',"form_action":"save"}).trigger(\'store_form_data\');});'];
+                                        }
+                                        break;
                                     case 'edit':
                                         switch($this->request['action'])
                                         {

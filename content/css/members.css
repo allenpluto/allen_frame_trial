@@ -98,6 +98,7 @@
 .form_container .form_row_container:hover > label {height: 2em;}*/
 
 .form_row_container input[type="text"],
+.form_row_container input[type="password"],
 .form_row_container select
 {
     width: 100%;
@@ -111,6 +112,7 @@
 }
 
 .form_row_container_highlight input[type="text"],
+.form_row_container_highlight input[type="password"],
 .form_row_container_highlight select
 {
     border-color: #ffb303;
