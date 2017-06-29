@@ -6,7 +6,7 @@
                 <label for="form_members_organization_name">Business Name</label>
                 <input id="form_members_organization_name" name="name" type="text" placeholder="Business Name" value="[[*name]]">
             </div>
-            <div class="form_row_container form_row_organization_logo_container">
+            <div class="form_row_container form_row_organization_logo_container form_row_container_mandatory">
                 <label>Logo</label>
                 [[logo_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader_empty`:field=`{"empty_file_uri":"./image/upload_logo.jpg","field_name":"logo","image_uploader_id":"form_members_organization_logo"}`]]
             </div>
@@ -14,7 +14,7 @@
                 <label>Banner</label>
                 [[banner_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader_empty`:field=`{"empty_file_uri":"./image/upload_banner.jpg","field_name":"banner","image_uploader_id":"form_members_organization_banner"}`]]
             </div>
-            <div class="form_row_container form_row_street_address_container">
+            <div class="form_row_container form_row_street_address_container form_row_container_mandatory">
                 <input id="form_members_organization_street_address_place_id" name="place_id" type="hidden" value="[[*place_id]]">
                 <label for="form_members_organization_street_address">Street Address</label>
                 <input id="form_members_organization_street_address" class="form_row_street_address_input" type="text">
@@ -29,27 +29,27 @@
                     <div class="form_select_display_container"></div>
                 </div>
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_phone">
                 <label for="form_members_organization_telephone">Main Phone</label>
                 <input id="form_members_organization_telephone" name="telephone" type="text" placeholder="Main Phone" value="[[*telephone]]">
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_phone">
                 <label for="form_members_organization_alternate_telephone">Alternate Phone</label>
                 <input id="form_members_organization_alternate_telephone" name="alternate_telephone" type="text" placeholder="Alternate Phone" value="[[*alternate_telephone]]">
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_phone">
                 <label for="form_members_organization_mobile">Mobile Phone</label>
                 <input id="form_members_organization_mobile" name="mobile" type="text" placeholder="Mobile Phone" value="[[*mobile]]">
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_phone">
                 <label for="form_members_organization_fax_number">Fax</label>
                 <input id="form_members_organization_fax_number" name="fax_number" type="text" placeholder="Fax" value="[[*fax_number]]">
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_email">
                 <label for="form_members_organization_email">Email Address</label>
                 <input id="form_members_organization_email" name="email" type="text" placeholder="Email Address" value="[[*email]]">
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_uri">
                 <label for="form_members_organization_website_uri">Website</label>
                 <input id="form_members_organization_website_uri" name="website_uri" type="text" placeholder="Website" value="[[*website_uri]]">
             </div>

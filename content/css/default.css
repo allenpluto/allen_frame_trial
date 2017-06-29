@@ -393,7 +393,7 @@ img {display:block;max-width:100%;}
     top: 0;
     left: 0;
 
-    background: rgba(0,0,0,0.4);
+    background: rgba(255,255,255,0.4);
 
     opacity: 0;
     z-index: -1;
@@ -456,7 +456,7 @@ img {display:block;max-width:100%;}
     left: 10%;
     padding: 0.5em 1em;
 
-    background: rgba(255,255,150,1);
+    background: rgba(255,255,180,1);
 
     border: 2px solid #cccccc;
     border-radius: 5px;
@@ -485,13 +485,25 @@ img {display:block;max-width:100%;}
 
 .ajax_form_info_success
 {
-    background: rgba(150,255,150,1);
+    background: rgba(180,255,180,1);
 }
 
 .ajax_form_info_error
 {
-    background: rgba(255,150,150,1);
+    background: rgba(255,180,180,1);
 }
+
+.ajax_form_info_list
+{
+    display:block;
+    font-size:0.75em;
+}
+
+.ajax_form_info_list:before
+{
+    content: '• ';
+}
+
 
 /*# JQuery Plugins/Expandable Elements #*/
 .expand_trigger

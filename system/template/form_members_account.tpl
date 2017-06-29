@@ -2,11 +2,11 @@
     <div class="section_title"><h1>Edit My Business</h1></div>
     <div class="section_content ajax_form_container">
         <form id="form_members_account" class="ajax_form">
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_mandatory">
                 <label for="form_members_account_name">Nickname</label>
                 <input id="form_members_account_name" name="name" type="text" placeholder="Nickname" value="[[*name]]">
             </div>
-            <div class="form_row_container form_row_account_image_container">
+            <div class="form_row_container form_row_account_image_container form_row_container_mandatory">
                 <label>Image</label>
                 [[image_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader_empty`:field=`{"empty_file_uri":"./image/upload_image.jpg","field_name":"image","image_uploader_id":"form_members_account_image"}`]]
             </div>
@@ -14,11 +14,11 @@
                 <label>Banner</label>
                 [[banner_id:object=`view_image`:template_name=`form_image_uploader`:empty_template_name=`form_image_uploader_empty`:field=`{"empty_file_uri":"./image/upload_account_banner.jpg","field_name":"banner","image_uploader_id":"form_members_account_banner"}`]]
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_mandatory">
                 <label for="form_members_account_first_name">First Name</label>
                 <input id="form_members_account_first_name" name="first_name" type="text" placeholder="First Name" value="[[*first_name]]">
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_mandatory">
                 <label for="form_members_account_last_name">Last Name</label>
                 <input id="form_members_account_last_name" name="last_name" type="text" placeholder="Last Name" value="[[*last_name]]">
             </div>
