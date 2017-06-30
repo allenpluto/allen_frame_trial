@@ -33,19 +33,19 @@
                 <div class="form_row_street_address_display_container"></div>
                 <div id="form_members_account_street_address_map" class="form_row_street_address_map"></div>
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_phone">
                 <label for="form_members_account_telephone">Phone</label>
                 <input id="form_members_account_telephone" name="telephone" type="text" placeholder="Phone" value="[[*telephone]]">
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_phone">
                 <label for="form_members_account_fax_number">Fax</label>
                 <input id="form_members_account_fax_number" name="fax_number" type="text" placeholder="Fax" value="[[*fax_number]]">
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_email">
                 <label for="form_members_account_email">Email Address</label>
                 <input id="form_members_account_email" name="email" type="text" placeholder="Email Address" value="[[*email]]">
             </div>
-            <div class="form_row_container">
+            <div class="form_row_container form_row_container_uri">
                 <label for="form_members_account_website_uri">Website</label>
                 <input id="form_members_account_website_uri" name="website_uri" type="text" placeholder="Website" value="[[*website_uri]]">
             </div>

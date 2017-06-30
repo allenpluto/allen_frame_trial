@@ -789,7 +789,7 @@ $.fn.form_gallery_uploader = function(user_option){
         'default_image': './image/upload_gallery_image.jpg',
         'width': 800,
         'height': 600,
-        'ratio': [0.5,1.5],
+        'ratio': [0.5,1.8],
         'quality': 0.6
     };
     // Extend our default option with user provided.
