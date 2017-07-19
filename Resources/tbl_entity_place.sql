@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: May 05, 2017 at 05:24 PM
+-- Generation Time: Jul 19, 2017 at 02:52 PM
 -- Server version: 5.6.12-log
 -- PHP Version: 5.4.12
 
@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS `tbl_entity_place` (
   `image_id` int(11) NOT NULL DEFAULT '0',
   `enter_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `subpremise` varchar(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `street_number` varchar(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `route` varchar(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `locality` varchar(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
@@ -44,6 +45,7 @@ CREATE TABLE IF NOT EXISTS `tbl_entity_place` (
   `administrative_area_level_2` varchar(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `administrative_area_level_1` varchar(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `country` varchar(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `address_additional` text COLLATE utf8_unicode_ci,
   `location_latitude` decimal(11,8) NOT NULL DEFAULT '200.00000000',
   `location_longitude` decimal(11,8) NOT NULL DEFAULT '200.00000000',
   `viewport_northeast_latitude` decimal(11,8) NOT NULL DEFAULT '200.00000000',
