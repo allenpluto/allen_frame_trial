@@ -160,7 +160,8 @@ class entity_organization extends entity
             'category' => 'GROUP_CONCAT(DISTINCT tbl_rel_category_to_organization.category_id ORDER BY tbl_rel_category_to_organization.category_id)',
             'gallery' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_organization.gallery_id ORDER BY tbl_rel_gallery_to_organization.gallery_order,tbl_rel_gallery_to_organization.gallery_id)',
             'image' => 'GROUP_CONCAT(DISTINCT tbl_rel_gallery_to_image.image_id ORDER BY tbl_rel_gallery_to_image.image_id)',
-            'featured' => 'IF((CURDATE()<=ListingFeatured.date_end AND CURDATE()>=ListingFeatured.date_start), 1, 0)'
+            'featured' => 'IF((CURDATE()<=ListingFeatured.date_end AND CURDATE()>=ListingFeatured.date_start), 1, 0)',
+            'schema_itemtype' => 'tbl_entity_category.schema_itemtype'
         );
 
         $sync_parameter['join'] = array(
@@ -168,7 +169,8 @@ class entity_organization extends entity
             'LEFT JOIN ListingFeatured ON tbl_entity_organization.id = ListingFeatured.id',
             'LEFT JOIN tbl_rel_category_to_organization ON tbl_entity_organization.id = tbl_rel_category_to_organization.organization_id',
             'LEFT JOIN tbl_rel_gallery_to_organization ON tbl_entity_organization.id = tbl_rel_gallery_to_organization.organization_id',
-            'LEFT JOIN tbl_rel_gallery_to_image ON tbl_rel_gallery_to_organization.gallery_id = tbl_rel_gallery_to_image.gallery_id'
+            'LEFT JOIN tbl_rel_gallery_to_image ON tbl_rel_gallery_to_organization.gallery_id = tbl_rel_gallery_to_image.gallery_id',
+            'LEFT JOIN tbl_entity_category ON tbl_rel_category_to_organization.category_id = tbl_entity_category.id'
         );
 
         $sync_parameter['where'] = array(

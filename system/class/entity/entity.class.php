@@ -312,7 +312,7 @@ class entity extends base
         }
         foreach ($parameter['relational_fields'] as $relational_field_name=>$relational_field)
         {
-            $fields[] = 'GROUP_CONCAT('.$relational_field['table'].'.'.$relational_field['target_id_field'].' ORDER BY '.$relational_field['order'].') AS '.$relational_field_name;
+            $fields[] = 'GROUP_CONCAT(DISTINCT '.$relational_field['table'].'.'.$relational_field['target_id_field'].' ORDER BY '.$relational_field['order'].') AS '.$relational_field_name;
             $joins[] = 'LEFT JOIN '.$relational_field['table'].' ON '.$parameter['table'].'.'.$parameter['primary_key'].' = '.$relational_field['table'].'.'.$relational_field['source_id_field'];
         }
         if (!in_array($parameter['primary_key'], $parameter['table_fields']))

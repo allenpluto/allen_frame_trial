@@ -2238,7 +2238,7 @@ class content extends base {
                                     {
                                         $index_organization_obj = new index_organization();
                                         $this->content['field']['featured_business'] = $index_organization_obj->filter_by_featured();
-print_r($this->content['field']);
+//print_r($this->content['field']);
                                         //,array('page_size'=>4,'order'=>'RAND()')
                                     }
                                 }

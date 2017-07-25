@@ -33,8 +33,5 @@
         <div class="off_canvas_menu_item">
             <a href="login"><span>Login</span></a>
         </div>
-        <div class="off_canvas_menu_item">
-            <a href="logout"><span>Logout</span></a>
-        </div>
     </div>
 </div><!-- #off_canvas_menu -->
