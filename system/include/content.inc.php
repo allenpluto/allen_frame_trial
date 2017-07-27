@@ -1989,6 +1989,51 @@ class content extends base {
                         {
                             case 'members':
                                 // Members home page
+                                if ($this->request['document'] == 'logout')
+                                {
+                                    // success or fail, logout page always redirect to home page after process complete
+                                    $this->result['status'] = 301;
+                                    $this->result['header']['Location'] =  URI_SITE_BASE;
+                                    if (!isset($this->request['session_id']))
+                                    {
+                                        // session_id is not set, redirect to login page
+                                        return true;
+                                    }
+                                    $this->result['cookie'] = ['session_id'=>['value'=>'','time'=>1]];
+
+                                    $entity_account_session_obj = new entity_account_session();
+                                    $get_parameter = array(
+                                        'bind_param' => array(':name'=>$this->request['session_id']),
+                                        'where' => array('`name` = :name')
+                                    );
+                                    $entity_account_session_obj->get($get_parameter);
+                                    /*$method_variable = ['status' => 'OK', 'message' => '', 'account_session_id' => $this->request['session_id']];
+                                    $session = $entity_account_session_obj->validate_account_session_id($method_variable);
+                                    if ($session === false)
+                                    {
+                                        // If session_id is not valid, redirect to login page
+                                        return true;
+                                    }*/
+                                    if (count($entity_account_session_obj->row) > 0)
+                                    {
+                                        // Record logout event
+                                        $session_record = end($entity_account_session_obj->row);
+
+                                        $entity_account_log_obj = new entity_account_log();
+                                        $log_record = ['name'=>'Logout','account_id'=>$session_record['account_id'],'status'=>'OK','message'=>'Session close by user','content'=>$session_record['name'],'remote_ip'=>$this->request['remote_ip'],'request_uri'=>$_SERVER['REQUEST_URI']];
+                                        $entity_account_obj = new entity_account($session_record['account_id']);
+                                        if (count($entity_account_obj->row) > 0)
+                                        {
+                                            $log_record['description'] = end($entity_account_obj->row)['name'];
+                                        }
+                                        $entity_account_log_obj->set_log($log_record);
+                                    }
+
+                                    // If session is valid, delete the session then redirect to login
+                                    $entity_account_session_obj->delete();
+                                    return true;
+                                }
+
                                 $this->content['field']['page_content'] = '<a href="account" class="general_style_input_button general_style_input_button_gray">Edit Profile</a>
 <a href="listing" class="general_style_input_button general_style_input_button_gray">Manage My Businesses</a>';
                                 break;
