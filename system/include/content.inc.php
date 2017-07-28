@@ -256,7 +256,7 @@ class content extends base {
                 }
 
                 //$request_path_part = array_shift($request_path);
-                $module = ['account','profile','listing','business','business-amp','gallery'];
+                $module = ['account','article','profile','listing','business','business-amp','gallery'];
                 if (in_array($request_path_part,$module))
                 {
                     $this->request['module'] = $request_path_part;
@@ -279,6 +279,26 @@ class content extends base {
                         else
                         {
                             $this->request['method'] = end($method);
+                        }
+                        break;
+                    case 'article':
+                        $method = ['guide','search',''];
+                        if (in_array($request_path_part,$method))
+                        {
+                            $this->request['method'] = $request_path_part;
+                            $request_path_part = array_shift($request_path);
+                        }
+                        else
+                        {
+                            $this->request['method'] = end($method);
+                        }
+                        if ($request_path_part == 'detail')
+                        {
+                            $request_path_part = array_shift($request_path);
+                        }
+                        if (!empty($request_path_part))
+                        {
+                            $this->request['document'] = $request_path_part;
                         }
                         break;
                     case 'gallery':
