@@ -282,7 +282,7 @@ class content extends base {
                         }
                         break;
                     case 'article':
-                        $method = ['guide','search',''];
+                        $method = ['detail','guide','search',''];
                         if (in_array($request_path_part,$method))
                         {
                             $this->request['method'] = $request_path_part;
@@ -292,13 +292,42 @@ class content extends base {
                         {
                             $this->request['method'] = end($method);
                         }
-                        if ($request_path_part == 'detail')
+                        switch($this->request['method'])
                         {
-                            $request_path_part = array_shift($request_path);
-                        }
-                        if (!empty($request_path_part))
-                        {
-                            $this->request['document'] = $request_path_part;
+                            case 'detail':
+                                $request_path_part = array_shift($request_path);
+                                if (!empty($request_path_part))
+                                {
+                                    $this->request['document'] = $request_path_part;
+                                }
+                                else
+                                {
+                                    $this->request['method'] = '';
+                                }
+                                break;
+                            case 'guide':
+                                $request_path_part = array_shift($request_path);
+                                if (!empty($request_path_part))
+                                {
+                                    $this->request['option']['category'] = $request_path_part;
+                                }
+                                else
+                                {
+                                    $this->request['method'] = '';
+                                }
+                                break;
+                            case 'search':
+                                $request_path_part = array_shift($request_path);
+                                if (!empty($request_path_part))
+                                {
+                                    $this->request['option']['keywords'] = $request_path_part;
+                                }
+                                else
+                                {
+                                    $this->request['method'] = '';
+                                }
+                                break;
+                            default:
                         }
                         break;
                     case 'gallery':
@@ -1166,6 +1195,15 @@ class content extends base {
 
                                 }
                                 break;
+                        }
+                        break;
+                    case 'article':
+                        switch($this->request['method'])
+                        {
+                            case 'detail':
+                                break;
+                            default:
+
                         }
                         break;
                     case 'business':

@@ -29,9 +29,6 @@ class entity_article extends entity
 
         $sync_parameter = array_merge($sync_parameter, $parameter);
 
-        if ($GLOBALS['db']) $db = $GLOBALS['db'];
-        else $db = new db;
-
         if (!isset($sync_parameter['sync_type']))
         {
             $sync_parameter['sync_type'] = 'differential_sync';
