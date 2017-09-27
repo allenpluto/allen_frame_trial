@@ -1203,6 +1203,37 @@ class content extends base {
                             case 'detail':
                                 break;
                             default:
+                                $ajax_loading_data = array(
+                                    'data_encode'=>$this->preference->data_encode,
+                                    'id_group'=>array(),
+                                    'page_size'=>$this->preference->view_article_category_page_size,
+                                    'page_number'=>0,
+                                    'page_count'=>0
+                                );
+                                if (!isset($this->request['option']['id_group']))
+                                {
+                                    $index_article_category_obj = new index_article_category();
+                                    $index_article_category_obj->filter_by_active();
+                                    $this->content['field']['article_category'] = $index_article_category_obj->id_group;
+                                    $ajax_loading_data['id_group'] = $index_article_category_obj->id_group;
+                                }
+                                else
+                                {
+                                    $this->content['field']['article_category'] = $this->request['option']['id_group'];
+                                    $ajax_loading_data['id_group'] = $this->request['option']['id_group'];
+                                }
+                                if (isset($this->request['option']['page_size'])) $ajax_loading_data['page_size'] = $this->request['option']['page_size'];
+                                if (isset($this->request['option']['page_number'])) $ajax_loading_data['page_number'] = $this->request['option']['page_number'];
+                                $ajax_loading_data['page_count'] = ceil(count($ajax_loading_data['id_group'])/$ajax_loading_data['page_size']);
+
+                                $ajax_loading_data_string = json_encode($ajax_loading_data);
+                                if ($this->preference->data_encode == 'base64')
+                                {
+                                    $ajax_loading_data_string = '$.parseJSON(atob(\'' . base64_encode($ajax_loading_data_string) . '\'))';
+                                }
+
+                                $this->content['script']['article_category_ajax'] = ['content'=>'$(document).ready(function(){$(\'.ajax_loader_container\').ajax_loader('.$ajax_loading_data_string.');});'];
+                                break;
 
                         }
                         break;
@@ -1217,7 +1248,7 @@ class content extends base {
                         if (empty($business_fetched_value))
                         {
                             // Error Handling, fetch record row failed, database data error
-                            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): Fetch row failed '.implode(',',$page_obj->id_group);
+                            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): Fetch row failed '.implode(',',$view_business_detail_obj->id_group);
                             $this->result['status'] = 404;
                             return false;
                         }

@@ -13,6 +13,9 @@ $global_preference->view_category_page_size = 12;
 $global_preference->view_organization_page_size = 8;
 $global_preference->view_business_summary_page_size = 8;
 
+$global_preference->view_article_category_page_size = 12;
+
+
 // Data Encode, options: base64, none
 $global_preference->data_encode = 'none';
 

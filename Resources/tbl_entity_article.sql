@@ -1,0 +1,2 @@
+INSERT INTO `tbl_entity_article`(`id`, `friendly_uri`, `name`, `description`, `image_id`, `enter_time`, `update_time`,`account_id`, `page_title`, `page_content`, `category_id`)
+  (SELECT `id`, `friendly_url`, `title`, `abstract`, `image_id`, `entered`, `updated`, `account_id`, `seo_title`, `content`, `cat_1_id` FROM `top4_domain1`.`Article`)

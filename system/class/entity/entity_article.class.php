@@ -21,10 +21,10 @@ class entity_article extends entity
             'description' => 'tbl_entity_article.description',
             'enter_time' => 'tbl_entity_article.enter_time',
             'update_time' => 'tbl_entity_article.update_time',
+            'account_id' => 'tbl_entity_article.account_id',
             'view_time' => '"'.date('Y-m-d H:i:s').'"',
             'page_title' => 'tbl_entity_article.page_title',
-            'page_content' => 'tbl_entity_article.page_content',
-            'extra_field' => 'tbl_entity_article.extra_field'
+            'page_content' => 'tbl_entity_article.page_content'
         );
 
         $sync_parameter = array_merge($sync_parameter, $parameter);
