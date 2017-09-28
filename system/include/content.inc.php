@@ -1202,6 +1202,9 @@ class content extends base {
                         {
                             case 'detail':
                                 break;
+                            case 'guide':
+
+                                break;
                             default:
                                 $ajax_loading_data = array(
                                     'data_encode'=>$this->preference->data_encode,
@@ -2036,6 +2039,37 @@ class content extends base {
                             default:
                                 switch($this->request['method'])
                                 {
+                                    case 'find':
+                                        if (empty($this->request['option']['category']))
+                                        {
+                                            // Error Handling, category not provided
+                                            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): category not set';
+                                            $this->result['status'] = 404;
+                                            return false;
+                                        }
+
+                                        $view_category_obj = new view_category($this->request['option']['category']);
+                                        if (count($view_category_obj->id_group) == 0)
+                                        {
+                                            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): category does not exist';
+                                            $this->result['status'] = 404;
+                                            return false;
+                                        }
+                                        $index_organization_obj = new index_organization();
+                                        $index_organization_obj->filter_by_category($view_category_obj->id_group);
+
+                                        if (count($index_organization_obj->id_group) == 0)
+                                        {
+                                            $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): no listing found under category '.$this->request['option']['category'];
+                                            $this->result['status'] = 404;
+                                            $this->result['content'] = 'No listing found under category '.$this->request['option']['category'];
+                                            return false;
+                                        }
+                                        $this->content['field']['business'] = $index_organization_obj->id_group;
+
+                                        break;
+                                    case 'search':
+                                        break;
                                     case '':
                                         $ajax_loading_data = array(
                                             'data_encode'=>$this->preference->data_encode,
