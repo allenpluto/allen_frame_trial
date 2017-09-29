@@ -14,7 +14,7 @@ class content extends base {
     {
         parent::__construct();
 
-        $this->request = array();
+        $this->request = array('force_consistent_uri'=>true);
         $this->result = array(
             'status'=>200,
             'header'=>array(),
@@ -374,6 +374,7 @@ class content extends base {
                                 }
                                 break;
                             case 'find':
+                                $this->request['force_consistent_uri'] = false;
                                 $this->request['option'] = array('category'=> $request_path_part);
                                 $location = ['state','region','suburb'];
                                 $option = ['keyword','where','screen','sort'];
@@ -471,7 +472,7 @@ class content extends base {
             $this->request['http_referer'] = $_SERVER['HTTP_REFERER'];
         }
 
-        if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) != parse_url($this->request['file_uri'],PHP_URL_PATH))
+        if ($this->request['force_consistent_uri'] AND parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) != parse_url($this->request['file_uri'],PHP_URL_PATH))
         {
             if ($this->request['file_type'] == 'html')
             {
@@ -2055,6 +2056,8 @@ class content extends base {
                                             $this->result['status'] = 404;
                                             return false;
                                         }
+                                        $category = $view_category_obj->fetch_value();
+                                        $this->content['category'] = end($category);
                                         $index_organization_obj = new index_organization();
                                         $index_organization_obj->filter_by_category($view_category_obj->id_group);
 
@@ -2065,7 +2068,9 @@ class content extends base {
                                             $this->result['content'] = 'No listing found under category '.$this->request['option']['category'];
                                             return false;
                                         }
-                                        $this->content['field']['business'] = $index_organization_obj->id_group;
+
+                                        $this->content['field']['organization_list_title'] = $this->content['category']['name'];
+                                        $this->content['field']['organization'] = $index_organization_obj->id_group;
 
                                         break;
                                     case 'search':

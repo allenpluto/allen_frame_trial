@@ -275,6 +275,14 @@ class view extends base
             }
             $sql .= ' ORDER BY '.$parameter['order'];
         }
+        if (!empty($parameter['page_size']) AND empty($parameter['limit']))
+        {
+            $parameter['limit'] = $parameter['page_size'];
+            if (!empty($parameter['page_count']))
+            {
+                $parameter['offset'] = $parameter['page_number']*$parameter['limit'];
+            }
+        }
         if (!empty($parameter['limit']))
         {
             $sql .= ' LIMIT '.$parameter['limit'];
