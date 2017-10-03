@@ -400,6 +400,15 @@ class format
                 $result['name'] = $result['street_number'].' '.$result['name'];
             }
         }
+        switch($place_type)
+        {
+            case 'administrative_area_level_1':
+            case 'administrative_area_level_2':
+                $result['friendly_uri'] = $this->file_name( $result['alternate_name']);
+                break;
+            default:
+                $result['friendly_uri'] = $this->file_name( $result['name']);
+        }
 
         return $result;
     }

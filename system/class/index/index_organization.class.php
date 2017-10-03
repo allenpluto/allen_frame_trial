@@ -92,25 +92,81 @@ class index_organization extends index
         return parent::get($filter_parameter);
     }
 
-    function filter_by_suburb($value, $parameter = array())
+    function filter_by_place_uri($value)
     {
-        $format = format::get_obj();
-        $suburb_id_group = $format->id_group(array('value'=>$value,'key_prefix'=>':suburb_id_'));
-        if ($suburb_id_group === false)
+        // TODO: find listing place by given uri
+        $bind_param = [];
+        $join_table = [];
+
+        if (!empty($value['state']))
         {
-            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): '.get_class($this).' invalid postcode_suburb id(s)';
+            $bind_param[':state'] = $value['state'];
+            $join_table[] = 'JOIN tbl_entity_place tbl_locality ON tbl_locality.id = '.$this->parameter['table'].'.locality AND tbl_locality.friendly_uri = :state';
+        }
+
+        if (!empty($value['region']))
+        {
+            $bind_param[':region'] = $value['region'];
+            $join_table[] = 'JOIN tbl_entity_place tbl_locality ON tbl_locality.id = '.$this->parameter['table'].'.locality AND tbl_locality.friendly_uri = :region';
+        }
+
+        if (!empty($value['suburb']))
+        {
+            $bind_param[':suburb'] = $value['suburb'];
+            $join_table[] = 'JOIN tbl_entity_place tbl_locality ON tbl_locality.id = '.$this->parameter['table'].'.locality AND tbl_locality.friendly_uri = :suburb';
+        }
+    }
+
+    function filter_by_place_id($value, $parameter = array())
+    {
+        if (empty($value))
+        {
+            $GLOBALS['global_message']->warning = __FILE__.'(line '.__LINE__.'): '.get_class($this).' filter place not set';
             return false;
         }
 
-        $filter_parameter = array(
-            'where' => 'postcode_suburb_id IN ('.implode(',',array_keys($suburb_id_group)).')',
-        );
+        if (is_string($value))
+        {
+            $value = explode(',',$value);
+        }
+        $value = array_values($value);
+
+        $filter_parameter = [
+            'bind_param' => []
+        ];
+        foreach ($value as $key=>$item)
+        {
+            $filter_parameter['bind_param'][':place_id_'.$key] = $item;
+        }
+
+        if (!isset($parameter['type']))
+        {
+            $filter_parameter['where'] = 'locality IN ('.implode(',',array_keys($filter_parameter['bind_param'])).') OR administrative_area_level_2 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).') OR administrative_area_level_1 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
+        }
+        else
+        {
+            switch($parameter['type'])
+            {
+                case 'locality':
+                    $filter_parameter['where'] = 'locality IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
+                    break;
+                case 'administrative_area_level_2':
+                    $filter_parameter['where'] = 'administrative_area_level_2 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
+                    break;
+                case 'administrative_area_level_1':
+                    $filter_parameter['where'] = 'administrative_area_level_1 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
+                    break;
+                default:
+                    $filter_parameter['where'] = 'locality IN ('.implode(',',array_keys($filter_parameter['bind_param'])).') OR administrative_area_level_2 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).') OR administrative_area_level_1 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
+            }
+            unset($parameter['type']);
+        }
+
         $filter_parameter = array_merge($filter_parameter, $parameter);
-        if (!isset($filter_parameter['bind_param'])) $filter_parameter['bind_param'] = array();
-        $filter_parameter['bind_param'] = array_merge($filter_parameter['bind_param'], $suburb_id_group);
 
         return parent::get($filter_parameter);
     }
+
 
     // Fuzzy Search
     function filter_by_keyword($value, $parameter = array())

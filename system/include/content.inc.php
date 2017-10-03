@@ -374,6 +374,15 @@ class content extends base {
                                 }
                                 break;
                             case 'find':
+                                if (empty($request_path_part))
+                                {
+                                    // Error Handling, category not provided
+                                    $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): category not set';
+                                    $this->result['status'] = 404;
+                                    $this->result['content'] = 'Category not set';
+                                    return false;
+                                }
+                                $this->request['method'] = 'search';
                                 $this->request['force_consistent_uri'] = false;
                                 $this->request['option'] = array('category'=> $request_path_part);
                                 $location = ['state','region','suburb'];
@@ -2040,26 +2049,39 @@ class content extends base {
                             default:
                                 switch($this->request['method'])
                                 {
-                                    case 'find':
-                                        if (empty($this->request['option']['category']))
+                                    case 'search':
+                                        $index_organization_obj = new index_organization();
+                                        if (!empty($this->request['option']['category']))
                                         {
-                                            // Error Handling, category not provided
-                                            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): category not set';
-                                            $this->result['status'] = 404;
-                                            return false;
+                                            $view_category_obj = new view_category($this->request['option']['category']);
+                                            if (count($view_category_obj->id_group) == 0)
+                                            {
+                                                $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): category does not exist';
+                                                $this->result['status'] = 404;
+                                                return false;
+                                            }
+                                            $category = $view_category_obj->fetch_value();
+                                            $this->content['category'] = end($category);
+                                            $index_organization_obj->filter_by_category($view_category_obj->id_group);
                                         }
 
-                                        $view_category_obj = new view_category($this->request['option']['category']);
-                                        if (count($view_category_obj->id_group) == 0)
+                                        if (!empty($this->request['option']['state']))
                                         {
-                                            $GLOBALS['global_message']->error = __FILE__.'(line '.__LINE__.'): category does not exist';
-                                            $this->result['status'] = 404;
-                                            return false;
+                                            if (!empty($this->request['option']['suburb']))
+                                            {
+
+                                            }
+                                            $view_place_obj = new view_place();
+                                            $view_place_obj->get(['where'=>'friendly_uri = :friendly_uri','bind_param'=>[':friendly_uri'=>$this->request['option']['state']]]);
+
                                         }
-                                        $category = $view_category_obj->fetch_value();
-                                        $this->content['category'] = end($category);
-                                        $index_organization_obj = new index_organization();
-                                        $index_organization_obj->filter_by_category($view_category_obj->id_group);
+
+                                        if (!empty($this->request['option']['keywords']))
+                                        {
+                                            $index_organization_obj->filter_by_keyword($this->request['option']['keywords']);
+                                        }
+
+
 
                                         if (count($index_organization_obj->id_group) == 0)
                                         {
@@ -2072,8 +2094,6 @@ class content extends base {
                                         $this->content['field']['organization_list_title'] = $this->content['category']['name'];
                                         $this->content['field']['organization'] = $index_organization_obj->id_group;
 
-                                        break;
-                                    case 'search':
                                         break;
                                     case '':
                                         $ajax_loading_data = array(
