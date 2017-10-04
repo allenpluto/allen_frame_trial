@@ -2065,15 +2065,25 @@ class content extends base {
                                             $index_organization_obj->filter_by_category($view_category_obj->id_group);
                                         }
 
+                                        // TODO: convert uri to place_id
                                         if (!empty($this->request['option']['state']))
                                         {
-                                            if (!empty($this->request['option']['suburb']))
+                                            $place_uri['state'] = $this->request['option']['state'];
+                                            if (!empty($this->request['option']['region']))
                                             {
-
+                                                $place_uri['region'] = $this->request['option']['region'];
+                                                if (!empty($this->request['option']['suburb']))
+                                                {
+                                                    $place_uri['suburb'] = $this->request['option']['suburb'];
+                                                }
                                             }
-                                            $view_place_obj = new view_place();
-                                            $view_place_obj->get(['where'=>'friendly_uri = :friendly_uri','bind_param'=>[':friendly_uri'=>$this->request['option']['state']]]);
+                                            // ?index_place -> get place id from uri?
+                                            $index_organization_obj->filter_by_place_uri($place_uri);
+                                        }
 
+                                        if (!empty($this->request['option']['place_id']))
+                                        {
+                                            $index_organization_obj->filter_by_place_id($this->request['option']['place_id']);
                                         }
 
                                         if (!empty($this->request['option']['keywords']))

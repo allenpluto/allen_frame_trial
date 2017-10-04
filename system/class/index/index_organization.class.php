@@ -94,27 +94,44 @@ class index_organization extends index
 
     function filter_by_place_uri($value)
     {
-        // TODO: find listing place by given uri
-        $bind_param = [];
-        $join_table = [];
+        if (empty($value))
+        {
+            return false;
+        }
+
+        if (is_string($value))
+        {
+            $uri_parts = explode('/',$value);
+            $value = ['state'=>$uri_parts[0]];
+            if (!empty($uri_parts[1])) $value['region'] = $uri_parts[1];
+            if (!empty($uri_parts[2])) $value['suburb'] = $uri_parts[2];
+        }
+
+        $filter_parameter = [
+            'bind_param'=>[],
+            'where'=>[]
+        ];
 
         if (!empty($value['state']))
         {
-            $bind_param[':state'] = $value['state'];
-            $join_table[] = 'JOIN tbl_entity_place tbl_locality ON tbl_locality.id = '.$this->parameter['table'].'.locality AND tbl_locality.friendly_uri = :state';
+            $filter_parameter['bind_param'][':state'] = $value['state'];
+            $filter_parameter['where'][] = 'administrative_area_level_1 IN (SELECT id FROM tbl_entity_place WHERE friendly_uri = :state)';
         }
 
         if (!empty($value['region']))
         {
-            $bind_param[':region'] = $value['region'];
-            $join_table[] = 'JOIN tbl_entity_place tbl_locality ON tbl_locality.id = '.$this->parameter['table'].'.locality AND tbl_locality.friendly_uri = :region';
+            $filter_parameter['bind_param'][':state'] = $value['state'];
+            $filter_parameter['where'][] = 'administrative_area_level_1 IN (SELECT id FROM tbl_entity_place WHERE friendly_uri = :state)';
         }
 
         if (!empty($value['suburb']))
         {
-            $bind_param[':suburb'] = $value['suburb'];
-            $join_table[] = 'JOIN tbl_entity_place tbl_locality ON tbl_locality.id = '.$this->parameter['table'].'.locality AND tbl_locality.friendly_uri = :suburb';
+            $filter_parameter['bind_param'][':state'] = $value['state'];
+            $filter_parameter['where'][] = 'administrative_area_level_1 IN (SELECT id FROM tbl_entity_place WHERE friendly_uri = :state)';
         }
+
+        return parent::get($filter_parameter);
+
     }
 
     function filter_by_place_id($value, $parameter = array())
@@ -132,35 +149,15 @@ class index_organization extends index
         $value = array_values($value);
 
         $filter_parameter = [
+            'primary_key' => 'organization_id',
+            'table' => 'tbl_rel_organization_to_place',
             'bind_param' => []
         ];
         foreach ($value as $key=>$item)
         {
             $filter_parameter['bind_param'][':place_id_'.$key] = $item;
         }
-
-        if (!isset($parameter['type']))
-        {
-            $filter_parameter['where'] = 'locality IN ('.implode(',',array_keys($filter_parameter['bind_param'])).') OR administrative_area_level_2 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).') OR administrative_area_level_1 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
-        }
-        else
-        {
-            switch($parameter['type'])
-            {
-                case 'locality':
-                    $filter_parameter['where'] = 'locality IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
-                    break;
-                case 'administrative_area_level_2':
-                    $filter_parameter['where'] = 'administrative_area_level_2 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
-                    break;
-                case 'administrative_area_level_1':
-                    $filter_parameter['where'] = 'administrative_area_level_1 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
-                    break;
-                default:
-                    $filter_parameter['where'] = 'locality IN ('.implode(',',array_keys($filter_parameter['bind_param'])).') OR administrative_area_level_2 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).') OR administrative_area_level_1 IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
-            }
-            unset($parameter['type']);
-        }
+        $filter_parameter['where'] = 'place_id IN ('.implode(',',array_keys($filter_parameter['bind_param'])).')';
 
         $filter_parameter = array_merge($filter_parameter, $parameter);
 
