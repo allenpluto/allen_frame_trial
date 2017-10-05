@@ -5,6 +5,29 @@
 
 class entity_place extends entity
 {
+    function get($parameter = array())
+    {
+        $result = parent::get($parameter);
+        if (!empty($result))
+        {
+            $counter = 0;
+            foreach($result as $row_index=>$row)
+            {
+                $this->id_group[':id_'.$counter] = $row['id'];
+                $counter++;
+            }
+        }
+    }
+
+    function get_from_uri($value,$parameter = array())
+    {
+        $parameter = array(
+            'bind_param' => array(':friendly_uri'=>$value),
+            'where' => array('`friendly_uri` = :friendly_uri')
+        );
+        return $this->get($parameter);
+    }
+
     function sync($parameter = array())
     {
         // set default sync parameters for view table

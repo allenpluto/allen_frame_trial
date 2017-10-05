@@ -92,48 +92,6 @@ class index_organization extends index
         return parent::get($filter_parameter);
     }
 
-    function filter_by_place_uri($value)
-    {
-        if (empty($value))
-        {
-            return false;
-        }
-
-        if (is_string($value))
-        {
-            $uri_parts = explode('/',$value);
-            $value = ['state'=>$uri_parts[0]];
-            if (!empty($uri_parts[1])) $value['region'] = $uri_parts[1];
-            if (!empty($uri_parts[2])) $value['suburb'] = $uri_parts[2];
-        }
-
-        $filter_parameter = [
-            'bind_param'=>[],
-            'where'=>[]
-        ];
-
-        if (!empty($value['state']))
-        {
-            $filter_parameter['bind_param'][':state'] = $value['state'];
-            $filter_parameter['where'][] = 'administrative_area_level_1 IN (SELECT id FROM tbl_entity_place WHERE friendly_uri = :state)';
-        }
-
-        if (!empty($value['region']))
-        {
-            $filter_parameter['bind_param'][':state'] = $value['state'];
-            $filter_parameter['where'][] = 'administrative_area_level_1 IN (SELECT id FROM tbl_entity_place WHERE friendly_uri = :state)';
-        }
-
-        if (!empty($value['suburb']))
-        {
-            $filter_parameter['bind_param'][':state'] = $value['state'];
-            $filter_parameter['where'][] = 'administrative_area_level_1 IN (SELECT id FROM tbl_entity_place WHERE friendly_uri = :state)';
-        }
-
-        return parent::get($filter_parameter);
-
-    }
-
     function filter_by_place_id($value, $parameter = array())
     {
         if (empty($value))

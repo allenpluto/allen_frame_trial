@@ -25,6 +25,15 @@ class view_place extends view
         }
     }
 
+    function get_from_uri($value,$parameter = array())
+    {
+        $parameter = array(
+            'bind_param' => array(':friendly_uri'=>$value),
+            'where' => array('`friendly_uri` = :friendly_uri')
+        );
+        $this->get($parameter);
+    }
+
     function get($parameter = array())
     {
         // When id_group changes, reset the stored row value and rendered html

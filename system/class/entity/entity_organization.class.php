@@ -133,10 +133,10 @@ class entity_organization extends entity
             'banner' => 'tbl_entity_organization.banner_id',
             'abn' => 'tbl_entity_organization.abn',
             'account' => 'tbl_entity_organization.account_id',
-            'latitude' => 'tbl_locality.geometry_location_lat',
-            'longitude' => 'tbl_locality.geometry_location_lng',
+            'latitude' => 'tbl_locality.location_latitude',
+            'longitude' => 'tbl_locality.location_longitude',
             'subpremise' => 'tbl_entity_organization.subpremise',
-            'street_address' => 'tbl_entity_organization.street_address',
+            'street_address' => 'tbl_locality.name',
             'suburb' => 'tbl_locality.locality',
             'region' => 'tbl_locality.administrative_area_level_2',
             'state' => 'tbl_locality.administrative_area_level_1',
@@ -165,12 +165,14 @@ class entity_organization extends entity
         );
 
         $sync_parameter['join'] = array(
-            'LEFT JOIN tbl_entity_google_place tbl_locality ON tbl_entity_organization.place_id = tbl_locality.id',
+            'LEFT JOIN tbl_entity_place tbl_locality ON tbl_entity_organization.place_id = tbl_locality.id',
             'LEFT JOIN ListingFeatured ON tbl_entity_organization.id = ListingFeatured.id',
             'LEFT JOIN tbl_rel_category_to_organization ON tbl_entity_organization.id = tbl_rel_category_to_organization.organization_id',
             'LEFT JOIN tbl_rel_gallery_to_organization ON tbl_entity_organization.id = tbl_rel_gallery_to_organization.organization_id',
             'LEFT JOIN tbl_rel_gallery_to_image ON tbl_rel_gallery_to_organization.gallery_id = tbl_rel_gallery_to_image.gallery_id',
-            'LEFT JOIN tbl_entity_category ON tbl_rel_category_to_organization.category_id = tbl_entity_category.id'
+            'LEFT JOIN tbl_entity_category ON tbl_rel_category_to_organization.category_id = tbl_entity_category.id',
+            //'LEFT JOIN tbl_rel_organization_to_place ON tbl_entity_organization.id = tbl_rel_organization_to_place.organization_id',
+            //'JOIN tbl_entity_place tbl_locality ON tbl_rel_organization_to_place.place_id = tbl_locality.id AND tbl_locality.types LIKE "[""locality%"'
         );
 
         $sync_parameter['where'] = array(

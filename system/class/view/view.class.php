@@ -156,7 +156,7 @@ class view extends base
             {
                 if ($this->parameter['entity'] == 'entity_image' OR $this->parameter['entity'] == 'entity_organization')
                 {
-                    if (!empty($id_group))
+                    if (!empty($id_group) AND count($id_group)<10)
                     {
                         $entity_obj = new $this->parameter['entity']();
 //print_r("<pre>\n--------test point 1--------\n");

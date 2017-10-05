@@ -2068,17 +2068,43 @@ class content extends base {
                                         // TODO: convert uri to place_id
                                         if (!empty($this->request['option']['state']))
                                         {
-                                            $place_uri['state'] = $this->request['option']['state'];
+
                                             if (!empty($this->request['option']['region']))
                                             {
-                                                $place_uri['region'] = $this->request['option']['region'];
                                                 if (!empty($this->request['option']['suburb']))
                                                 {
-                                                    $place_uri['suburb'] = $this->request['option']['suburb'];
+                                                    $entity_place_obj = new entity_place();
+                                                    $entity_place_obj->get_from_uri($this->request['option']['suburb']);
+                                                    if (count($entity_place_obj->id_group) == 0)
+                                                    {
+                                                        $index_organization_obj->id_group = [];
+                                                    }
+                                                    else
+                                                    {
+                                                        $index_organization_obj->filter_by_place_id($entity_place_obj->id_group);
+                                                    }
+                                                }
+                                                $entity_place_obj = new entity_place();
+                                                $entity_place_obj->get_from_uri($this->request['option']['region']);
+                                                if (count($entity_place_obj->id_group) == 0)
+                                                {
+                                                    $index_organization_obj->id_group = [];
+                                                }
+                                                else
+                                                {
+                                                    $index_organization_obj->filter_by_place_id($entity_place_obj->id_group);
                                                 }
                                             }
-                                            // ?index_place -> get place id from uri?
-                                            $index_organization_obj->filter_by_place_uri($place_uri);
+                                            $entity_place_obj = new entity_place();
+                                            $entity_place_obj->get_from_uri($this->request['option']['state']);
+                                            if (count($entity_place_obj->id_group) == 0)
+                                            {
+                                                $index_organization_obj->id_group = [];
+                                            }
+                                            else
+                                            {
+                                                $index_organization_obj->filter_by_place_id($entity_place_obj->id_group);
+                                            }
                                         }
 
                                         if (!empty($this->request['option']['place_id']))
