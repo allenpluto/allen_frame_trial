@@ -1022,6 +1022,13 @@ class entity extends base
                     $sql .= ', ADD `'.$advanced_sync_update_field.'` '.$advanced_sync_update_field_attribute;
                 }
             }
+            if (isset($parameter['key']))
+            {
+                foreach ($parameter['key'] as $index=>$fields)
+                {
+                    $sql .= ', ADD KEY '.$index.' ('.implode(',',$fields).')';
+                }
+            }
             if (isset($parameter['fulltext_key']))
             {
                 foreach ($parameter['fulltext_key'] as $fulltext_index=>$fulltext_fields)
@@ -1244,7 +1251,7 @@ class entity extends base
             if (empty($parameter['advanced_sync']))
             {
                 $sql = 'INSERT INTO ' . $parameter['sync_table'] . ' (' . implode(',', array_keys($parameter['update_fields'])) . ')
-SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['table'] . ' ' . implode(' ', $parameter['join']) . ' WHERE ' . $parameter['table'] . '.' . $parameter['primary_key'] . ' IN (' . implode(',', $id_group) . ')';
+SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['table'] . ' ' . implode(' ', $parameter['join']) . ' WHERE ' . $parameter['table'] . '.' . $parameter['primary_key'] . ' IN (' . implode(',', array_keys($id_group)) . ')';
                 if (!empty($parameter['where'])) $sql .= ' AND (' . implode(' AND ', $parameter['where']) . ')';
                 if (!empty($parameter['group'])) $sql .= ' GROUP BY '.implode(', ',$parameter['group']);
                 $sql .= ' ON DUPLICATE KEY UPDATE ';
@@ -1254,7 +1261,7 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
                 }
                 $sql .= implode(',', $update_fields);
                 unset($update_fields);
-                $query = $this->query($sql);
+                $query = $this->query($sql,$id_group);
                 if ($query !== false) {
                     if ($query->rowCount() == 0) {
                         $GLOBALS['global_message']->notice = __FILE__ . '(line ' . __LINE__ . '): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' no row inserted/updated';
