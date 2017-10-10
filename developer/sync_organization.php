@@ -10,7 +10,7 @@ include('../system/config/config.php');
 $timestamp = microtime(true);
 echo '<pre>';
 
-$entity_organization = new entity_organization(121);
+$entity_organization = new entity_organization();
 $entity_organization->sync();
 ?>
 <div class="system_debug"><div class="container">
