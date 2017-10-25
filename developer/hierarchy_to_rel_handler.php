@@ -120,20 +120,24 @@ function convert_google_place($value)
 }
 
 $entity_organization_obj = new entity_organization();
-$result = $entity_organization_obj->get(['where'=>'tbl_entity_organization.import_error < 1 AND status = "A" AND id NOT IN (SELECT DISTINCT organization_id FROM tbl_rel_organization_to_place)','limit'=>$limit]);
+$result = $entity_organization_obj->get(['where'=>'tbl_entity_organization.import_error < 1 AND id NOT IN (SELECT DISTINCT organization_id FROM tbl_rel_organization_to_place)','limit'=>$limit]);
 $rel_row = [];
 $organization_place_merged = [];
 foreach($result as $result_row_index => $result_row)
 {
+    if (!empty($result_row['place_id']))
+    {
+        $organization_place_merged[] = $result_row['place_id'];
+    }
     $entity_hierarchy_obj = new entity(null,['table'=>'tbl_entity_listing_place_hierarchy']);
-    $entity_hierarchy_result = $entity_hierarchy_obj->get(['where'=>'place_id = "'.$result_row['place_id'].'" OR additional_0 = "'.$result_row['place_id'].'" OR additional_1 = "'.$result_row['place_id'].'" OR additional_2 = "'.$result_row['place_id'].'"']);
+    $entity_hierarchy_result = $entity_hierarchy_obj->get(['where'=>'place_id = "'.$result_row['place_id'].'"']);
 
     if (!empty($entity_hierarchy_result))
     {
         foreach ($entity_hierarchy_result as $hierarchy_row_index=>$hierarchy_row)
         {
             $i = 0;
-            while (!empty($hierarchy_row['additional_'.$i]) AND $hierarchy_row['locality'] != $hierarchy_row['additional_'.$i])
+            while ($i < 12 AND $hierarchy_row['locality'] != $hierarchy_row['additional_'.$i])
             {
                 $i++;
             }
@@ -145,6 +149,10 @@ foreach($result as $result_row_index => $result_row)
                     $organization_place[] = $hierarchy_row['additional_'.$i];
                 }
                 $i++;
+                if ($hierarchy_row['additional_'.$i] == 'ChIJ38WHZwf9KysRUhNblaFnglM')
+                {
+                    $i = 12;
+                }
             }
         }
         $ajax_result['updated_data'][] = print_r('Listing '.$result_row['id'].' relation inserted'.PHP_EOL,true);

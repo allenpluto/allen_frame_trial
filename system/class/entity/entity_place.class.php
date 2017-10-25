@@ -5,6 +5,26 @@
 
 class entity_place extends entity
 {
+    function __construct($value = null, $parameter = array())
+    {
+        parent::__construct(null, $parameter);
+
+        if (!empty($value))
+        {
+            if (!is_array($value))
+            {
+                $value = [$value];
+            }
+            $counter = 0;
+            foreach ($value as $id_index=>$id_value)
+            {
+                $this->id_group[':id_'.$counter] = $id_value;
+                $counter++;
+            }
+            $this->get();
+        }
+    }
+
     function get($parameter = array())
     {
         $result = parent::get($parameter);
@@ -17,6 +37,7 @@ class entity_place extends entity
                 $counter++;
             }
         }
+        return $result;
     }
 
     function get_from_uri($value,$parameter = array())
@@ -25,6 +46,41 @@ class entity_place extends entity
             'bind_param' => array(':friendly_uri'=>$value),
             'where' => array('`friendly_uri` = :friendly_uri')
         );
+        return $this->get($parameter);
+    }
+
+    function get_related_place($parameter = array())
+    {
+        if (empty($parameter['id_group']))
+        {
+            $this->message->warning = 'Get related place source id_group is mandatory';
+            return false;
+        }
+        if (empty($parameter['bind_param']))
+        {
+            $parameter['bind_param'] = array();
+        }
+        if (empty($parameter['where']))
+        {
+            $parameter['where'] = array();
+        }
+        $parameter['id_group'] = array_values($parameter['id_group']);
+        $id_group = array();
+        foreach($parameter['id_group'] as $id_key=>$id)
+        {
+            $id_group[':id_'.$id_key] = $id;
+        }
+        unset($parameter['id_group']);
+        $parameter['bind_param'] = array_merge($parameter['bind_param'],$id_group);
+        $parameter['where'][] = 'id IN (SELECT DISTINCT `place_id` FROM `tbl_rel_organization_to_place` WHERE organization_id IN (SELECT DISTINCT organization_id FROM `tbl_rel_organization_to_place` WHERE place_id IN ('.implode(',',array_keys($id_group)).')))';
+
+        if (!empty($parameter['type']))
+        {
+            $parameter['bind_param'][':type'] = '["'.$parameter['type'].'"%';
+            $parameter['where'][] = 'types LIKE :type';
+            unset($parameter['type']);
+        }
+
         return $this->get($parameter);
     }
 

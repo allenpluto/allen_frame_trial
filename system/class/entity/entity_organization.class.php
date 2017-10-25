@@ -165,14 +165,14 @@ class entity_organization extends entity
         );
 
         $sync_parameter['join'] = array(
-            'LEFT JOIN tbl_entity_place tbl_locality ON tbl_entity_organization.place_id = tbl_locality.id',
+            'JOIN tbl_entity_place tbl_locality ON tbl_entity_organization.place_id = tbl_locality.id',
             'LEFT JOIN ListingFeatured ON tbl_entity_organization.id = ListingFeatured.id',
             'LEFT JOIN tbl_rel_category_to_organization ON tbl_entity_organization.id = tbl_rel_category_to_organization.organization_id',
             'LEFT JOIN tbl_rel_gallery_to_organization ON tbl_entity_organization.id = tbl_rel_gallery_to_organization.organization_id',
             'LEFT JOIN tbl_rel_gallery_to_image ON tbl_rel_gallery_to_organization.gallery_id = tbl_rel_gallery_to_image.gallery_id',
             'LEFT JOIN tbl_entity_category ON tbl_rel_category_to_organization.category_id = tbl_entity_category.id',
-            'LEFT JOIN (SELECT organization_id, alternate_name FROM `tbl_rel_organization_to_place` JOIN tbl_entity_place ON tbl_rel_organization_to_place.place_id = tbl_entity_place.id AND types LIKE "[""administrative_area_level_2%") view_region ON tbl_entity_organization.id = view_region.organization_id',
-            'LEFT JOIN (SELECT organization_id, alternate_name FROM `tbl_rel_organization_to_place` JOIN tbl_entity_place ON tbl_rel_organization_to_place.place_id = tbl_entity_place.id AND types LIKE "[""administrative_area_level_1%") view_state ON tbl_entity_organization.id = view_state.organization_id'
+            'JOIN (SELECT organization_id, alternate_name FROM `tbl_rel_organization_to_place` JOIN tbl_entity_place ON tbl_rel_organization_to_place.place_id = tbl_entity_place.id WHERE types LIKE "[""administrative_area_level_2%") view_region ON tbl_entity_organization.id = view_region.organization_id',
+            'JOIN (SELECT organization_id, alternate_name FROM `tbl_rel_organization_to_place` JOIN tbl_entity_place ON tbl_rel_organization_to_place.place_id = tbl_entity_place.id WHERE types LIKE "[""administrative_area_level_1%") view_state ON tbl_entity_organization.id = view_state.organization_id'
             //'LEFT JOIN tbl_rel_organization_to_place ON tbl_entity_organization.id = tbl_rel_organization_to_place.organization_id',
             //'JOIN tbl_entity_place tbl_locality ON tbl_rel_organization_to_place.place_id = tbl_locality.id AND tbl_locality.types LIKE "[""locality%"'
         );
