@@ -10,5 +10,5 @@ include('../system/config/config.php');
 $timestamp = time();
 echo '<pre>';
 $place_obj = new entity_place();
-$place_obj->get_related_place(['id_group'=>['ChIJO9s-6t3uEmsRmDDk_5-6CIo'],'type'=>'locality']);
+$place_obj->get_related_place(['id_group'=>['ChIJdd4hrwug2EcRmSrV3Vo6llI'],'type'=>'locality']);
 print_r($place_obj);

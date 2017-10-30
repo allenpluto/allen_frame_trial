@@ -16,7 +16,7 @@ $ajax_result = [
 $limit = !empty($_REQUEST['limit']) ? $_REQUEST['limit'] : 10;
 
 $entity_organization = new entity_organization();
-$result = $entity_organization->get(['where'=>'tbl_entity_organization.status = "A" AND tbl_entity_organization.place_id != "" AND tbl_entity_organization.place_id NOT IN (SELECT id FROM tbl_entity_place)','limit'=>$limit]);
+$result = $entity_organization->get(['where'=>'tbl_entity_organization.place_id != "" AND tbl_entity_organization.place_id NOT IN (SELECT id FROM tbl_entity_place)','limit'=>$limit]);
 if (empty($result))
 {
     $ajax_result['success'] = false;
@@ -42,11 +42,13 @@ else
         {
             $content_row['status'] = 'REQUEST_DENIED';
             $content_row['message'] = 'Fail to get place info from Google, Illegal Format Response';
+            $ajax_result['updated_data'][] = $content_row;
+            continue;
         }
         if ($response['status'] != 'OK')
         {
             $content_row['status'] = $response['status'];
-            $content_row['message'] = 'Fail to get place info from Google.';
+            $content_row['message'] = 'Fail to get place info from Google. Organization '.$result_row['id'];
             if (!empty($response['error_message'])) $content_row['message'] .= ' - '.$response['error_message'];
         }
         if (empty($response['result']))
@@ -62,6 +64,16 @@ else
             continue;
         }
         $organization_google_place = $format->flatten_google_place($response['result']);
+        if ($organization_google_place['country'] != 'Australia')
+        {
+            $content_row['status'] = 'REQUEST_DENIED';
+            $content_row['message'] = 'Place is not inside Australia';
+            $ajax_result['updated_data'][] = $content_row;
+            $entity_organization_obj = new entity_organization();
+            $entity_organization_obj->set(['row'=>[['id'=>$result_row['id'],'place_id'=>'']],'fields'=>['id','place_id']]);
+            continue;
+        }
+
         $entity_place->row[] = $organization_google_place;
         if ($result_row['place_id'] != $organization_google_place['id'])
         {
@@ -89,7 +101,7 @@ else
         if (empty($response['results']))
         {
             $content_row['status'] = 'ZERO_RESULTS';
-            $content_row['message'] = 'Fail to get reverse geocoding results from Google. Given Location returns empty result';
+            $content_row['message'] = 'Fail to get reverse geocoding results from Google. Given Location returns empty result. Organization '.$result_row['id'];
             $ajax_result['updated_data'][] = $content_row;
             continue;
         }
@@ -111,7 +123,7 @@ else
         $entity_place->set();
         $content_row = [
             'status'=>'OK',
-            'message'=>'Organization '.end($entity_organization_obj->id_group).' Place Set'
+            'message'=>'Organization '.$result_row['id'].' Place Set'
         ];
         $ajax_result['updated_data'][] = $content_row;
     }

@@ -174,7 +174,7 @@ $('#timer_container').addClass('complete');
 }
 }
 });
-}, 5000);
+}, 10000);
 });
 </script>
 </body>
