@@ -108,7 +108,7 @@ var post_value = {
 };
 $.ajax({
 'type': 'POST',
-'url': '/allen_frame_trial/developer/organization_place_handler.php',
+'url': '/developer/location_conversion/organization_place_handler.php',
 'data': post_value,
 'timeout': 40000,
 'success': function(result_string) {
@@ -174,7 +174,7 @@ $('#timer_container').addClass('complete');
 }
 }
 });
-}, 7000);
+}, 10000);
 });
 </script>
 </body>

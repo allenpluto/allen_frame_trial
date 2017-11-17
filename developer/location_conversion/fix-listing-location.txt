@@ -1,0 +1,70 @@
+UPDATE Listing
+JOIN tbl_entity_organization ON Listing.id = tbl_entity_organization.id
+SET
+Listing.place_id = tbl_entity_organization.place_id,
+Listing.status = tbl_entity_organization.status,
+Listing.address2 = tbl_entity_organization.address_additional
+WHERE tbl_entity_organization.import_error = 5
+
+UPDATE `Listing`
+JOIN tbl_entity_place ON Listing.place_id = tbl_entity_place.id
+SET
+Listing.city = tbl_entity_place.locality,
+Listing.region = tbl_entity_place.administrative_area_level_2,
+Listing.state = tbl_entity_place.administrative_area_level_1,
+Listing.zip_code = tbl_entity_place.postal_code,
+Listing.latitude = tbl_entity_place.location_latitude,
+Listing.longitude = tbl_entity_place.location_longitude
+
+UPDATE `Listing`
+JOIN tbl_entity_place ON Listing.place_id = tbl_entity_place.id
+SET Listing.address = tbl_entity_place.alternate_name
+WHERE tbl_entity_place.route != ""
+
+UPDATE `Listing`
+JOIN tbl_rel_organization_to_place ON Listing.id = tbl_rel_organization_to_place.organization_id
+JOIN tbl_entity_place ON tbl_rel_organization_to_place.place_id = tbl_entity_place.id
+SET
+Listing.city = tbl_entity_place.name
+WHERE tbl_entity_place.types LIKE '["locality%' AND tbl_rel_organization_to_place.place_order = 0
+
+UPDATE `Listing`
+JOIN tbl_rel_organization_to_place ON Listing.id = tbl_rel_organization_to_place.organization_id
+JOIN tbl_entity_place ON tbl_rel_organization_to_place.place_id = tbl_entity_place.id
+SET
+Listing.zip_code = tbl_entity_place.name
+WHERE tbl_entity_place.types LIKE '["postal_code%'
+
+UPDATE `Listing`
+JOIN tbl_rel_organization_to_place ON Listing.id = tbl_rel_organization_to_place.organization_id
+JOIN tbl_entity_place ON tbl_rel_organization_to_place.place_id = tbl_entity_place.id
+SET
+Listing.region = tbl_entity_place.name
+WHERE tbl_entity_place.types LIKE '["administrative_area_level_2%'
+
+UPDATE `Listing`
+JOIN tbl_rel_organization_to_place ON Listing.id = tbl_rel_organization_to_place.organization_id
+JOIN tbl_entity_place ON tbl_rel_organization_to_place.place_id = tbl_entity_place.id
+SET
+Listing.state = tbl_entity_place.name
+WHERE tbl_entity_place.types LIKE '["administrative_area_level_1%'
+
+/*UPDATE `Listing`
+JOIN tbl_entity_place ON Listing.place_id = tbl_entity_place.id
+SET Listing.address = CONCAT(tbl_entity_place.subpremise,"/",Listing.address)
+WHERE tbl_entity_place.subpremise != ""
+*/
+SELECT * 
+FROM  `listing` 
+JOIN tbl_entity_place ON Listing.place_id = tbl_entity_place.id
+WHERE place_id !=  ""
+AND tbl_entity_place.formatted_address NOT LIKE CONCAT( Listing.address,  "%" ) 
+
+SELECT * FROM `listing` WHERE place_id != "" ORDER BY updated DESC
+
+SELECT Listing.city, Listing.state, Listing.zip_code, tbl_entity_place.formatted_address, Listing . * 
+FROM  `tbl_rel_organization_to_place` 
+JOIN Listing ON tbl_rel_organization_to_place.organization_id = Listing.id
+JOIN tbl_entity_place ON tbl_rel_organization_to_place.place_id = tbl_entity_place.id
+WHERE tbl_entity_place.types LIKE  '["locality"%'
+AND tbl_entity_place.name != Listing.city

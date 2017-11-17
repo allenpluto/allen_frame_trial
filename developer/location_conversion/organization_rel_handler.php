@@ -6,7 +6,7 @@
  * Time: 1:45 PM
  */
 define('PATH_SITE_BASE', dirname(__DIR__).DIRECTORY_SEPARATOR);
-include('../system/config/config.php');
+include('../../system/config/config.php');
 $timestamp = microtime(true);
 $ajax_result = [
     'updated_data'=>[],

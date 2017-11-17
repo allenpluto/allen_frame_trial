@@ -108,9 +108,9 @@ var post_value = {
 };
 $.ajax({
 'type': 'POST',
-'url': '/allen_frame_trial/developer/organization_rel_handler.php',
+'url': '/developer/location_conversion/fix_po_box_handler.php',
 'data': post_value,
-'timeout': 30000,
+'timeout': 40000,
 'success': function(result_string) {
     console.log(result_string);
 if (counter == 0)
@@ -174,7 +174,7 @@ $('#timer_container').addClass('complete');
 }
 }
 });
-}, 10000);
+}, 15000);
 });
 </script>
 </body>

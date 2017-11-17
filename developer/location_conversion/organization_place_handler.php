@@ -6,7 +6,7 @@
  * Time: 1:45 PM
  */
 define('PATH_SITE_BASE', dirname(__DIR__).DIRECTORY_SEPARATOR);
-include('../system/config/config.php');
+include('../../system/config/config.php');
 $timestamp = microtime(true);
 $ajax_result = [
     'updated_data'=>[],
@@ -16,7 +16,7 @@ $ajax_result = [
 $limit = !empty($_REQUEST['limit']) ? $_REQUEST['limit'] : 10;
 
 $entity_organization = new entity_organization();
-$result = $entity_organization->get(['where'=>'tbl_entity_organization.place_id != "" AND tbl_entity_organization.id NOT IN (SELECT DISTINCT organization_id FROM tbl_rel_organization_to_place)','limit'=>$limit]);
+$result = $entity_organization->get(['where'=>'tbl_entity_organization.place_id != "" AND tbl_entity_organization.import_error = 5 AND tbl_entity_organization.id NOT IN (SELECT DISTINCT organization_id FROM tbl_rel_organization_to_place)','limit'=>$limit]);
 if (empty($result))
 {
     $ajax_result['success'] = false;
@@ -112,7 +112,7 @@ else
                     }
                     else
                     {
-                        print_r($entity_place_region->row);
+//                        print_r($entity_place_region->row);
                     }
                 }
             }

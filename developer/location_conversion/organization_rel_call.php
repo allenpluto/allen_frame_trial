@@ -108,7 +108,7 @@ var post_value = {
 };
 $.ajax({
 'type': 'POST',
-'url': '/allen_frame_trial/developer/hierarchy_to_rel_handler.php',
+'url': '/developer/location_conversion/organization_rel_handler.php',
 'data': post_value,
 'timeout': 30000,
 'success': function(result_string) {
@@ -124,7 +124,14 @@ var new_div = $('<div />',{
 'class': 'success'
 });
 $.each(result['updated_data'], function( row_index, row ) {
-new_div.append('<div class="success_row">'+row+'</div>');
+    var html_row = $('<div />',{
+        'class':'success_row'
+    }).html(row.status+' - '+row.message);
+    if (row.status != 'OK')
+    {
+        html_row.addClass('error')
+    }
+    new_div.append(html_row);
 });
 new_div.append('<br><br>Execution Time: '+result['execution_time']+' seconds');
 new_div.append('<br><br>Process Time: '+Math.round((Date.now() - result['start_time'])/10)/100+' seconds');
