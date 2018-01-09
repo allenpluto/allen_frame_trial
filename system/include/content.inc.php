@@ -1109,7 +1109,7 @@ class content extends base {
                                                         }
                                                     }
                                                     $entity_account_obj->set(['row'=>[['id'=>end($entity_account_obj->id_group),'place'=>$place]],'fields'=>['id','place']]);
-                                                    $entity_place->set();
+                                                    $entity_place->set_place();
                                                 }
 
                                                 $entity_account_obj->update($this->content['form_data']);
@@ -1394,7 +1394,7 @@ class content extends base {
                                 }
                                 $entity_organization_obj = new entity_organization($business_fetched_value['id']);
                                 $entity_organization_obj->set(['row'=>[['id'=>$business_fetched_value['id'],'place'=>$organization_place]],'fields'=>['id','place']]);
-                                $entity_place->set();
+                                $entity_place->set_place();
 
                             }
                         }
@@ -1858,7 +1858,7 @@ class content extends base {
                                                         }
                                                     }
                                                     $entity_organization_obj->set(['row'=>[['id'=>end($entity_organization_obj->id_group),'place'=>$organization_place]],'fields'=>['id','place']]);
-                                                    $entity_place->set();
+                                                    $entity_place->set_place();
                                                 }
 
                                                 $entity_organization_obj->update($this->content['form_data']);

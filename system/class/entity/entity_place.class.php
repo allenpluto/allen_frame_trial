@@ -84,6 +84,66 @@ class entity_place extends entity
         return $this->get($parameter);
     }
 
+    function set_place($parameter = array())
+    {
+        // Place alternate set function, for existing rows execute update instead of set (google place coming in with different fields on different api service call, set function will overwrite the fields)
+        if (isset($parameter['row']))
+        {
+            $row = $parameter['row'];
+            unset($parameter['row']);
+        }
+        else
+        {
+            if (empty($this->row))
+            {
+                $GLOBALS['global_message']->warning = __FILE__.'(line '.__LINE__.'): '.get_class($this).' INSERT/UPDATE entity with empty row';
+                return false;
+            }
+            else
+            {
+                $row = $this->row;
+            }
+        }
+
+        $result_id_group = [];
+        foreach ($row as $place_row_index=>$place_row)
+        {
+            $entity_place_exist = new entity_place($place_row['id']);
+            if (count($entity_place_exist->id_group) > 0)
+            {
+                if ($entity_place_exist->update($place_row,$parameter) === true)
+                {
+                    $result_id_group[] = $place_row['id'];
+                }
+            }
+            else
+            {
+                $entity_place_exist->row = [$place_row];
+                $entity_place_exist->set($parameter);
+                if (count($entity_place_exist->id_group) > 0)
+                {
+                    $result_id_group[] = $place_row['id'];
+                }
+            }
+        }
+
+        if (empty($result_id_group))
+        {
+            return false;
+        }
+        else
+        {
+            $this->id_group = [];
+            $counter = 0;
+            foreach ($result_id_group as $id_index=>$id_value)
+            {
+                $this->id_group[':id_'.$counter] = $id_value;
+                $counter++;
+            }
+            $this->get();
+        }
+    }
+
     function sync($parameter = array())
     {
         $result = array();

@@ -28,7 +28,6 @@
         function flatten_google_place(place)
         {
             var flatten_place = {'id':place['place_id']};
-console.log(place);
             var place_type = place['types'][0];
             var address_component_field = ['subpremise','street_number','route','sublocality','locality','colloquial_area','postal_code','administrative_area_level_2','administrative_area_level_1','country'];
             if (address_component_field.indexOf(place_type) < 0)
@@ -301,7 +300,7 @@ console.log(place);
             }
             $.ajax({
                 'type': 'POST',
-                'url': '/developer/location_conversion/fix_organization_place_handler.php',
+                'url': '/allen_frame_trial/developer/location_conversion/fix_organization_place_handler.php',
                 'data': post_value,
                 'dataType': 'json',
                 'timeout': 30000,
@@ -418,7 +417,7 @@ console.log(result);
 console.log(post_value);
             $.ajax({
                 'type': 'POST',
-                'url': '/developer/location_conversion/fix_organization_place_handler.php',
+                'url': '/allen_frame_trial/developer/location_conversion/fix_organization_place_handler.php',
                 'data': post_value,
                 'dataType': 'json',
                 'timeout': 30000,

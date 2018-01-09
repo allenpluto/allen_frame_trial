@@ -5,7 +5,7 @@
  * Date: 7/06/2016
  * Time: 1:45 PM
  */
-define('PATH_SITE_BASE', dirname(__DIR__).DIRECTORY_SEPARATOR);
+define('PATH_SITE_BASE', dirname(dirname(__DIR__)).DIRECTORY_SEPARATOR);
 include('../../system/config/config.php');
 $timestamp = microtime(true);
 $ajax_result = [
