@@ -4,7 +4,7 @@
             <h1>TOP4 Business Directory</h1>
         </div>
     </div>
-    <div class="off_canvas_menu_section">
+    <div id="top_main_menu" class="off_canvas_menu_section">
         <div class="off_canvas_menu_item">
             <a href=""><span>Home</span></a>
         </div>
