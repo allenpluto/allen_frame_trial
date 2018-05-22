@@ -1,11 +1,4 @@
 <div id="header_wrapper" class="wrapper">
-    <div id="top_wrapper" class="wrapper">
-        <div id="top_container" class="container">
-            <div id="top_off_canvas_trigger" class="off_canvas_trigger"></div>
-            <div id="top_logo"><a href=""><svg width="80" height="40"><image xlink:href="content/image/the-new-australian-social-business-directory_logo.svg" src="content/image/the-new-australian-social-business-directory_logo_small.png" alt="Top4 - The New Australian Social Business Directory" width="80" height="40" /></svg></a><a href="" class="top_logo_text">Find. Share. <span class="general_style_colour_orange">Connect.</span></a></div>
-            <div id="top_search_trigger" class="search_trigger"></div>
-        </div>
-    </div><!-- #top_wrapper -->
     <div id="search_wrapper" class="wrapper">
         <div id="search_container" class="container">
             <div id="search_wrapper_close" class="search_halt"></div>
@@ -23,6 +16,7 @@
             <div id="search_submit_container" class="search_form_row">
                 <a id="search_submit" class="general_style_input_button general_style_input_button_orange"><span>Search</span></a>
             </div>
+            <div id="top_search_trigger" class="search_trigger"></div>
         </div>
     </div><!-- #search_wrapper -->
 </div><!-- #header_wrapper -->

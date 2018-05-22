@@ -34,8 +34,11 @@
             <a href="terms-conditions"><span>Terms & Conditions</span></a>
         </div>
     </div>
-    <div id="top_login_wrapper" class="off_canvas_menu_section">
-        <div id="top_login_container" class="container">
+    <div id="top_bar_wrapper" class="off_canvas_menu_section">
+        <div id="top_bar_container" class="container">
+            <div id="top_bar_logo" class="off_canvas_menu_item">
+                <a href=""><span><svg width="80" height="40"><image xlink:href="content/image/the-new-australian-social-business-directory_logo.svg" src="content/image/the-new-australian-social-business-directory_logo_small.png" alt="Top4 - The New Australian Social Business Directory" width="80" height="40" /></svg></span><span class="top_logo_text">&nbsp;Find. Share.</span><span class="top_logo_text general_style_colour_orange">Connect.</span></a>
+            </div>
             <div class="off_canvas_menu_item">
                 <a href="sign-up"><span>Sign Up</span></a>
             </div>
@@ -44,4 +47,5 @@
             </div>
         </div>
     </div>
+    <div id="top_off_canvas_trigger" class="off_canvas_trigger"></div>
 </div><!-- #off_canvas_menu -->
