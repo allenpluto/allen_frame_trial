@@ -965,6 +965,7 @@ class entity extends base
 
     function sync($parameter = array())
     {
+        $format = format::get_obj();
         $parameter = array_merge($this->parameter,$parameter);
         if (!isset($parameter['sync_table']))
         {
@@ -1220,7 +1221,7 @@ class entity extends base
             $GLOBALS['global_message']->notice = __FILE__.'(line '.__LINE__.'): '.$parameter['table'].' on sync to '.$parameter['sync_table'].' no row deleted';
         }
 
-        $id_group = array_merge($sync_id_group['insert'], $sync_id_group['update']);
+        $id_group = $format->id_group(array_merge($sync_id_group['insert'], $sync_id_group['update']));
         if (count($id_group) > 0)
         {
             // Generate INSERT/UPDATE query

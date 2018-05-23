@@ -48,4 +48,5 @@
         </div>
     </div>
     <div id="top_off_canvas_trigger" class="off_canvas_trigger"></div>
+    <div id="top_search_trigger" class="search_trigger"></div>
 </div><!-- #off_canvas_menu -->

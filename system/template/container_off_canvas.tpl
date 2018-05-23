@@ -2,7 +2,7 @@
     <div class="off_canvas_container wrapper">
         <div class="off_canvas_container_mask off_canvas_halt"></div>
         [[$chunk_menu]]
-        [[$chunk_header]]
+        [[$chunk_search]]
         <div class="body_wrapper wrapper">
             [[*_placeholder]]
         </div><!-- #body_wrapper -->

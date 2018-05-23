@@ -1838,6 +1838,20 @@ function FrameOnload(){
     });
 
     $('.touch_slider_container').touch_slider();
+
+    if ($('#banner_wrapper').length > 0)
+    {
+        $(window).scroll(function() {
+            if ($(window).scrollTop() - $('#banner_wrapper .container').height() > 100) {
+                $('#search_wrapper').removeClass('display_on_banner').addClass('display_on_top_bar');
+            }
+            else
+            {
+                $('#search_wrapper').removeClass('display_on_top_bar').addClass('display_on_banner');
+            }
+        });
+        $(window).scroll();
+    }
 }
 function BodyOnload(){
 }

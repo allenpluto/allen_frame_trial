@@ -2458,6 +2458,8 @@ class content extends base {
                                         return false;
                                     }
                                     $this->content['field'] = array_merge($this->content['field'],end($page_fetched_value));
+                                    $this->content['field']['banner_title'] = $this->content['field']['page_title'];
+                                    $this->content['field']['banner_description'] = $this->content['field']['description'];
 
                                     if ($this->request['document'] == 'login' OR $this->request['document'] == 'signup' )
                                     {
