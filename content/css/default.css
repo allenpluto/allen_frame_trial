@@ -1206,60 +1206,6 @@ img {display:block;max-width:100%;}
 /* Base Z-INDEX 300 */
 /*# Header/Top #*/
 /* Base Z-INDEX 1000 - Same as Off Canvas */
-#top_wrapper
-{
-    min-height:5rem;
-    position:relative;
-    padding:0.5rem;
-    
-    background:#353535 url(../image/bg_top_wrapper.jpg) top center repeat-x;
-    background:-webkit-linear-gradient(top, #000000, #353535);
-    background:-moz-linear-gradient(top, #000000, #353535);
-    background:-ms-linear-gradient(top, #000000, #353535);
-    background:-o-linear-gradient(top, #000000, #353535);
-    background:linear-gradient(to bottom, #000000, #353535);
-    
-    z-index:1000;
-}
-
-#top_logo
-{
-    display:block;
-    width:100%;
-    height: 100%;
-    position:absolute;
-    top:0;
-    left:0;
-
-    text-align:center;
-    
-    z-index:1010;
-}
-
-#top_logo > a
-{
-    display:inline-block;
-    height:100%;
-    padding: 3px;
-}
-
-#top_logo img
-{
-    display:block;
-    max-height:100%;
-}
-
-#top_logo > a.top_logo_text
-{
-    display: none;
-    padding-left: 1em;
-
-    color: #ffffff;
-    font-size: 2em;
-    line-height: 2.2;
-    vertical-align: top;
-}
-
 #top_bar_logo > a
 {
     display: inline-block;
@@ -1298,10 +1244,9 @@ img {display:block;max-width:100%;}
     display:block;
     width:4rem;
     height:4rem;
-    position:absolute;
-    left: 100%;
+    position:fixed;
     top: 0.7em;
-    margin-left: 0.5em;
+    left: 0.5em;
 
     border-radius:0.3rem;
 
@@ -1343,8 +1288,7 @@ img {display:block;max-width:100%;}
 
 @media only screen and (max-width:991px)
 {
-    #top_wrapper {padding:0.5em;}
-    #top_container {width:100%;}
+    #top_bar_container {width:100%;}
     #top_main_menu_container {width:100%;}
     #top4_main_menu_cta_container a
     {
@@ -1579,7 +1523,7 @@ img {display:block;max-width:100%;}
 {
     padding:0 0 0.5em 0;
     
-    font-size:3em;
+    font-size:2em;
     font-weight:bold;
 }
 
@@ -1764,6 +1708,27 @@ img {display:block;max-width:100%;}
 {
     line-height: 1.2;
     padding-bottom: 0.5em;
+}
+
+@media only screen and (min-width:992px)
+{
+    .section_title > *
+    {
+        padding-left: 0.5em;
+
+        text-align: left;
+
+        font-size: 2.4em;
+    }
+    .listing_section_container .section_title > *:before
+    {
+        padding-right: 1em;
+
+        color: #1066ab;
+        font-family: 'FontAwesome';
+
+        content: '\f02d';
+    }
 }
 
 /*# Body/Block #*/
@@ -2687,7 +2652,7 @@ img {display:block;max-width:100%;}
     #banner_container
     {
         width:800px;
-        padding-top: 2.5em;
+        padding-top: 3.5em;
         font-size:2em;
     }
 
@@ -2701,7 +2666,7 @@ img {display:block;max-width:100%;}
     .block_thumb_container
     {
         width: 100%;
-        height: 18em;
+        height: 24em;
         position: relative;
         float: none;
 
