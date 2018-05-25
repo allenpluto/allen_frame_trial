@@ -2468,9 +2468,42 @@ class content extends base {
                                     if ($this->request['document'] == '')
                                     {
                                         $index_organization_obj = new index_organization();
-                                        $this->content['field']['featured_business'] = $index_organization_obj->filter_by_featured();
-//print_r($this->content['field']);
-                                        //,array('page_size'=>4,'order'=>'RAND()')
+                                        $listing_id_group = $index_organization_obj->filter_by_featured();
+                                        $this->content['field']['featured_business'] = $listing_id_group;
+
+                                        $index_category_obj = new index_category();
+                                        $index_category_obj->filter_by_active();
+                                        $category_listing_count = $index_category_obj->filter_by_organization_count();
+                                        $category_id_group = $index_category_obj->id_group;
+                                        if (!empty($category_id_group))
+                                        {
+                                            if (count($category_id_group) > 16)
+                                            {
+                                                // If there are more than 16 categories in system, get the top 16
+                                                $category_id_group = array_slice($category_id_group, 0, 16);
+                                            }
+                                            foreach ($category_id_group as $category_id_index=>$category_id)
+                                            {
+                                                // Remove the categories that have less than 100 listings
+                                                if ($category_listing_count[$category_id] < 100)
+                                                {
+                                                    unset($category_id_group[$category_id_index]);
+                                                }
+                                            }
+                                            // Random the order of categories selected
+                                            shuffle($category_id_group);
+                                            if (count($category_id_group) >= 8)
+                                            {
+                                                // If there are more than 8 categories selected, display 8
+                                                $category_id_group = array_slice($category_id_group, 0, 8);
+                                            }
+                                            else
+                                            {
+                                                // If there are less than 8 categories, display 4 (or less)
+                                                $category_id_group = array_slice($category_id_group, 0, 4);
+                                            }
+                                            $this->content['field']['popular_category'] = $category_id_group;
+                                        }
                                     }
                                 }
 
