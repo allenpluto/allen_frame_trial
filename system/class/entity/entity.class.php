@@ -1376,7 +1376,7 @@ SELECT ' . implode(',', $parameter['update_fields']) . ' FROM ' . $parameter['ta
         return true;
     }
 
-    // Do some php process for data sync,
+    // Use pure mysql cannot solve the field, need php function to process the data
     function advanced_sync_update(&$source_row = array())
     {
         foreach($source_row as $index=>&$row)
