@@ -1602,7 +1602,7 @@ $.fn.tool_tip = function(user_option){
 };
 
 // Mobile Touch Slider
-$.fn.touch_slider = function(user_option){
+/*$.fn.touch_slider = function(user_option){
     var default_option = {
         'slider_window': 'parent',      // Define visible area for slider
         'min_trigger_offset': 0.3,
@@ -1833,6 +1833,334 @@ $.fn.touch_slider = function(user_option){
 
                 if (navigation_next) {
                     // move next button (>) to the right of image_counter
+                    navigation_next.appendTo(slider_wrapper);
+                }
+            }
+
+
+            if (slider_container.data('option').auto_slide !== 0) {
+                let auto_slide_interval = 3000;
+                if (slider_container.data('option').auto_slide_interval) {
+                    auto_slide_interval = slider_container.data('option').auto_slide_interval
+                }
+                if (slider_container.data('auto_slide_clear_timeout')) {
+                    clearTimeout(slider_container.data('auto_slide_clear_timeout'));
+                    slider_container.data('auto_slide_clear_timeout','');
+                }
+                slider_container.data('time_out_callback',function () {
+                    if (!$('body').find(slider_container).length) {
+                        // if element does not belong to current html body any more (e.g. element or element wrapper being detached)
+                        clearTimeout(slider_container.data('auto_slide_clear_timeout'));
+                        slider_container.data('auto_slide_clear_timeout','');
+                        return;
+                    }
+                    let auto_slide_clear_timeout = setTimeout(slider_container.data('time_out_callback'), auto_slide_interval);
+                    slider_container.data('auto_slide_clear_timeout',auto_slide_clear_timeout);
+                    if (!slider_container.data('current_event'))
+                    {
+                        if (slider_container.data('option').auto_slide_pause_on_hover && slider_wrapper.hasClass('slider_wrapper_hover')) {
+                            return;
+                        }
+
+                        let last_set_current_triggered = slider_container.data('set_current_triggered_at');
+                        if (last_set_current_triggered) {
+                            let current_timestamp = new Date().getTime();
+                            if (current_timestamp - last_set_current_triggered < auto_slide_interval*0.8) {
+                                return;
+                            }
+                            if (current_timestamp - last_set_current_triggered > auto_slide_interval*2) {
+                                slider_container.data('set_current_triggered_at',new Date().getTime());
+                                return;
+                            }
+                        }
+
+                        slider_container.data('current_event','auto_slide');
+                        slider_container.data('touch_start_x', 0);
+                        slider_container.data('touch_offset_x', 0);
+                        slider_container.trigger('set_current',[slider_container.data('count_current')+slider_container.data('option').auto_slide]);
+                        slider_container.data('current_event','');
+                    }
+                });
+                let auto_slide_clear_timeout = setTimeout(slider_container.data('time_out_callback'), auto_slide_interval);
+                slider_container.data('auto_slide_clear_timeout',auto_slide_clear_timeout);
+            }
+
+        }
+    });
+};*/
+// Chrome(126.0.6478.127 - 02 Sep, 2024) stops supporting negative indent based slide animation, change to negative margin based
+$.fn.touch_slider = function(user_option){
+    var default_option = {
+        'slider_window': 'parent',      // Define visible area for slider
+        'min_trigger_offset': 0.3,
+        'display_count': false,
+        'navigation_dot': true,
+        'navigation_arrow': true,
+        'auto_slide': 0,
+        'auto_slide_pause_on_hover': true
+    };
+    // Extend our default option with user provided.
+    var option = $.extend(default_option, user_option);
+
+    return this.each(function(){
+        var slider_wrapper = $(this);
+
+        slider_wrapper.on('mouseenter', function () {
+            $(this).addClass('slider_wrapper_hover');
+        });
+        slider_wrapper.on(' mouseleave', function () {
+            $(this).removeClass('slider_wrapper_hover');
+        });
+
+        var slider_container = $(this);
+        if (slider_container.find('.touch_slider_container').length > 0) {
+            slider_container = slider_container.find('.touch_slider_container');
+        }
+        slider_container.data('option', option);
+
+        var slider_window = $(this);
+        switch(option.slider_window) {
+            case 'self':
+                break;
+            case 'window':
+                slider_window = $(window);
+                break;
+            case 'parent':
+                slider_window = slider_window.parent();
+                break;
+            default:
+                if ($(option.slider_window).length) {
+                    slider_window = $(option.slider_window);
+                }
+        }
+
+        var slider_item = $(this).find('.touch_slider_item');
+        if (slider_item.length < slider_window.width() / slider_container.width()) {
+            slider_container.find('.touch_slider_item:first-child').css('margin-left',-100*(slider_item.length-1)/2+'%');
+        } else {
+            slider_container.data('count_total', slider_item.length);
+            slider_container.data('count_current', 1);
+
+            slider_container.data('clone_offset',Math.floor((slider_window.width() / slider_container.width()-1)/2+1));
+
+            let front_slider_item_clone;
+            let back_slider_item_clone;
+            for (var i=0;i<slider_container.data('clone_offset');i++) {
+                front_slider_item_clone = slider_item.eq(i).clone();
+                if (front_slider_item_clone.attr('id')) {
+                    front_slider_item_clone.attr('id',front_slider_item_clone.attr('id')+'_clone');
+                }
+                front_slider_item_clone.appendTo(slider_container);
+
+                back_slider_item_clone = slider_item.eq(-1-i).clone();
+                if (back_slider_item_clone.attr('id')) {
+                    back_slider_item_clone.attr('id',back_slider_item_clone.attr('id')+'_clone');
+                }
+                back_slider_item_clone.prependTo(slider_container);
+            }
+
+            slider_container.find('.touch_slider_item:first-child').css('margin-left',-100*slider_container.data('clone_offset')+'%');
+            slider_container.data('touch_start_x',0);
+            slider_container.data('touch_offset_x',0);
+            slider_container.data('current_event','');
+            slider_container.data('auto_slide_clear_timeout','');
+
+            slider_container.on('set_current',function(event,new_count_current) {
+                var slider_container = $(this);
+
+                if (new_count_current > slider_container.data('count_total'))
+                {
+                    new_count_current -= slider_container.data('count_total');
+                }
+                if (new_count_current < 1)
+                {
+                    new_count_current += slider_container.data('count_total');
+                }
+
+                // To make navigation animation go in a loop, if 1st item navigate to last or other way around, set current position to the cloned item
+                if (slider_container.data('count_current') === 1 && new_count_current === slider_container.data('count_total') && slider_container.data('current_event') !== 'navigation_next_touch') {
+                    slider_container.find('.touch_slider_item:first-child').css('margin-left',-100*(new_count_current+slider_container.data('clone_offset'))+'%');
+                }
+                if (slider_container.data('count_current') === slider_container.data('count_total') && new_count_current === 1 && slider_container.data('current_event') !== 'navigation_previous_touch') {
+                    slider_container.find('.touch_slider_item:first-child').css('margin-left',-100*(slider_container.data('clone_offset')-1)+'%');
+                }
+
+                slider_container.data('count_current', new_count_current);
+                slider_container.find('.touch_slider_item:first-child').animate({'margin-left':-100*(slider_container.data('count_current')+slider_container.data('clone_offset')-1)+'%'},300);
+                if (slider_container.data('option').display_count === true)
+                {
+                    slider_wrapper.find('.touch_slider_image_counter_container').html(slider_container.data('count_current')+' / '+slider_container.data('count_total'));
+                }
+                slider_container.data('set_current_triggered_at',new Date().getTime());
+            });
+
+            slider_container.bind('touchstart',function(event){
+                if (!slider_container.data('current_event'))
+                {
+                    var touchobj = event.originalEvent.changedTouches[0];
+                    slider_container.data('touch_start_x',parseInt(touchobj.clientX));
+                    slider_container.data('touch_start_y',parseInt(touchobj.clientY));
+                    slider_container.data('current_event','touch_slider');
+                }
+            });
+            slider_container.bind('touchmove',function(event){
+                var touchobj = event.originalEvent.changedTouches[0];
+                var touch_offset_x = parseInt(touchobj.clientX) - slider_container.data('touch_start_x');
+                var touch_offset_y = parseInt(touchobj.clientY) - slider_container.data('touch_start_y');
+                if (Math.abs(touch_offset_x) > 5)
+                {
+                    event.preventDefault();
+                    slider_container.data('current_event','move_slider');
+                }
+                if (slider_container.data('current_event') == 'move_slider')
+                {
+                    event.preventDefault();
+                    if (Math.abs(touch_offset_x/slider_container.width()) > 1)
+                    {
+                        if (touch_offset_x > 0)
+                        {
+                            slider_container.data('touch_start_x', slider_container.data('touch_start_x') + slider_container.width());
+                            slider_container.data('touch_offset_x', slider_container.data('touch_offset_x') - slider_container.width());
+                            slider_container.find('.touch_slider_item:first').css('marginLeft',slider_container.data('touch_offset_x')+'px');
+                            slider_container.trigger('set_current',[slider_container.data('count_current')-1]);
+                        }
+                        else
+                        {
+                            slider_container.data('touch_start_x', slider_container.data('touch_start_x') - slider_container.width());
+                            slider_container.data('touch_offset_x', slider_container.data('touch_offset_x') + slider_container.width());
+                            slider_container.find('.touch_slider_item:first').css('marginLeft',slider_container.data('touch_offset_x')+'px');
+                            slider_container.trigger('set_current',[slider_container.data('count_current')+1]);
+                        }
+                    }
+                    slider_container.data('touch_offset_x',parseInt(touchobj.clientX) - slider_container.data('touch_start_x'));
+                    slider_container.find('.touch_slider_item:first').css('marginLeft',slider_container.data('touch_offset_x')+'px');
+
+                }
+            });
+            slider_container.bind('touchend',function(event){
+                if (slider_container.data('current_event') == 'move_slider')
+                {
+                    event.preventDefault();
+
+                    if (Math.abs(slider_container.data('touch_offset_x')/slider_container.width()) > slider_container.data('option').min_trigger_offset)
+                    {
+                        if (slider_container.data('touch_offset_x') > 0)
+                        {
+                            slider_container.trigger('set_current',[slider_container.data('count_current')-1]);
+                        }
+                        else
+                        {
+                            slider_container.trigger('set_current',[slider_container.data('count_current')+1]);
+                        }
+                    }
+                    slider_item = $(this).find('.touch_slider_item:first').attr('style','');
+                    slider_container.data('touch_start_x', 0);
+                    slider_container.data('touch_offset_x', 0);
+                    slider_container.data('current_event','');
+                }
+            });
+
+            if (slider_container.data('option').navigation_arrow === true)
+            {
+                var navigation_previous = $('<div />', {
+                    'class': 'touch_slider_navigation_button touch_slider_navigation_button_previous'
+                });
+                var navigation_next = $('<div />', {
+                    'class': 'touch_slider_navigation_button touch_slider_navigation_button_next'
+                });
+
+                navigation_previous.appendTo(slider_wrapper);
+                navigation_previous.bind('touchstart mousedown',function(event){
+                    event.preventDefault();
+                    if (!slider_container.data('current_event'))
+                    {
+                        slider_container.data('current_event','navigation_previous_touch');
+                        $(this).addClass('touch_slider_navigation_button_pressed');
+                    }
+                });
+                navigation_previous.bind('touchend mouseup',function(event){
+                    event.preventDefault();
+                    if (slider_container.data('current_event') === 'navigation_previous_touch')
+                    {
+                        $(this).removeClass('touch_slider_navigation_button_pressed');
+                        slider_container.data('touch_start_x', 0);
+                        slider_container.data('touch_offset_x', 0);
+                        slider_container.trigger('set_current',[slider_container.data('count_current')-1]);
+                        slider_container.data('current_event','');
+                    }
+                });
+
+                navigation_next.appendTo(slider_wrapper);
+                navigation_next.bind('touchstart mousedown',function(event){
+                    event.preventDefault();
+                    if (!slider_container.data('current_event'))
+                    {
+                        slider_container.data('current_event', 'navigation_next_touch');
+                        $(this).addClass('touch_slider_navigation_button_pressed');
+                    }
+                });
+                navigation_next.bind('touchend mouseup',function(event){
+                    event.preventDefault();
+                    if (slider_container.data('current_event') === 'navigation_next_touch')
+                    {
+                        $(this).removeClass('touch_slider_navigation_button_pressed');
+                        slider_container.data('touch_start_x', 0);
+                        slider_container.data('touch_offset_x', 0);
+                        slider_container.trigger('set_current',[slider_container.data('count_current')+1]);
+                        slider_container.data('current_event','');
+                    }
+                });
+            }
+
+            if (slider_container.data('option').display_count === true)
+            {
+                var image_counter = $('<div />', {
+                    'class': 'touch_slider_image_counter_container'
+                }).html(slider_container.data('count_current')+' / '+slider_container.data('count_total'));
+                image_counter.appendTo(slider_wrapper);
+
+                if (navigation_next) {
+                    // move next button (>) to the end of slider_wrapper
+                    navigation_next.appendTo(slider_wrapper);
+                }
+            }
+
+            if (slider_container.data('option').navigation_dot === true)
+            {
+                var navigation_dot_container = $('<div />', {
+                    'class': 'touch_slider_navigation_dot_container'
+                });
+                navigation_dot_container.appendTo(slider_wrapper);
+                var navigation_dot;
+                var i;
+                for(i=0;i<slider_container.data('count_total');i++) {
+                    navigation_dot = $('<div />', {
+                        'class': 'touch_slider_navigation_dot'
+                    });
+                    navigation_dot.bind('touchstart mousedown',function(event){
+                        event.preventDefault();
+                        if (!slider_container.data('current_event'))
+                        {
+                            slider_container.data('current_event', 'navigation_dot_touch');
+                            $(this).addClass('touch_slider_navigation_button_pressed');
+                        }
+                    });
+                    navigation_dot.bind('touchend mouseup',function(event){
+                        event.preventDefault();
+                        if (slider_container.data('current_event') === 'navigation_dot_touch')
+                        {
+                            $(this).removeClass('touch_slider_navigation_button_pressed');
+                            slider_container.data('touch_start_x', 0);
+                            slider_container.data('touch_offset_x', 0);
+                            slider_container.trigger('set_current',[i]);
+                            slider_container.data('current_event','');
+                        }
+                    });
+                    navigation_dot.appendTo(navigation_dot_container);
+                }
+
+                if (navigation_next) {
+                    // move next button (>) to the end of slider_wrapper
                     navigation_next.appendTo(slider_wrapper);
                 }
             }
