@@ -1,7 +1,7 @@
 <?php
 // Database
 define('DATABASE_HOST', '127.0.0.1');
-define('DATABASE_NAME', 'allen_frame_trial');
+define('DATABASE_NAME', 'allen_frame');
 define('DATABASE_USER', 'root');
 define('DATABASE_PASSWORD', '');
 define('DATABASE_CHARSET', 'utf8');
@@ -9,7 +9,7 @@ define('DATABASE_TABLE_PREFIX', 'tbl_');
 
 // URI
 define('URI_BASE','http://10.1.1.200/');
-define('FOLDER_SITE_BASE','allen_frame_trial');
+define('FOLDER_SITE_BASE','allen_frame');
 
 define('URI_IMAGE_EXTERNAL', 'http://dev.top4.com.au/custom/domain_1/image_files/');
 

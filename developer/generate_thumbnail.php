@@ -26,7 +26,7 @@ $target_image = imagecreatetruecolor($target_width, $target_height);
 
 imagecopyresized($target_image, $source_image,0,0,0,0,$target_width, $target_height,$source_width, $source_height);
 
-imagejpeg($target_image, '/wamp/www/allen_frame_trial/asset/image/eden-institute-image.jpg', 60);
+imagejpeg($target_image, '/wamp/www/allen_frame/asset/image/eden-institute-image.jpg', 60);
 
 $size = getimagesize($source_image_path);
 echo $size['mime'];

@@ -5,7 +5,7 @@
  * Date: 18/05/2018
  * Time: 1:57 PM
  */
-define('PATH_SITE_BASE', '/wamp/www/allen_frame_trial/');
+define('PATH_SITE_BASE', '/wamp/www/allen_frame/');
 include('../../system/config/config.php');
 
 if (!isset($_GET['root_node']))

@@ -5,10 +5,244 @@
  * Date: 20/11/2015
  * Time: 2:00 PM
  */
-define('PATH_SITE_BASE','C:\\wamp\\www\\allen_frame_trial\\');
+//phpinfo();
+//exit;
+define('PATH_SITE_BASE', dirname(__DIR__).DIRECTORY_SEPARATOR);
+include('../system/config/config.php');
+
+
+$entity_file_obj = new entity_file();
+foreach ($entity_file_obj->file_type_extension_map as $file_type=>$file_type_extension){
+    echo $file_type.'(".'.implode('", ".',$file_type_extension).'")'.PHP_EOL;
+}
+exit;
+
+
+$test_file = '20220615 0115 x Jason Qian G to  x accounts@ste RE- Dimet Tools - Origin-May x (jason.qian@h)_x01.pdf';
+$file_post_fix = preg_replace('/^(.*?)(_x\d\d)?\.pdf$/','$2.pdf',$test_file);
+echo $file_post_fix;
+exit;
+
+$file_path = 'C:\2\HAL-TEL-APHOS-DATA-DRIVE\Data\HOS\0HOS\Contract_Info\ARCHIVE\Top 5 Agency Market Leaders.pptx';
+$phpPresentation = \PhpOffice\PhpPresentation\IOFactory::load($file_path);
+$properties = $phpPresentation->getProperties();
+$file_row['meta_property'] = json_encode($properties);
+
+$file_row['creator'] = $properties->getCreator();
+$file_row['created_date'] = date ('Y-m-d H:i:s', $properties->getCreated());
+$file_row['last_modified_by'] = $properties->getLastModifiedBy();
+$file_row['modified_date'] = date ('Y-m-d H:i:s', $properties->getModified());
+
+echo '<pre>';
+print_r($file_row);
+
+exit;
+
+$path = 'C:\temp\\';
+$source  = 'tbl_entity_eml_headline.csv';
+$target  = 'tbl_entity_eml.csv';
+
+$file_handle = fopen($path.$source, 'r');
+if ($file_handle) {
+    $line = fgets($file_handle);
+    fclose($file_handle);
+}
+$target_file_content = file_get_contents($path.$target);
+$target_file_content = $line.$target_file_content;
+file_put_contents($path.$target, $target_file_content);
+exit;
+
+$test_string = '<span style=\'font-size:15.0pt;font-family:"Helvetica",sans-serif;color:#32465A\'>&nbsp;<o:p></o:p></span></p>';
+echo preg_replace('/font\-family\:"(.*)",?(.*?)([\;\\\'])/','font-family:Helvetica$3',$test_string);
+exit;
+
+echo file_get_contents('https://qantashotels.my.salesforce.com/servlet/servlet.ImageServer?oid=00D90000000ZL1d&esid=0186F00000uIDhJ');
+exit;
+
+
+$entity_eml_obj = new entity_eml();
+$entity_eml_obj->get(['where'=>['target_file <> ""'],'limit'=>20000]);
+
+$source_folder = 'C:\pdf_ex\\';
+$target_folder = 'C:\pdf_ex\1\\';
+
+echo '<pre>';
+foreach ($entity_eml_obj->row as $eml_row) {
+    set_time_limit(240);
+    $file_name = preg_replace('/\.pdf$/','',$eml_row['target_file']);
+
+    foreach (glob($source_folder.$file_name.'_ATTCH_doc*') as $filename) {
+        rename($filename, str_replace($source_folder,$target_folder,$file_name));
+    }
+    if (file_exists($source_folder.$file_name.'_HTML.pdf')) {
+        rename($source_folder.$file_name.'_HTML.pdf',$target_folder.$file_name.'_HTML.pdf');
+    }
+    if (file_exists($source_folder.$eml_row['target_file'])) {
+        rename($source_folder.$eml_row['target_file'],$target_folder.$eml_row['target_file']);
+    }
+    echo $eml_row['target_file'].' has been moved to new folder.'.PHP_EOL;
+}
+
+exit;
+
+
+
+//$source_file = 'C:\temp\Test email for Mr Allen_from_michael.eml';
+//$source_file = 'C:\temp\Test email for Mr Allen_from_allen.eml';
+//$source_file = 'C:\1\jason.qian@halikos.com.au.pst\jason.qian@halikos.com.au (Primary)\Recoverable Items\Deletions\37.eml';
+//$source_file = 'C:\temp\Don\'t need that anymore_from_michael.eml';
+//$source_file = 'C:\1\jason.qian@halikos.com.au.pst\jason.qian@halikos.com.au (Primary)\Recoverable Items\Deletions\242.eml';
+$source_file = 'C:\1\jason.qian@halikos.com.au.pst\jason.qian@halikos.com.au (Primary)\Sync Issues\Conflicts\600.eml';
+$target_folder = 'C:\temp\export\\';
+
+$parser = mailparse_msg_parse_file($source_file);
+$structure = mailparse_msg_get_structure($parser);
+
+print_r($structure);
+
+foreach ($structure as $file_part_index) {
+    $part = mailparse_msg_get_part($parser,$file_part_index);
+
+    print_r($part);
+
+    $part_data = mailparse_msg_get_part_data($part);
+    print_r($part_data);
+}
+
+$mimeParser = new PhpMimeMailParser\Parser();
+$mimeParser->setPath($source_file);
+
+echo '<pre>';
+print_r($mimeParser->getHeaders());
+//echo '<br>--------------------------------------<br>';
+//print_r($mimeParser->getMessageBody('html'));
+//echo '--------------------------------------<br>';
+print_r(nl2br($mimeParser->getMessageBody('text')));
+echo '--------------------------------------<br>';
+print_r($mimeParser->getMessageBody('htmlEmbedded'));
+exit;
+
+$pdf = new TCPDF('P', 'mm', 'A4', 'UTF-8', false);
+$pdf->SetCreator('MGS');
+$pdf->SetAuthor('MGS');
+$pdf->SetTitle('Test');
+$pdf->setFont('helvetica', '', 16);
+
+$pdf->addPage();
+//$pdf->writeHTML($mimeParser->getMessageBody('htmlEmbedded'), true, false, true, false, '');
+//$pdf->Text(0,0,$mimeParser->getMessageBody('text'));
+$pdf->MultiCell(190, 5, $mimeParser->getMessageBody('text'), 0, 'L', 0, 0, '', '', true, 0, false, true, 0, 'T', false);
+
+
+$pdf->Output($target_folder.'eml_to_text.pdf', 'F');
+
+$pdf2 = new TCPDF('P', 'mm', 'A4', 'UTF-8', false);
+$pdf2->SetCreator('MGS');
+$pdf2->SetAuthor('MGS');
+$pdf2->SetTitle('Test');
+$pdf2->setFont('helvetica', '', 16);
+
+$pdf2->addPage();
+$pdf2->writeHTML($mimeParser->getMessageBody('htmlEmbedded'), true, false, true, false, '');
+
+$pdf2->Output($target_folder.'eml_to_html.pdf', 'F');
+
+
+$mimeParser->saveAttachments($target_folder, false);
+exit;
+
+
+$source_file = 'C:\temp\allen_test_pdf.pdf';
+$parser = new \Smalot\PdfParser\Parser();
+$pdf = $parser->parseFile($source_file);
+$details = $pdf->getDetails();
+print_r($details);
+
+
+echo '<br>';
+
+exit;
+
+$source_file = 'C:\temp\Macq09Sep2607-2208.pptx';
+$phpPresentation = \PhpOffice\PhpPresentation\IOFactory::load($source_file);
+$properties = $phpPresentation->getProperties();
+
+print_r($properties);
+echo '<br>';
+
+exit;
+
+$source_file = 'C:\temp\Price List Nov 2023.xlsx';
+$phpSpreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($source_file);
+$properties = $phpSpreadsheet->getProperties();
+
+print_r($properties);
+echo '<br>';
+
+exit;
+
+$source_file = 'C:\temp\The Erdogan Family Trust.doc';
+$phpWord = \PhpOffice\PhpWord\IOFactory::load($source_file);
+$properties = $phpWord->getDocInfo();
+
+print_r($properties->getCreator());
+echo '<br>';
+print_r($properties->getCreated());
+echo '<br>';
+print_r($properties->getLastModifiedBy());
+echo '<br>';
+print_r($properties->getModified());
+
+
+exit;
+
+$entity_file_obj = new entity_file();
+print_r($entity_file_obj->parameter['table_fields']);
+print_r($entity_file_obj->query("INSERT INTO tbl_entity_file (`name`,`source_time`,`is_dir`,`file_size`,`image_width`,`image_height`,`extension`,`mime`,`source_file`,`source_root`,`parent_id`) VALUES ('grp','0000-00-00 00:00:00','1','0','0','0','','','\grp','C:\scan_files\halikos_group_1\HAL-TEL-APNTFSG-DATA-DRIVE\data','0')"));
+$entity_file_obj->set(['row'=>[
+    [
+        'name' =>'ntf',
+        'source_time' =>'0000-00-00 00:00:00',
+        'is_dir' =>'1',
+        'file_size' =>'0',
+        'image_width' =>'0',
+        'image_height' =>'0',
+        'extension' =>'',
+        'mime' =>'',
+        'source_file' =>'\ntf',
+        'source_root' =>'C:\data',
+        'parent_id' =>'0',
+    ]
+],'fields'=>$entity_file_obj->parameter['table_fields']]);
+exit;
+
+
+
+$folder_path = 'C:\scan_files\halikos_group_1\HAL-TEL-APNTFSG-DATA-DRIVE\data';
+print_r(scandir($folder_path));
+
+exit();
+
+$file_path = 'D:\Projects\Russ\Extracted\3708434-006_MD_(iPhone 14 Pro Max)\files\Image\NewBokeh-Light-Yellow_thumb.png';
+echo '<pre>';
+print_r(filemtime($file_path));
+echo PHP_EOL;
+print_r(filesize($file_path));
+echo PHP_EOL;
+print_r(pathinfo($file_path));
+echo PHP_EOL;
+print_r(mime_content_type($file_path));
+echo PHP_EOL;
+print_r(getimagesize($file_path));
+
+
+exit();
+
+define('PATH_SITE_BASE','C:\\wamp\\www\\allen_frame\\');
 include('../system/config/config.php');
 $timestamp = time();
 echo '<pre>';
+
 /*$data = 'data:image/jpeg;base64,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';
 //$data = 'http://dev.top4.com.au/images/top4/profile_banner_default.jpg';
 //$data = PATH_IMAGE.'/xxs/202_photo_19233.jpg';
@@ -691,7 +925,7 @@ print_r($quoted_content);
 echo '<br>';
 print_r(minify_content(".column_container > .column {display: block; float:left;min-height:1px ;}",'css'));
 
-$js_test = file_get_contents('C:\wamp\www\allen_frame_trial\content\js\default.js');
+$js_test = file_get_contents('C:\wamp\www\allen_frame\content\js\default.js');
 preg_match_all('/"((?:[^"]|\\")*?)(?<!\\\)"/',$js_test,$matches,PREG_OFFSET_CAPTURE);
 print_r($matches);
 //exit();
@@ -727,5 +961,5 @@ $sub_uri = array_merge($uri_query_part, $sub_uri);
 */
 
 /* // TEST GET File Header
-$file_header = @get_headers('http://localhost/allen_frame_trial/css/default.min.css',true);
+$file_header = @get_headers('http://localhost/allen_frame/css/default.min.css',true);
 print_r($file_header);*/

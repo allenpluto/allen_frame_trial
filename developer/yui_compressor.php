@@ -6,7 +6,7 @@
  * Time: 6:00 PM
  */
 $version = '11mar2016';
-chdir('C:\wamp\www\allen_frame_trial\developer');
+chdir('C:\wamp\www\allen_frame\developer');
 exec('java -jar yuicompressor-2.4.8.jar ../content/js/default.js -o ../asset/js/default.'.$version.'.min.js', $result);
 echo '<pre>';
 print_r('default_'.$version.'.min.js exist: '.file_exists('default_'.$version.'.min.js'));

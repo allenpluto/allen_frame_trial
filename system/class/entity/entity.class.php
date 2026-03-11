@@ -366,6 +366,7 @@ class entity extends base
         {
             $sql .= ' OFFSET '.$parameter['offset'];
         }
+        print_r($sql);
         $query = $this->query($sql,$parameter['bind_param']);
         if ($query === false) return false;
 
@@ -407,6 +408,7 @@ class entity extends base
     // INSERT/UPDATE multiple rows of data, return id_group of inserted/updated rows
     function set($parameter = array())
     {
+        $this->time_stack['set_start'] = microtime(true);
         if (isset($parameter['row']))
         {
             $row = $parameter['row'];
@@ -497,6 +499,7 @@ class entity extends base
         }
         $sql .= implode(',',$field_bind);
         unset($field_bind);
+//echo $sql.PHP_EOL;
         $query = $this->_conn->prepare($sql);
 
         $new_row = array();
@@ -544,7 +547,7 @@ class entity extends base
             }
 
             $bind_value = array_merge($bind_value,$parameter['bind_param']);
-
+//print_r($bind_value);echo PHP_EOL;
             if (count($bind_value) != count($parameter['table_fields']))
             {
                 $GLOBALS['global_message']->warning = __FILE__.'(line '.__LINE__.'): '.get_class($this).' INSERT/UPDATE number of tokens ('.count($parameter['table_fields']).') does not match number of bound variables('.count($bind_value).') - '.print_r($bind_value,true);
@@ -552,14 +555,47 @@ class entity extends base
             else
             {
 
-                $query->execute($bind_value);
-                if ($query === false) continue;
+                $result = $query->execute($bind_value);
+//                echo '** '.$sql.PHP_EOL;
+//                print_r('$bind_value->'.json_encode($bind_value));echo PHP_EOL;
+//                print_r('$result->'.json_encode($result));echo PHP_EOL;
+                if ($result === false) continue;
 
                 $insert_respond = $query->rowCount();
                 unset($record_primary_key);
                 if ($insert_respond == 0)
                 {
-                    $record_primary_key = $bind_value[':'.$parameter['primary_key']];
+                    if (empty($bind_value[':'.$parameter['primary_key']])) {
+//                        echo '** '.$sql.PHP_EOL;
+//                        print_r($bind_value);echo PHP_EOL;
+                        $sql = 'SELECT '.$parameter['primary_key'].' FROM '.$parameter['table'].' WHERE ';
+                        $field_bind = array();
+                        foreach ($parameter['table_fields'] as $field_index=>$field_name)
+                        {
+                            if ($field_name != $parameter['primary_key'])
+                            {
+                                $field_bind[] = '`'.$field_name.'` = :'.$field_name;
+                            }
+                        }
+                        $sql .= implode(' AND ',$field_bind);
+                        unset($field_bind);
+//                        echo '** '.$sql.PHP_EOL;
+                        $query2 = $this->query($sql, $bind_value);
+                        if ($query2 === false) continue;
+
+                        $result = $query2->fetchAll(PDO::FETCH_ASSOC);
+//                        if (count($result) !== 1) {
+//                            echo '** '.$sql.PHP_EOL;
+//                            print_r('$bind_value->'.json_encode($bind_value));echo PHP_EOL;
+//                            print_r('$result->'.json_encode($result));echo PHP_EOL;
+//                        }
+                        foreach ($result as $row_index=>$row_value)
+                        {
+                            $record_primary_key = $row_value[$parameter['primary_key']];
+                        }
+                    } else {
+                        $record_primary_key = $bind_value[':'.$parameter['primary_key']];
+                    }
                 }
                 else
                 {
@@ -676,7 +712,17 @@ class entity extends base
         $this->id_group = $format->id_group($id_group);
         $this->row = $new_row;
         $this->_initialized = true;
+        $this->time_stack['set_end'] = microtime(true);
         return $this->id_group;
+    }
+
+    function set_row($row, $parameter = array())
+    {
+        $parameter['row'] = [$row];
+        if (empty($parameter['fields'])) {
+            $parameter['fields'] = array_keys($row);
+        }
+        return $this->set($parameter);
     }
 
     function fetch_value($parameter = array())
@@ -861,6 +907,9 @@ class entity extends base
             }
 
             $query = $this->query($sql, $parameter['bind_param']);
+//            echo '** '.$sql.PHP_EOL;
+//            print_r('$parameter[\'bind_param\']->'.json_encode($parameter['bind_param']));echo PHP_EOL;
+//            print_r('$query->'.json_encode($query));echo PHP_EOL;
             if ($query !== false)
             {
                 if ($query->rowCount() == 0)

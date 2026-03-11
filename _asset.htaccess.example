@@ -2,7 +2,7 @@ Options +FollowSymlinks
 DirectorySlash Off
 
 RewriteEngine On
-RewriteBase /allen_frame_trial/
+RewriteBase /allen_frame/
 
 # If the file is directly accessed, redirect to site root
 RewriteCond %{QUERY_STRING} !request_uri=

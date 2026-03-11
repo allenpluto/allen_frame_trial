@@ -5,7 +5,7 @@
 
 // Render template, create html page view...
 
-class content extends base {
+class content {
     protected $request = array();
     protected $content = array();
     protected $result = array();

@@ -5,7 +5,7 @@
  * Date: 25/10/2017
  * Time: 4:23 PM
  */
-define('PATH_SITE_BASE','C:\\wamp\\www\\allen_frame_trial\\');
+define('PATH_SITE_BASE','C:\\wamp\\www\\allen_frame\\');
 include('../../system/config/config.php');
 $timestamp = time();
 echo '<pre>';

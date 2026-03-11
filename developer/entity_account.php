@@ -5,7 +5,7 @@
  * Date: 9/03/2017
  * Time: 5:00 PM
  */
-define('PATH_SITE_BASE','C:\\wamp\\www\\allen_frame_trial\\');
+define('PATH_SITE_BASE','C:\\wamp\\www\\allen_frame\\');
 include('../system/config/config.php');
 $start_stamp = microtime(1);
 echo '<pre>';

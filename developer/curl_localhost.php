@@ -18,7 +18,7 @@ if (!isset($_GET['handler']))
         $method = 'list_available_method';
     }
 
-    $handler_uri = 'http://localhost/allen_frame_trial/login';
+    $handler_uri = 'http://localhost/allen_frame/login';
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $handler_uri);

@@ -1,5 +1,5 @@
-#ErrorDocument 404 /allen_frame_trial/404.php
-#ErrorDocument 403 /allen_frame_trial/404.php
+#ErrorDocument 404 /allen_frame/404.php
+#ErrorDocument 403 /allen_frame/404.php
 
 Options +FollowSymlinks
 Options -Indexes

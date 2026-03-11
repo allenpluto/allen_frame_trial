@@ -11,7 +11,7 @@ if (!isset($_GET['handler']))
     //$my_uri .= '://';
     //$my_uri .= $_SERVER['HTTP_HOST']?$_SERVER['HTTP_HOST']:'127.0.0.1';
     //$my_uri .= $_SERVER['REQUEST_URI']?$_SERVER['REQUEST_URI']:'/';
-    //$my_uri = 'http://localhost/allen_frame_trial/json/select_business_by_uri';
+    //$my_uri = 'http://localhost/allen_frame/json/select_business_by_uri';
     $post_value = $_GET;
     if (isset($post_value['method']))
     {
@@ -80,7 +80,7 @@ clinic'
     }
 
     //$handler_uri = 'https://api.top4.com.au/json/'.$method;
-    //$handler_uri = 'http://localhost/allen_frame_trial/json/'.$method;
+    //$handler_uri = 'http://localhost/allen_frame/json/'.$method;
     //$handler_uri = $my_uri.($_SERVER['QUERY_STRING']?'?'.$_SERVER['QUERY_STRING']:'').'&handler=true';
     //$handler_uri = 'https://api.top4.com.au/json/select_business_by_uri?uri=http://www.caroma.com.au';
     $handler_uri = 'http://apidev.top4.com.au/json/'.$method;

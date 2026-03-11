@@ -5,7 +5,7 @@
  * Date: 15/05/2018
  * Time: 5:06 PM
  */
-define('PATH_SITE_BASE', '/wamp/www/allen_frame_trial/');
+define('PATH_SITE_BASE', '/wamp/www/allen_frame/');
 include('../../system/config/config.php');
 
 $entity_schema_type = new entity(Null,[

@@ -29,6 +29,7 @@ define('URI_CONTENT_JS', URI_CONTENT . FOLDER_JS . '/');
 define('PATH_SYSTEM', PATH_SITE_BASE . 'system' . DIRECTORY_SEPARATOR);
 define('PATH_CLASS', PATH_SYSTEM . 'class' . DIRECTORY_SEPARATOR);
 define('PATH_TEMPLATE', PATH_SYSTEM . 'template' . DIRECTORY_SEPARATOR);
+define('PATH_VENDOR', PATH_SITE_BASE . 'vendor' . DIRECTORY_SEPARATOR);
 
 define('PATH_INCLUDE', PATH_SYSTEM . 'include' . DIRECTORY_SEPARATOR);
 define('PATH_PREFERENCE', PATH_INCLUDE . 'preference' . DIRECTORY_SEPARATOR);
@@ -78,6 +79,8 @@ $format = format::get_obj();
 set_include_path(PATH_CLASS.PATH_SEPARATOR.PATH_CLASS.'entity/'.PATH_SEPARATOR.PATH_CLASS.'view/'.PATH_SEPARATOR.PATH_CLASS.'index/');
 spl_autoload_extensions(FILE_EXTENSION_CLASS);
 spl_autoload_register();
+
+require PATH_VENDOR.'autoload.php';
 
 // Load System Functions (Functions that may call Classes)
 include_once(PATH_INCLUDE.'function'.FILE_EXTENSION_INCLUDE);

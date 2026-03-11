@@ -19,7 +19,7 @@
         .listing_message_container {color:#00cc00}
         .error {color:#cc0000;}
     </style>
-    <script type="text/javascript" src="/allen_frame_trial/content/js/jquery-1.11.3.js"></script>
+    <script type="text/javascript" src="/allen_frame/content/js/jquery-1.11.3.js"></script>
     <script type="text/javascript">
         var autocomplete,map,geocoder;
         var colour_set = ['#000000','#FF0000','#00FF00','#0000FF','#999900','#009999','#FF00FF','#000000','#000000','#000000','#000000','#000000','#000000'];
@@ -300,7 +300,7 @@
             }
             $.ajax({
                 'type': 'POST',
-                'url': '/allen_frame_trial/developer/location_conversion/fix_organization_place_handler.php',
+                'url': '/allen_frame/developer/location_conversion/fix_organization_place_handler.php',
                 'data': post_value,
                 'dataType': 'json',
                 'timeout': 30000,
@@ -417,7 +417,7 @@ console.log(result);
 console.log(post_value);
             $.ajax({
                 'type': 'POST',
-                'url': '/allen_frame_trial/developer/location_conversion/fix_organization_place_handler.php',
+                'url': '/allen_frame/developer/location_conversion/fix_organization_place_handler.php',
                 'data': post_value,
                 'dataType': 'json',
                 'timeout': 30000,

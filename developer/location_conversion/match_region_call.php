@@ -2,7 +2,7 @@
 <head>
 	<title>Google Location Retriever</title>
 	<meta name="robots" content="noindex, nofollow">
-    <script type="text/javascript" src="/allen_frame_trial/content/js/jquery-1.11.3.js"></script>
+    <script type="text/javascript" src="/allen_frame/content/js/jquery-1.11.3.js"></script>
 </head>
 <body>
 <div id="timer_container"></div>
@@ -108,7 +108,7 @@ var post_value = {
 };
 $.ajax({
 'type': 'POST',
-'url': '/allen_frame_trial/developer/location_conversion/match_region_handler.php',
+'url': '/allen_frame/developer/location_conversion/match_region_handler.php',
 'data': post_value,
 'timeout': 40000,
 'success': function(result_string) {

@@ -495,5 +495,13 @@ class format
         }
         return $result;
     }
+
+    private function source_time($value) {
+        $result = $value;
+        if (is_int($value)) {
+            $result = date("Y-m-d H:i:s", filectime($value));
+        }
+        return $result;
+    }
 }
 ?>
